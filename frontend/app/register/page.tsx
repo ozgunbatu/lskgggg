@@ -2,7 +2,8 @@
 import { useEffect, useRef, useState } from "react";
 import { clearToken, setToken, validateSession } from "../../lib/auth";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://api.lksgcompass.de";
+const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
+const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
 
 const css = `
   *,*::before,*::after{box-sizing:border-box}

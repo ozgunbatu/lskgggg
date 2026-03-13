@@ -1,5 +1,5 @@
-import AppWorkspace from "../../components/AppWorkspace";
+import AppWorkspace from "../../../components/AppWorkspace";
 
-export default function AppIndexPage() {
-  return <AppWorkspace initialTab="dashboard" />;
+export default function Page() {
+  return <AppWorkspace initialTab="suppliers" />;
 }

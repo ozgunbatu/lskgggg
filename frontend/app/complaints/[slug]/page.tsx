@@ -2,7 +2,8 @@
 import { useEffect, useState } from "react";
 import { getLang, setLang, type Lang } from "../../../lib/i18n";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://api.lksgcompass.de";
+const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
+const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
 
 type Supplier = { id:string; name:string; country:string; industry:string };
 

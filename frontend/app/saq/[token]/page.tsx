@@ -1,7 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://api.lksgcompass.de";
+const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
+const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
 
 type Question = {
   id: string; paragraph: string; de: string; en: string;

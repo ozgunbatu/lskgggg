@@ -2,7 +2,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { clearToken, setToken, validateSession } from "../../lib/auth";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "https://api.lksgcompass.de";
+// Uses /api proxy (Next.js rewrites to backend) — no CORS, no env var needed
+const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
+const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
 
 type Lang = "de" | "en";
 

@@ -1,9 +1,15 @@
-export const API = process.env.NEXT_PUBLIC_API_URL || "https://api.lksgcompass.de";
+// API base: use /api proxy (Next.js rewrites to backend) as primary.
+// Falls back to NEXT_PUBLIC_API_URL for cross-origin deploys (e.g. Vercel + Railway on different domains).
+const isAbsoluteUrl = (s: string) => s.startsWith("http://") || s.startsWith("https://");
+const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
 
-// Deduplicate error toasts — track last-shown message per error type
+// If NEXT_PUBLIC_API_URL is set and looks like an absolute URL, use it directly.
+// Otherwise use /api (works via Next.js rewrite proxy — same domain, no CORS).
+export const API = isAbsoluteUrl(NEXT_PUBLIC) ? NEXT_PUBLIC : "/api";
+
+// Deduplicate error toasts
 const lastToastAt: Record<string, number> = {};
 const TOAST_DEBOUNCE_MS = 4000;
-
 export function shouldShowToast(key: string): boolean {
   const now = Date.now();
   if ((now - (lastToastAt[key] ?? 0)) > TOAST_DEBOUNCE_MS) {
@@ -13,7 +19,7 @@ export function shouldShowToast(key: string): boolean {
   return false;
 }
 
-// Inflight deduplication: don't fire the same GET twice simultaneously
+// Inflight deduplication for GET requests
 const inflight: Map<string, Promise<any>> = new Map();
 
 export function createApiClient(getToken: () => string, onUnauthorized?: () => void) {
@@ -25,7 +31,6 @@ export function createApiClient(getToken: () => string, onUnauthorized?: () => v
     const token = getToken();
     if (token) headers.set("Authorization", `Bearer ${token}`);
 
-    // Deduplicate concurrent GET requests to the same path
     const isGet = !init.method || init.method.toUpperCase() === "GET";
     const dedupeKey = isGet ? path : null;
 
@@ -36,14 +41,8 @@ export function createApiClient(getToken: () => string, onUnauthorized?: () => v
     const request = (async () => {
       const res = await fetch(`${API}${path}`, { ...init, headers });
       const data = await res.json().catch(() => ({}));
-
-      if (res.status === 401) {
-        onUnauthorized?.();
-        throw new Error("Session");
-      }
-      if (res.status === 429) {
-        throw new Error("rate_limited");
-      }
+      if (res.status === 401) { onUnauthorized?.(); throw new Error("Session"); }
+      if (res.status === 429) throw new Error("rate_limited");
       if (!res.ok) throw new Error((data as any)?.error || `Error ${res.status}`);
       return data;
     })();
@@ -52,7 +51,6 @@ export function createApiClient(getToken: () => string, onUnauthorized?: () => v
       inflight.set(dedupeKey, request);
       request.finally(() => inflight.delete(dedupeKey));
     }
-
     return request;
   };
 }
