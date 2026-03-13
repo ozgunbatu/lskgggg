@@ -1,0 +1,52 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:15
+    container_name: lksg_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: lksg
+      POSTGRES_PASSWORD: lksg
+      POSTGRES_DB: lksg
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./database/init.sql:/docker-entrypoint-initdb.d/00_init.sql:ro
+      - lksg_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U lksg -d lksg"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  backend:
+    build: ./backend
+    container_name: lksg_api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - PORT=4000
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "4000:4000"
+
+  frontend:
+    build: ./frontend
+    container_name: lksg_web
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:4000}
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+
+volumes:
+  lksg_pgdata:
