@@ -4,6 +4,6 @@
   "framework": "nextjs",
   "regions": ["fra1"],
   "env": {
-    "BACKEND_URL": "@backend_url"
+    "BACKEND_URL": "https://lskgggg-production.up.railway.app"
   }
 }
