@@ -1,23 +1,13 @@
-// API base: use /api proxy (Next.js rewrites to backend) as primary.
-// Falls back to NEXT_PUBLIC_API_URL for cross-origin deploys (e.g. Vercel + Railway on different domains).
-const isAbsoluteUrl = (s: string) => s.startsWith("http://") || s.startsWith("https://");
-const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
+/**
+ * API client — always uses /api/* proxy (Next.js rewrites to BACKEND_URL).
+ * Never calls backend directly from browser — no CORS issues.
+ * 
+ * NEXT_PUBLIC_API_URL is kept for backward compat but ONLY used server-side
+ * (in rewrites). Client always calls /api/*.
+ */
 
-// If NEXT_PUBLIC_API_URL is set and looks like an absolute URL, use it directly.
-// Otherwise use /api (works via Next.js rewrite proxy — same domain, no CORS).
-export const API = isAbsoluteUrl(NEXT_PUBLIC) ? NEXT_PUBLIC : "/api";
-
-// Deduplicate error toasts
-const lastToastAt: Record<string, number> = {};
-const TOAST_DEBOUNCE_MS = 4000;
-export function shouldShowToast(key: string): boolean {
-  const now = Date.now();
-  if ((now - (lastToastAt[key] ?? 0)) > TOAST_DEBOUNCE_MS) {
-    lastToastAt[key] = now;
-    return true;
-  }
-  return false;
-}
+// Always use /api proxy — Next.js rewrites /api/* to BACKEND_URL server-side
+export const API = "/api";
 
 // Inflight deduplication for GET requests
 const inflight: Map<string, Promise<any>> = new Map();

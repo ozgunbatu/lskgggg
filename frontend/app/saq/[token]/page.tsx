@@ -1,8 +1,8 @@
 "use client";
 import { useEffect, useState } from "react";
 
-const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
-const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
+// Always use /api proxy — Next.js rewrites to backend (no CORS)
+const API = "/api";
 
 type Question = {
   id: string; paragraph: string; de: string; en: string;

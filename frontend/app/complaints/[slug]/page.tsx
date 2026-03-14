@@ -2,8 +2,8 @@
 import { useEffect, useState } from "react";
 import { getLang, setLang, type Lang } from "@/lib/i18n";
 
-const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
-const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";
+// Always use /api proxy — Next.js rewrites to backend (no CORS)
+const API = "/api";
 
 type Supplier = { id:string; name:string; country:string; industry:string };
 

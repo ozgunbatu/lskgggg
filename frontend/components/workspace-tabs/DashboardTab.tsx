@@ -5,6 +5,7 @@ import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
 import WorkspaceLaunchpad from "../workspace/WorkspaceLaunchpad";
 import WorkspaceApprovalSummary from "../workspace/WorkspaceApprovalSummary";
 import WorkspaceApprovalAging from "../workspace/WorkspaceApprovalAging";
+import SkeletonCard from "@/components/workspace/SkeletonCard";
 import type { DashboardTabProps, Supplier } from "@/lib/workspace-types";
 
 export default function DashboardTab(props: DashboardTabProps) {

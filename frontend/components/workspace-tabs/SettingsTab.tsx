@@ -30,7 +30,7 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
 
   useEffect(() => {
     apiFn("/companies/me").then((d: any) => setForm(d || {})).catch(() => {});
-    fetch((process.env.NEXT_PUBLIC_API_URL || "") + "/health")
+    fetch("/api/health")
       .then(r => r.json()).then(setHealth).catch(() => {});
   }, [apiFn]);
 

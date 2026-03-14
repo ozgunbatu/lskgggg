@@ -1,15 +1,18 @@
 /** @type {import('next').NextConfig} */
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || 
-                    process.env.BACKEND_URL || 
-                    "http://backend:4000";  // docker-compose service name
+// BACKEND_URL: server-side only, used for Next.js rewrites
+// Must point to your Railway backend URL
+const BACKEND_URL = process.env.BACKEND_URL || 
+                    process.env.NEXT_PUBLIC_API_URL ||  // fallback for compat
+                    "http://backend:4000";               // docker-compose
 
 const nextConfig = {
   output: 'standalone',
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  // Proxy /api/* to backend — works without CORS, no env var at runtime needed
+  // All /api/* requests proxied to backend server-side
+  // Browser never calls backend directly → no CORS, no hardcoded URLs
   async rewrites() {
     return [
       {
@@ -19,7 +22,6 @@ const nextConfig = {
     ];
   },
 
-  // Security headers
   async headers() {
     return [
       {

@@ -1,469 +1,782 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
+// ─── Styles ──────────────────────────────────────────────────────────────────
 const css = `
   *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  body{font-family:'DM Sans',system-ui,sans-serif}
-  .dw{min-height:100vh;background:#0b1209;color:#fff}
-  .dnav{display:flex;align-items:center;justify-content:space-between;padding:20px 40px;border-bottom:1px solid rgba(255,255,255,.08);position:sticky;top:0;background:#0b1209;z-index:100}
-  .dlogo{font-size:18px;font-weight:800;color:#fff;text-decoration:none}
-  .dlogo em{font-style:normal;color:rgba(255,255,255,.4)}
-  .dnav-links{display:flex;align-items:center;gap:20px}
-  .dnav-links a{color:rgba(255,255,255,.6);font-size:14px;font-weight:600;text-decoration:none;transition:color .15s}
-  .dnav-links a:hover{color:#fff}
-  .dbtn{background:#1B3D2B;color:#fff;border:none;border-radius:8px;padding:10px 20px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s}
-  .dbtn:hover{background:#2d5c3f;transform:translateY(-1px)}
-  
-  .dhero{text-align:center;padding:80px 24px 60px;max-width:760px;margin:0 auto}
-  .dhero-tag{display:inline-flex;align-items:center;gap:8px;background:rgba(27,61,43,.4);border:1px solid rgba(27,61,43,.6);color:#4ade80;font-size:12px;font-weight:700;padding:5px 14px;border-radius:99px;letter-spacing:.5px;text-transform:uppercase;margin-bottom:24px}
-  .dhero h1{font-size:clamp(32px,5vw,52px);font-weight:800;line-height:1.1;letter-spacing:-.5px;margin-bottom:16px}
-  .dhero h1 em{font-style:normal;color:#4ade80}
-  .dhero p{font-size:17px;color:rgba(255,255,255,.6);line-height:1.7;max-width:560px;margin:0 auto 32px}
-  .dhero-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-  .dbtn-outline{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.15);border-radius:8px;padding:12px 24px;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .2s}
-  .dbtn-outline:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3)}
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&display=swap');
+  body,html{font-family:'DM Sans',system-ui,sans-serif;background:#0b1209;color:#fff;overflow-x:hidden}
 
-  .dsteps{display:flex;gap:0;overflow-x:auto;padding:0 40px;margin-bottom:0;scrollbar-width:none;border-bottom:1px solid rgba(255,255,255,.08)}
-  .dsteps::-webkit-scrollbar{display:none}
-  .dstep{display:flex;align-items:center;gap:10px;padding:14px 20px;cursor:pointer;border-bottom:2px solid transparent;color:rgba(255,255,255,.45);font-size:13.5px;font-weight:600;white-space:nowrap;transition:all .2s;flex-shrink:0}
-  .dstep:hover{color:rgba(255,255,255,.8)}
-  .dstep.on{color:#4ade80;border-bottom-color:#4ade80}
-  .dstep-n{width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,.1);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0}
-  .dstep.on .dstep-n{background:#1B3D2B;color:#4ade80}
+  /* ── Layout ── */
+  .demo-shell{display:grid;grid-template-rows:56px 1fr;min-height:100vh}
+  .demo-topbar{display:flex;align-items:center;justify-content:space-between;padding:0 24px;background:rgba(11,18,9,.9);border-bottom:1px solid rgba(255,255,255,.08);backdrop-filter:blur(12px);position:sticky;top:0;z-index:50}
+  .demo-logo{font-size:16px;font-weight:800;color:#fff;text-decoration:none}
+  .demo-logo em{font-style:normal;color:rgba(255,255,255,.35)}
+  .demo-topbar-r{display:flex;align-items:center;gap:12px}
+  .demo-pill{font-size:11px;font-weight:700;color:#4ade80;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);padding:4px 10px;border-radius:99px;letter-spacing:.3px}
+  .demo-cta{background:#1B3D2B;color:#fff;border:none;border-radius:8px;padding:8px 18px;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:background .2s}
+  .demo-cta:hover{background:#2d5c3f}
 
-  .dscreen{display:grid;grid-template-columns:1fr 380px;gap:0;min-height:600px}
-  .dscreen-left{padding:40px;border-right:1px solid rgba(255,255,255,.08)}
-  .dscreen-right{padding:40px;background:rgba(255,255,255,.02)}
-  
-  .dscreen-tag{font-size:11px;font-weight:800;color:#4ade80;text-transform:uppercase;letter-spacing:1px;margin-bottom:12px}
-  .dscreen-h{font-size:26px;font-weight:800;line-height:1.2;margin-bottom:12px;letter-spacing:-.3px}
-  .dscreen-s{font-size:15px;color:rgba(255,255,255,.55);line-height:1.7;margin-bottom:28px}
-  .dscreen-pts{display:grid;gap:12px;margin-bottom:32px}
-  .dscreen-pt{display:flex;gap:12px;align-items:flex-start}
-  .dscreen-pt-ic{width:28px;height:28px;border-radius:8px;background:#1B3D2B;border:1px solid rgba(27,61,43,.6);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;margin-top:1px}
-  .dscreen-pt-tx{font-size:14px;color:rgba(255,255,255,.75);line-height:1.55}
-  .dscreen-pt-tx strong{color:#fff;display:block;margin-bottom:2px}
-  .dscreen-law{display:inline-flex;align-items:center;gap:6px;background:rgba(74,222,128,.08);border:1px solid rgba(74,222,128,.2);color:#4ade80;font-size:12px;font-weight:700;padding:5px 12px;border-radius:6px}
+  /* ── Main area ── */
+  .demo-body{display:grid;grid-template-columns:260px 1fr;overflow:hidden;height:calc(100vh - 56px)}
 
-  .dpreview{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:16px;overflow:hidden;height:100%;min-height:400px;display:flex;flex-direction:column}
-  .dpreview-bar{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(255,255,255,.04);border-bottom:1px solid rgba(255,255,255,.08)}
-  .dpreview-dot{width:10px;height:10px;border-radius:50%}
-  .dpreview-url{flex:1;background:rgba(255,255,255,.06);border-radius:6px;padding:4px 12px;font-size:11px;color:rgba(255,255,255,.4);font-family:monospace}
-  .dpreview-body{flex:1;padding:20px;display:flex;flex-direction:column;gap:12px}
+  /* ── Sidebar: step list ── */
+  .demo-sidebar{background:rgba(255,255,255,.025);border-right:1px solid rgba(255,255,255,.07);padding:20px 0;overflow-y:auto}
+  .demo-sidebar-h{font-size:10px;font-weight:800;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:1.2px;padding:0 20px;margin-bottom:12px}
+  .demo-step-btn{display:flex;align-items:center;gap:12px;width:100%;padding:10px 20px;background:none;border:none;cursor:pointer;text-align:left;transition:background .15s;position:relative}
+  .demo-step-btn:hover{background:rgba(255,255,255,.04)}
+  .demo-step-btn.active{background:rgba(27,61,43,.3)}
+  .demo-step-btn.active::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:#4ade80;border-radius:0 2px 2px 0}
+  .demo-step-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0;background:rgba(255,255,255,.08);color:rgba(255,255,255,.4);transition:all .2s}
+  .active .demo-step-num{background:#1B3D2B;color:#4ade80}
+  .done .demo-step-num{background:rgba(74,222,128,.15);color:#4ade80}
+  .demo-step-info{min-width:0}
+  .demo-step-title{font-size:13px;font-weight:700;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:color .15s}
+  .active .demo-step-title{color:#fff}
+  .demo-step-sub{font-size:11px;color:rgba(255,255,255,.3);margin-top:1px}
+  .demo-step-check{margin-left:auto;color:#4ade80;font-size:14px;flex-shrink:0;opacity:0;transition:opacity .2s}
+  .done .demo-step-check{opacity:1}
 
-  .dmock-nav{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-  .dmock-tab{font-size:11px;font-weight:700;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);cursor:pointer}
-  .dmock-tab.on{background:#1B3D2B;color:#4ade80}
-  .dmock-card{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:14px}
-  .dmock-h{font-size:11px;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
-  .dmock-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px}
-  .dmock-row:last-child{border-bottom:none}
-  .dmock-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:99px}
-  .dmock-h-badge{background:rgba(239,68,68,.15);color:#f87171;border:1px solid rgba(239,68,68,.2)}
-  .dmock-m-badge{background:rgba(245,158,11,.15);color:#fbbf24;border:1px solid rgba(245,158,11,.2)}
-  .dmock-l-badge{background:rgba(74,222,128,.1);color:#4ade80;border:1px solid rgba(74,222,128,.2)}
-  .dmock-score{font-size:28px;font-weight:800;color:#4ade80}
-  .dmock-stat{text-align:center;padding:10px}
-  .dmock-stat-n{font-size:22px;font-weight:800;color:#fff;margin-bottom:2px}
-  .dmock-stat-l{font-size:10px;color:rgba(255,255,255,.4);font-weight:700;text-transform:uppercase}
-  .dmock-bar{height:6px;border-radius:3px;background:rgba(255,255,255,.1);overflow:hidden;margin-top:6px}
-  .dmock-bar-fill{height:100%;border-radius:3px;background:#4ade80;transition:width .5s ease}
+  /* ── Progress bar ── */
+  .demo-progress{height:2px;background:rgba(255,255,255,.08);position:relative;overflow:hidden}
+  .demo-progress-fill{height:100%;background:linear-gradient(90deg,#1B3D2B,#4ade80);transition:width .6s cubic-bezier(.4,0,.2,1)}
 
-  .dnav-footer{display:flex;align-items:center;justify-content:space-between;padding:32px 40px;border-top:1px solid rgba(255,255,255,.08);margin-top:auto}
-  .dstep-btn{display:flex;align-items:center;gap:8px;background:none;border:1px solid rgba(255,255,255,.15);color:rgba(255,255,255,.7);font-size:13.5px;font-weight:700;padding:10px 18px;border-radius:8px;cursor:pointer;transition:all .2s}
-  .dstep-btn:hover{background:rgba(255,255,255,.06);color:#fff}
-  .dstep-btn:disabled{opacity:.25;cursor:not-allowed}
-  .dstep-btn.primary{background:#1B3D2B;border-color:#1B3D2B;color:#fff}
-  .dstep-btn.primary:hover{background:#2d5c3f}
-  .dprog{display:flex;gap:6px;align-items:center}
-  .dprog-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);transition:all .3s;cursor:pointer}
-  .dprog-dot.on{background:#4ade80;width:20px;border-radius:4px}
+  /* ── Screen viewer ── */
+  .demo-content{display:flex;flex-direction:column;overflow:hidden}
+  .demo-screen-wrap{flex:1;overflow:hidden;position:relative;background:#0f1a0d}
+  .demo-screen{position:absolute;inset:0;transition:opacity .4s,transform .4s;opacity:0;transform:translateY(12px);pointer-events:none;overflow:hidden}
+  .demo-screen.visible{opacity:1;transform:translateY(0);pointer-events:auto}
 
-  @media(max-width:900px){.dscreen{grid-template-columns:1fr}.dscreen-right{display:none}.dnav{padding:16px 20px}.dhero{padding:60px 20px 40px}.dsteps{padding:0 20px}.dscreen-left{padding:28px 20px}}
+  /* ── Browser chrome ── */
+  .browser{display:flex;flex-direction:column;height:100%}
+  .browser-bar{display:flex;align-items:center;gap:8px;padding:10px 16px;background:#1a2018;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+  .browser-dots{display:flex;gap:5px}
+  .browser-dot{width:10px;height:10px;border-radius:50%}
+  .browser-url{flex:1;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 12px;font-size:11.5px;color:rgba(255,255,255,.4);font-family:monospace;display:flex;align-items:center;gap:6px}
+  .browser-url-lock{color:#4ade80;font-size:11px}
+  .browser-body{flex:1;overflow:hidden;position:relative}
+
+  /* ── Fake app chrome ── */
+  .app-shell{display:grid;grid-template-columns:200px 1fr;height:100%;background:#f4f5f4}
+  .app-nav{background:#1B3D2B;display:flex;flex-direction:column;overflow:hidden}
+  .app-nav-logo{padding:18px 16px 14px;border-bottom:1px solid rgba(255,255,255,.1)}
+  .app-nav-logo-t{font-size:15px;font-weight:800;color:#fff}
+  .app-nav-logo-t em{font-style:normal;color:rgba(255,255,255,.4)}
+  .app-nav-links{padding:12px 8px;display:flex;flex-direction:column;gap:2px;flex:1}
+  .app-nav-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;font-size:12.5px;font-weight:600;color:rgba(255,255,255,.55);cursor:pointer;transition:all .15s}
+  .app-nav-item.on{background:rgba(255,255,255,.12);color:#fff}
+  .app-nav-item-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.6}
+  .app-main{overflow:hidden;display:flex;flex-direction:column}
+  .app-header{padding:16px 24px;border-bottom:1.5px solid #e8eae8;background:#fff;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+  .app-header-h{font-size:17px;font-weight:800;color:#0b0f0c;letter-spacing:-.3px}
+  .app-content{flex:1;overflow-y:auto;padding:20px 24px;display:flex;flex-direction:column;gap:14px}
+
+  /* ── Cards ── */
+  .card{background:#fff;border:1.5px solid #e8eae8;border-radius:16px;padding:18px}
+  .card-h{font-size:13px;font-weight:800;color:#0b0f0c;letter-spacing:-.2px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+  .card-tag{font-size:10.5px;font-weight:700;color:#1B3D2B;background:#f0f5f1;border:1px solid #d1e7d9;padding:2px 8px;border-radius:5px}
+  .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .stat{background:#fff;border:1.5px solid #e8eae8;border-radius:12px;padding:14px}
+  .stat-n{font-size:26px;font-weight:800;color:#0b0f0c;letter-spacing:-.5px;margin-bottom:2px}
+  .stat-l{font-size:11px;color:#9CA3AF;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
+  .stat-green .stat-n{color:#16A34A}
+  .stat-red .stat-n{color:#DC2626}
+  .stat-amber .stat-n{color:#D97706}
+  .badge{display:inline-flex;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:700}
+  .badge-h{background:#FEF2F2;color:#DC2626;border:1px solid #FECACA}
+  .badge-m{background:#FFFBEB;color:#D97706;border:1px solid #FDE68A}
+  .badge-l{background:#F0FDF4;color:#16A34A;border:1px solid #BBF7D0}
+  .badge-i{background:#EFF6FF;color:#2563EB;border:1px solid #BFDBFE}
+  .row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1.5px solid #F3F4F6}
+  .row:last-child{border-bottom:none}
+  .row-main{flex:1;min-width:0}
+  .row-name{font-size:13px;font-weight:700;color:#0b0f0c;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .row-sub{font-size:11.5px;color:#9CA3AF;margin-top:1px}
+  .score-ring{width:80px;height:80px;position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .score-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+  .score-ring-n{font-size:20px;font-weight:800;color:#16A34A;line-height:1}
+  .score-ring-l{font-size:9px;color:#9CA3AF;font-weight:700;margin-top:2px}
+  .bar{height:6px;background:#F3F4F6;border-radius:3px;overflow:hidden}
+  .bar-fill{height:100%;border-radius:3px;transition:width .8s ease}
+  .green-fill{background:#22c55e}
+  .amber-fill{background:#f59e0b}
+  .red-fill{background:#ef4444}
+  .checklist{display:flex;flex-direction:column;gap:8px}
+  .check-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:8px;background:#F9FAFB;font-size:12.5px;font-weight:600;color:#374151}
+  .check-item.ok{background:#F0FDF4;color:#16A34A}
+  .check-item.warn{background:#FFFBEB;color:#D97706}
+  .check-item.err{background:#FEF2F2;color:#DC2626}
+  .check-dot{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+  .ok .check-dot{background:#16A34A;color:#fff}
+  .warn .check-dot{background:#D97706;color:#fff}
+  .err .check-dot{background:#DC2626;color:#fff}
+  .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s}
+  .btn-g{background:#1B3D2B;color:#fff}
+  .btn-s{background:#F3F4F6;color:#374151}
+
+  /* ── Form styles ── */
+  .form-card{background:#fff;border:1.5px solid #e8eae8;border-radius:16px;padding:28px;max-width:400px;margin:20px auto}
+  .form-h{font-size:22px;font-weight:800;color:#0b0f0c;margin-bottom:6px;letter-spacing:-.3px}
+  .form-s{font-size:13.5px;color:#6b7280;margin-bottom:22px;line-height:1.5}
+  .form-field{margin-bottom:14px}
+  .form-label{font-size:11px;font-weight:800;color:#6b7280;text-transform:uppercase;letter-spacing:.7px;display:block;margin-bottom:6px}
+  .form-input{width:100%;padding:11px 14px;border:1.5px solid #e8eae8;border-radius:10px;font-size:14px;color:#0b0f0c;background:#f9fafb}
+  .form-submit{width:100%;padding:13px;background:#1B3D2B;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;margin-top:4px;display:flex;align-items:center;justify-content:center;gap:8px}
+  .otp-row{display:flex;gap:8px;justify-content:center;margin:4px 0 18px}
+  .otp-box{width:48px;height:58px;border:1.5px solid #e8eae8;border-radius:10px;font-size:26px;font-weight:800;text-align:center;font-family:monospace;background:#f9fafb}
+  .otp-box.filled{border-color:#1B3D2B;background:#f0f5f1;color:#1B3D2B}
+
+  /* ── Bottom controls ── */
+  .demo-controls{display:flex;align-items:center;justify-content:space-between;padding:14px 24px;background:#0f1a0d;border-top:1px solid rgba(255,255,255,.07);flex-shrink:0}
+  .demo-ctrl-btn{display:flex;align-items:center;gap:6px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.7);font-size:13px;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;transition:all .2s}
+  .demo-ctrl-btn:hover{background:rgba(255,255,255,.1);color:#fff}
+  .demo-ctrl-btn:disabled{opacity:.25;cursor:not-allowed}
+  .demo-ctrl-btn.primary{background:#1B3D2B;border-color:#1B3D2B;color:#fff}
+  .demo-ctrl-btn.primary:hover{background:#2d5c3f}
+  .demo-ctrl-center{display:flex;flex-direction:column;align-items:center;gap:8px}
+  .demo-dots{display:flex;gap:5px}
+  .demo-dot{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.15);cursor:pointer;transition:all .3s}
+  .demo-dot.on{background:#4ade80;width:18px;border-radius:4px}
+  .demo-play-btn{display:flex;align-items:center;gap:5px;background:rgba(74,222,128,.12);border:1px solid rgba(74,222,128,.25);color:#4ade80;font-size:11.5px;font-weight:700;padding:5px 12px;border-radius:99px;cursor:pointer;transition:all .2s}
+  .demo-play-btn:hover{background:rgba(74,222,128,.2)}
+  .timer-bar{width:200px;height:2px;background:rgba(255,255,255,.08);border-radius:1px;overflow:hidden}
+  .timer-fill{height:100%;background:#4ade80;transition:width linear}
+
+  @media(max-width:900px){.demo-body{grid-template-columns:1fr}.demo-sidebar{display:none}}
 `;
 
+// ─── Screen components ────────────────────────────────────────────────────────
+
+function RegisterScreen() {
+  return (
+    <div className="browser" style={{ background: "#f4f5f4" }}>
+      <div className="browser-bar">
+        <div className="browser-dots">
+          <div className="browser-dot" style={{ background: "#ef4444" }} />
+          <div className="browser-dot" style={{ background: "#f59e0b" }} />
+          <div className="browser-dot" style={{ background: "#22c55e" }} />
+        </div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/register</div>
+      </div>
+      <div className="browser-body" style={{ overflow: "auto", background: "#f4f5f4" }}>
+        <div className="form-card">
+          <div className="form-h">Account erstellen</div>
+          <div className="form-s">Compliance-Workspace in 60 Sekunden einrichten.</div>
+          <div className="form-field">
+            <label className="form-label">Unternehmensname</label>
+            <div className="form-input" style={{ color: "#0b0f0c" }}>Muster Automotive GmbH</div>
+          </div>
+          <div className="form-field">
+            <label className="form-label">Geschäftliche E-Mail</label>
+            <div className="form-input" style={{ color: "#0b0f0c" }}>max@muster-auto.de</div>
+          </div>
+          <div className="form-field">
+            <label className="form-label">Passwort</label>
+            <div className="form-input" style={{ color: "#9ca3af" }}>••••••••••••</div>
+          </div>
+          <div className="form-submit">Konto erstellen →</div>
+          <div style={{ textAlign: "center", fontSize: 12, color: "#9ca3af", marginTop: 12 }}>✓ 14 Tage kostenlos · Keine Kreditkarte erforderlich</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function OtpScreen() {
+  return (
+    <div className="browser" style={{ background: "#f4f5f4" }}>
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/register</div>
+      </div>
+      <div className="browser-body" style={{ overflow: "auto", background: "#f4f5f4" }}>
+        <div className="form-card">
+          <div className="form-h">E-Mail bestätigen</div>
+          <div className="form-s">Wir haben einen Code an <strong>max@muster-auto.de</strong> gesendet.</div>
+          <div style={{ background: "#f0f5f1", border: "1px solid #d1e7d9", borderRadius: 10, padding: "12px 16px", fontSize: 13, color: "#1B3D2B", marginBottom: 18 }}>
+            <strong>Code gesendet ✓</strong><br /><span style={{ fontSize: 12, opacity: .8 }}>Bitte prüfen Sie Ihr E-Mail-Postfach.</span>
+          </div>
+          <div className="otp-row">
+            {["4","7","3","1","9","2"].map((d, i) => (
+              <div key={i} className={`otp-box${i < 4 ? " filled" : ""}`}>{i < 4 ? d : ""}</div>
+            ))}
+          </div>
+          <div className="form-submit" style={{ opacity: .5 }}>Code bestätigen</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DashboardScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/dashboard</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="dashboard" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">Dashboard</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div className="btn btn-s" style={{ fontSize: 12, padding: "6px 12px" }}>↻ Aktualisieren</div>
+                <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>+ Lieferant</div>
+              </div>
+            </div>
+            <div className="app-content">
+              <div className="stats-row">
+                <div className="stat stat-green"><div className="stat-n">72</div><div className="stat-l">Compliance Score</div></div>
+                <div className="stat"><div className="stat-n">5</div><div className="stat-l">Lieferanten</div></div>
+                <div className="stat stat-red"><div className="stat-n">2</div><div className="stat-l">Offene CAPs</div></div>
+                <div className="stat stat-amber"><div className="stat-n">1</div><div className="stat-l">Beschwerden</div></div>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14 }}>
+                <div className="card">
+                  <div className="card-h">Risiko-Portfolio <span className="card-tag">§5 LkSG</span></div>
+                  {[["Hoch", "1 Lieferant", "h", 20], ["Mittel", "2 Lieferanten", "m", 40], ["Niedrig", "2 Lieferanten", "l", 40]].map(([l, s, t, p]) => (
+                    <div key={String(l)} className="row">
+                      <div className="row-main"><div className="row-name">{String(l)}</div><div className="row-sub">{String(s)}</div></div>
+                      <span className={`badge badge-${t}`}>{String(p)}%</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="card">
+                  <div className="card-h">BAFA-Readiness</div>
+                  <div className="checklist">
+                    {[["ok","§4 Menschenrechtsbeauftragter ✓"], ["ok","§5 Risikoanalyse abgeschlossen ✓"], ["warn","§6 CAPs: 2 ausstehend"], ["err","§8 Beschwerdebeauftragter fehlt"]].map(([t, label]) => (
+                      <div key={String(label)} className={`check-item ${t}`}>
+                        <div className="check-dot">{t === "ok" ? "✓" : t === "warn" ? "!" : "✕"}</div>
+                        {String(label)}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SuppliersScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/suppliers</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="suppliers" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">Lieferanten <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>5 gesamt</span></div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div className="btn btn-s" style={{ fontSize: 12, padding: "6px 12px" }}>Excel importieren</div>
+                <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>+ Lieferant</div>
+              </div>
+            </div>
+            <div className="app-content">
+              <div className="card">
+                <div className="card-h">Alle Lieferanten <span className="card-tag">§5 Risikoanalyse</span></div>
+                {[
+                  { name: "Shenzhen Parts Co.", country: "🇨🇳 China", industry: "Elektronik", score: 78, risk: "h" },
+                  { name: "Ankara Tekstil A.Ş.", country: "🇹🇷 Türkei", industry: "Textil", score: 52, risk: "m" },
+                  { name: "Hanoi Electro Ltd.", country: "🇻🇳 Vietnam", industry: "Elektronik", score: 61, risk: "m" },
+                  { name: "Schmidt Logistik", country: "🇩🇪 Deutschland", industry: "Logistik", score: 18, risk: "l" },
+                  { name: "Warsaw Auto Parts", country: "🇵🇱 Polen", industry: "Automotive", score: 24, risk: "l" },
+                ].map((s) => (
+                  <div key={s.name} className="row">
+                    <div className="row-main">
+                      <div className="row-name">{s.name}</div>
+                      <div className="row-sub">{s.country} · {s.industry}</div>
+                    </div>
+                    <div className="bar" style={{ width: 80, marginRight: 10 }}>
+                      <div className={`bar-fill ${s.risk === "h" ? "red-fill" : s.risk === "m" ? "amber-fill" : "green-fill"}`} style={{ width: `${s.score}%` }} />
+                    </div>
+                    <span className={`badge badge-${s.risk}`}>{s.risk === "h" ? "Hoch" : s.risk === "m" ? "Mittel" : "Niedrig"}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ComplaintsScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/complaints</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="complaints" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">Beschwerden <span style={{ fontSize: 13, color: "#9CA3AF", fontWeight: 600 }}>3 gesamt</span></div>
+              <div className="btn btn-s" style={{ fontSize: 12, padding: "6px 12px" }}>Portal-Link kopieren</div>
+            </div>
+            <div className="app-content">
+              <div className="card" style={{ borderColor: "#FECACA", background: "#FFF5F5" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 800, color: "#DC2626", marginBottom: 4 }}>⚠ NEUE BESCHWERDE — Kritisch</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0f0c" }}>Kinderarbeit bei Tier-2 Lieferant</div>
+                    <div style={{ fontSize: 12, color: "#6b7280", marginTop: 2 }}>Shenzhen Parts Co. · §2 Abs.2 Nr.1 LkSG · REF: BSWD-3A1B-X7</div>
+                  </div>
+                  <span className="badge badge-h">Kritisch</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#374151", lineHeight: 1.6, padding: "10px 14px", background: "#fff", borderRadius: 8, border: "1px solid #FECACA" }}>
+                  "Bei einer Vor-Ort-Begehung wurden Minderjährige unter 15 Jahren in der Produktion angetroffen..."
+                </div>
+                <div style={{ display: "flex", gap: 8, marginTop: 12 }}>
+                  <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>CAP erstellen</div>
+                  <div className="btn btn-s" style={{ fontSize: 12, padding: "6px 12px" }}>Status ändern</div>
+                </div>
+              </div>
+              {[
+                { ref: "BSWD-2C4D", cat: "Umweltverstoss", status: "In Prüfung", sev: "m" },
+                { ref: "BSWD-5E6F", cat: "Diskriminierung", status: "Gelöst ✓", sev: "l" },
+              ].map(c => (
+                <div key={c.ref} className="card" style={{ padding: "14px 18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <div>
+                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#9CA3AF", marginBottom: 3 }}>{c.ref}</div>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0f0c" }}>{c.cat}</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span className={`badge badge-${c.sev}`}>{c.status}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ActionsScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/actions</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="actions" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">Maßnahmenplan <span style={{ fontSize: 13, color: "#DC2626", fontWeight: 700 }}>2 überfällig</span></div>
+              <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>+ CAP erstellen</div>
+            </div>
+            <div className="app-content">
+              <div className="card" style={{ borderColor: "#FECACA", background: "#FFF9F9" }}>
+                <div style={{ fontSize: 11, color: "#DC2626", fontWeight: 800, marginBottom: 6 }}>⏰ ÜBERFÄLLIG — seit 3 Tagen</div>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 800, color: "#0b0f0c", marginBottom: 4 }}>Code of Conduct unterzeichnen lassen</div>
+                    <div style={{ fontSize: 12, color: "#6b7280" }}>Shenzhen Parts Co. · §6 Abs.2 LkSG · Zugewiesen: M. Weber</div>
+                    <div className="bar" style={{ width: 140, marginTop: 8 }}>
+                      <div className="bar-fill amber-fill" style={{ width: "35%" }} />
+                    </div>
+                    <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 3 }}>35% abgeschlossen</div>
+                  </div>
+                  <span className="badge badge-h">Kritisch</span>
+                </div>
+              </div>
+              {[
+                { title: "Audit-Bericht anfordern", sup: "Ankara Tekstil A.Ş.", para: "§6 Abs.4", due: "15.04.2025", prog: 60, pri: "m" },
+                { title: "SAQ an Lieferanten senden", sup: "Hanoi Electro Ltd.", para: "§6 Abs.3", due: "30.04.2025", prog: 0, pri: "l" },
+              ].map(a => (
+                <div key={a.title} className="card" style={{ padding: "14px 18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#0b0f0c", marginBottom: 3 }}>{a.title}</div>
+                      <div style={{ fontSize: 11.5, color: "#6b7280" }}>{a.sup} · {a.para} · Fällig: {a.due}</div>
+                      <div className="bar" style={{ width: 120, marginTop: 8 }}>
+                        <div className={`bar-fill ${a.prog > 50 ? "green-fill" : "amber-fill"}`} style={{ width: `${a.prog}%` }} />
+                      </div>
+                    </div>
+                    <span className={`badge badge-${a.pri}`} style={{ marginLeft: 12 }}>{a.pri === "m" ? "Hoch" : "Mittel"}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/kpi</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="kpi" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">KPIs & Wirksamkeit <span style={{ fontSize: 12, color: "#9CA3AF", fontWeight: 600 }}>§9 LkSG</span></div>
+              <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>Snapshot speichern</div>
+            </div>
+            <div className="app-content">
+              <div style={{ display: "grid", gridTemplateColumns: "200px 1fr", gap: 14 }}>
+                <div className="card" style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ position: "relative", width: 100, height: 100, marginBottom: 8 }}>
+                    <svg viewBox="0 0 100 100" style={{ position: "absolute", inset: 0, transform: "rotate(-90deg)" }}>
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#F3F4F6" strokeWidth="8" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="8" strokeDasharray={`${72 * 2.51} ${100 * 2.51}`} strokeLinecap="round" />
+                    </svg>
+                    <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+                      <div style={{ fontSize: 24, fontWeight: 800, color: "#16A34A", lineHeight: 1 }}>72</div>
+                      <div style={{ fontSize: 10, color: "#9CA3AF", fontWeight: 700 }}>Grade B</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 12, color: "#6b7280", textAlign: "center", lineHeight: 1.4 }}>Compliance-Score<br/><span style={{ color: "#D97706", fontWeight: 700 }}>↑ +5 vs Vormonat</span></div>
+                </div>
+                <div className="card">
+                  <div className="card-h">Wirksamkeits-Indikatoren</div>
+                  {[
+                    { label: "Audit-Abdeckung", val: 60, color: "amber-fill" },
+                    { label: "CoC-Abdeckung", val: 80, color: "green-fill" },
+                    { label: "CAP-Abschlussrate", val: 50, color: "amber-fill" },
+                    { label: "SAQ-Rücklaufquote", val: 33, color: "red-fill" },
+                  ].map(k => (
+                    <div key={k.label} className="row">
+                      <div className="row-main"><div className="row-name" style={{ fontSize: 12.5 }}>{k.label}</div></div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div className="bar" style={{ width: 80 }}><div className={`bar-fill ${k.color}`} style={{ width: `${k.val}%` }} /></div>
+                        <div style={{ fontSize: 12, fontWeight: 700, color: "#374151", width: 32, textAlign: "right" }}>{k.val}%</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ReportsScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/reports</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="reports" />
+          <div className="app-main">
+            <div className="app-header">
+              <div className="app-header-h">BAFA-Bericht 2024</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <div className="btn btn-s" style={{ fontSize: 12, padding: "6px 12px" }}>KI-Entwurf</div>
+                <div className="btn btn-g" style={{ fontSize: 12, padding: "6px 12px" }}>PDF exportieren</div>
+              </div>
+            </div>
+            <div className="app-content">
+              <div className="card" style={{ borderColor: "#BBF7D0", background: "#F0FDF4" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: "#0b0f0c" }}>Bericht genehmigt ✓</div>
+                  <span className="badge badge-l">Eingereicht 12.03.2025</span>
+                </div>
+                <div style={{ fontSize: 12, color: "#374151" }}>BAFA Berichtsjahr 2024 · Muster Automotive GmbH · §9 LkSG</div>
+              </div>
+              <div className="card">
+                <div className="card-h">Berichtsinhalt</div>
+                {["§5 Risikoanalyse", "§6 Präventionsmaßnahmen", "§7 Abhilfemaßnahmen", "§8 Beschwerdemechanismus", "§9 Wirksamkeitskontrolle", "§10 Dokumentation"].map((s, i) => (
+                  <div key={s} className="row">
+                    <div className="row-main"><div className="row-name" style={{ fontSize: 12.5 }}>{s}</div></div>
+                    <span className={`badge ${i < 4 ? "badge-l" : i === 4 ? "badge-m" : "badge-i"}`}>{i < 4 ? "✓ Vollständig" : i === 4 ? "In Bearbeitung" : "Offen"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="card">
+                <div className="card-h">KI-Entwurf <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>Claude AI</span></div>
+                <div style={{ fontSize: 12.5, color: "#374151", lineHeight: 1.7, padding: "12px 14px", background: "#F9FAFB", borderRadius: 8, border: "1px solid #E5E7EB" }}>
+                  "Die Muster Automotive GmbH hat gemäß §5 LkSG eine anlassbezogene Risikoanalyse für 5 direkte Lieferanten durchgeführt. Ein Lieferant (Shenzhen Parts Co., China) wurde als hochriskant eingestuft und ein Corrective Action Plan initiiert..."
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TeamScreen() {
+  return (
+    <div className="browser">
+      <div className="browser-bar">
+        <div className="browser-dots"><div className="browser-dot" style={{ background: "#ef4444" }} /><div className="browser-dot" style={{ background: "#f59e0b" }} /><div className="browser-dot" style={{ background: "#22c55e" }} /></div>
+        <div className="browser-url"><span className="browser-url-lock">🔒</span>lksgcompass.de/app/settings</div>
+      </div>
+      <div className="browser-body">
+        <div className="app-shell">
+          <AppNav active="settings" />
+          <div className="app-main">
+            <div className="app-header"><div className="app-header-h">Einstellungen</div></div>
+            <div className="app-content">
+              <div style={{ display: "flex", gap: 8, marginBottom: 4 }}>
+                {["Unternehmen","Team","Billing","Legal"].map((t, i) => (
+                  <div key={t} style={{ padding: "7px 14px", borderRadius: 8, fontSize: 13, fontWeight: 700, background: i === 1 ? "#1B3D2B" : "transparent", color: i === 1 ? "#fff" : "#6b7280", cursor: "pointer" }}>{t}</div>
+                ))}
+              </div>
+              <div className="card">
+                <div className="card-h">Mitglied einladen</div>
+                <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <div className="form-input" style={{ flex: 1, padding: "9px 12px", fontSize: 13, color: "#9ca3af" }}>kollegin@muster-auto.de</div>
+                  <select style={{ padding: "9px 10px", borderRadius: 8, border: "1.5px solid #e8eae8", fontSize: 13, color: "#374151", background: "#fff" }}><option>Member</option></select>
+                  <div className="btn btn-g" style={{ fontSize: 12, padding: "9px 14px", whiteSpace: "nowrap" }}>Einladen</div>
+                </div>
+              </div>
+              <div className="card">
+                <div className="card-h">Team <span style={{ fontSize: 11, color: "#9CA3AF", fontWeight: 600 }}>3 Mitglieder</span></div>
+                {[
+                  { email: "max@muster-auto.de", role: "Admin", status: "l", active: true },
+                  { email: "anna@muster-auto.de", role: "Member", status: "l", active: true },
+                  { email: "jo@extern.de", role: "Viewer", status: "m", active: false },
+                ].map(m => (
+                  <div key={m.email} className="row">
+                    <div className="row-main">
+                      <div className="row-name" style={{ fontSize: 13 }}>{m.email}</div>
+                      <div className="row-sub">{m.role}</div>
+                    </div>
+                    <span className={`badge badge-${m.status}`}>{m.active ? "Aktiv" : "Eingeladen"}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="card" style={{ background: "linear-gradient(135deg,#1B3D2B,#2d6348)", color: "#fff" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div><div style={{ fontSize: 14, fontWeight: 800 }}>Pro Plan</div><div style={{ fontSize: 12, color: "rgba(255,255,255,.6)", marginTop: 2 }}>€149/mo · bis zu 5 Nutzer · 14 Tage Trial</div></div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <div style={{ background: "rgba(74,222,128,.2)", border: "1px solid rgba(74,222,128,.4)", color: "#4ade80", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6 }}>Aktiv</div>
+                    <div style={{ background: "rgba(255,255,255,.1)", color: "#fff", fontSize: 11, fontWeight: 700, padding: "3px 10px", borderRadius: 6, cursor: "pointer" }}>Verwalten</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AppNav({ active }: { active: string }) {
+  const items = [
+    { id: "dashboard", label: "Dashboard" },
+    { id: "suppliers", label: "Lieferanten" },
+    { id: "complaints", label: "Beschwerden" },
+    { id: "actions", label: "Maßnahmen" },
+    { id: "kpi", label: "KPIs" },
+    { id: "reports", label: "BAFA-Bericht" },
+    { id: "settings", label: "Einstellungen" },
+  ];
+  return (
+    <div className="app-nav">
+      <div className="app-nav-logo"><div className="app-nav-logo-t">LkSG<em>Compass</em></div></div>
+      <div className="app-nav-links">
+        {items.map(i => (
+          <div key={i.id} className={`app-nav-item${i.id === active ? " on" : ""}`}>
+            <div className="app-nav-item-dot" />
+            {i.label}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Step definitions ────────────────────────────────────────────────────────
 const STEPS = [
-  {
-    tag: "Schritt 1 — Registrierung",
-    law: "§4 LkSG — Interne Verantwortung",
-    title: "Account & Workspace einrichten",
-    sub: "In unter 60 Sekunden einen compliance-fähigen Workspace erstellen. E-Mail-Verifizierung über OTP. Kein Kreditkartenzwang für 14-tägige Testphase.",
-    points: [
-      { ic: "🏢", title: "Unternehmensname", text: "Wird als Mandant-Identifier verwendet. Multi-tenant-fähig." },
-      { ic: "📧", title: "OTP-Verifikation", text: "Sicherer Registrierungsfluss via einmaligem 6-stelligem Code." },
-      { ic: "🔐", title: "JWT + Cookie", text: "7-tägige Sessions, sicher gespeichert in localStorage + httpOnly Cookie." },
-    ],
-    preview: "register",
-  },
-  {
-    tag: "Schritt 2 — Dashboard",
-    law: "§9 LkSG — Wirksamkeitskontrolle",
-    title: "Compliance-Score auf einen Blick",
-    sub: "Das Dashboard zeigt den aktuellen Compliance-Score (0–100), Risiko-Portfolio, offene CAPs und den BAFA-Readiness-Status in einer kompakten Ansicht.",
-    points: [
-      { ic: "📊", title: "Score-Formel", text: "Risikokomponente (55%) + Prozesskomponente (45%). §9-konform." },
-      { ic: "🔴", title: "Overdue-Alerts", text: "Überfällige CAPs und offene Beschwerden direkt sichtbar." },
-      { ic: "✓", title: "BAFA-Readiness", text: "Checkliste zeigt fehlende Pflichtfelder für §4 Abs.3 LkSG." },
-    ],
-    preview: "dashboard",
-  },
-  {
-    tag: "Schritt 3 — Lieferanten",
-    law: "§5 LkSG — Risikoanalyse",
-    title: "Lieferanten-Register & Risikobewertung",
-    sub: "Lieferanten einzeln anlegen, per CSV importieren oder per XLSX-Upload hochladen. Automatische Risikobewertung nach Land, Branche und Supplier-Profil.",
-    points: [
-      { ic: "🌍", title: "190+ Länder", text: "CPI-Index, Human Rights Score, Branchengewichtung — alles automatisch." },
-      { ic: "📤", title: "Excel-Import", text: "XLSX-Upload mit automatischer Spaltenerkennung (inkl. türkische Header)." },
-      { ic: "⚡", title: "Sofortige Neubewertung", text: "Audit/CoC/Zertifikate ergeben sofort aktualisierten Risiko-Score." },
-    ],
-    preview: "suppliers",
-  },
-  {
-    tag: "Schritt 4 — Beschwerden",
-    law: "§8 LkSG — Beschwerdeverfahren",
-    title: "Beschwerdemanagement & Whistleblowing",
-    sub: "Öffentliches Whistleblowing-Portal unter /complaints/[company-slug]. Anonym oder identifiziert. Statusverfolgung mit §8 Abs.5 Rückmeldepflicht.",
-    points: [
-      { ic: "🛡️", title: "Anonym & sicher", text: "IP-Hash statt IP-Adresse. HinSchG §16 Schutz integriert." },
-      { ic: "🔄", title: "Status-Workflow", text: "open → in_review → investigating → resolved/closed." },
-      { ic: "📮", title: "Hinweisgeber-Benachrichtigung", text: "Automatische E-Mail bei Abschluss gemäß §8 Abs.5." },
-    ],
-    preview: "complaints",
-  },
-  {
-    tag: "Schritt 5 — Maßnahmen",
-    law: "§6 LkSG — Präventions- & Abhilfemaßnahmen",
-    title: "CAP-Tracking & Maßnahmenplan",
-    sub: "Corrective Action Plans (CAPs) mit Fälligkeitsdatum, Priorität, Zuweisung und Fortschrittsanzeige. Evidence kann direkt angehängt werden.",
-    points: [
-      { ic: "📋", title: "Prioritäten", text: "Critical / High / Medium / Low mit visueller Priorisierung." },
-      { ic: "📎", title: "Evidence-Verknüpfung", text: "Dokumente direkt am CAP anhängen (§10 Abs.1: 7 Jahre Pflicht)." },
-      { ic: "⏰", title: "Fälligkeits-Alerts", text: "Überfällige CAPs erscheinen rot in Dashboard + Navigation." },
-    ],
-    preview: "actions",
-  },
-  {
-    tag: "Schritt 6 — BAFA-Bericht",
-    law: "§9 LkSG — Berichterstattungspflicht",
-    title: "BAFA-Report generieren & einreichen",
-    sub: "Automatisch generierter PDF-Bericht auf Knopfdruck. KI-gestützter Entwurf via Claude-API. Genehmigungsworkflow für Enterprise-Teams.",
-    points: [
-      { ic: "🤖", title: "KI-Entwurf", text: "Claude generiert einen BAFA-konformen Berichtsentwurf aus Ihren Daten." },
-      { ic: "✍️", title: "Genehmigungsworkflow", text: "Draft → Under Review → Approved. Audit Trail dokumentiert jeden Schritt." },
-      { ic: "📄", title: "PDF-Export", text: "Barrierefreier PDF mit BAFA-Gliederung, Zeitstempel und Signatur." },
-    ],
-    preview: "reports",
-  },
-  {
-    tag: "Schritt 7 — Team & Billing",
-    law: "§4 Abs.3 — Interner Beauftragter",
-    title: "Team einladen & Plan upgraden",
-    sub: "Mehrere Nutzer in einem Workspace. Admin lädt per E-Mail ein. Rollen: Admin, Member, Viewer. Stripe-Integration für Free/Pro/Enterprise.",
-    points: [
-      { ic: "👥", title: "Team-Invite", text: "Einladungslink mit 7-tägiger Gültigkeit, JWT-signiert." },
-      { ic: "💳", title: "Stripe-Billing", text: "Pro €149/mo · Enterprise €499/mo · 14 Tage Trial." },
-      { ic: "🎛️", title: "Rollen-System", text: "Viewer: Nur lesen. Member: Bearbeiten. Admin: Volle Kontrolle." },
-    ],
-    preview: "team",
-  },
+  { id: "register", title: "Registrierung", sub: "Account erstellen", law: "§4 LkSG", screen: RegisterScreen },
+  { id: "otp", title: "E-Mail Verifikation", sub: "OTP bestätigen", law: "Sicherheit", screen: OtpScreen },
+  { id: "dashboard", title: "Dashboard", sub: "Compliance-Übersicht", law: "§9 LkSG", screen: DashboardScreen },
+  { id: "suppliers", title: "Lieferanten", sub: "Risikobewertung", law: "§5 LkSG", screen: SuppliersScreen },
+  { id: "complaints", title: "Beschwerden", sub: "Whistleblowing", law: "§8 LkSG", screen: ComplaintsScreen },
+  { id: "actions", title: "Maßnahmenplan", sub: "CAP-Tracking", law: "§6 LkSG", screen: ActionsScreen },
+  { id: "kpi", title: "KPIs", sub: "Wirksamkeitskontrolle", law: "§9 LkSG", screen: KpiScreen },
+  { id: "reports", title: "BAFA-Bericht", sub: "Berichterstattung", law: "§9 LkSG", screen: ReportsScreen },
+  { id: "team", title: "Team & Billing", sub: "Multi-User", law: "Pro Plan", screen: TeamScreen },
 ];
 
-const PREVIEW_CONTENTS: Record<string, React.ReactNode> = {
-  register: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ fontSize: 15, fontWeight: 800, color: "#fff", marginBottom: 4 }}>Account erstellen</div>
-      {["Unternehmensname", "E-Mail-Adresse", "Passwort"].map(label => (
-        <div key={label}>
-          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.4)", textTransform: "uppercase", letterSpacing: ".5px", marginBottom: 4 }}>{label}</div>
-          <div style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.12)", borderRadius: 8, padding: "10px 12px", fontSize: 12, color: "rgba(255,255,255,.3)" }}>
-            {label === "Unternehmensname" ? "Muster GmbH" : label === "E-Mail-Adresse" ? "max@muster-gmbh.de" : "••••••••••"}
-          </div>
-        </div>
-      ))}
-      <div style={{ background: "#1B3D2B", borderRadius: 8, padding: "12px", textAlign: "center", fontSize: 13, fontWeight: 800, color: "#fff", marginTop: 4 }}>Konto erstellen →</div>
-      <div style={{ textAlign: "center", fontSize: 11, color: "rgba(255,255,255,.3)" }}>✓ 14 Tage kostenlos · Keine Kreditkarte</div>
-    </div>
-  ),
-  dashboard: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
-        {[["72", "Score"], ["5", "Lieferanten"], ["2", "Offen CAPs"]].map(([n, l]) => (
-          <div key={l} className="dmock-stat" style={{ background: "rgba(255,255,255,.05)", borderRadius: 8, border: "1px solid rgba(255,255,255,.08)" }}>
-            <div className="dmock-stat-n" style={{ color: l === "Score" ? "#4ade80" : "#fff" }}>{n}</div>
-            <div className="dmock-stat-l">{l}</div>
-          </div>
-        ))}
-      </div>
-      <div className="dmock-card">
-        <div className="dmock-h">Risiko-Portfolio</div>
-        {[["Hoch", "1", "h"], ["Mittel", "2", "m"], ["Niedrig", "2", "l"]].map(([l, n, t]) => (
-          <div key={l} className="dmock-row">
-            <span style={{ color: "rgba(255,255,255,.7)", fontSize: 12 }}>{l}</span>
-            <span className={`dmock-badge dmock-${t}-badge`}>{n}</span>
-          </div>
-        ))}
-      </div>
-      <div className="dmock-card">
-        <div className="dmock-h">BAFA-Readiness</div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: 12 }}>
-          <span style={{ color: "rgba(255,255,255,.6)" }}>Fortschritt</span>
-          <span style={{ color: "#4ade80", fontWeight: 700 }}>68%</span>
-        </div>
-        <div className="dmock-bar"><div className="dmock-bar-fill" style={{ width: "68%" }} /></div>
-      </div>
-    </div>
-  ),
-  suppliers: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>Lieferanten (5)</div>
-        <div style={{ display: "flex", gap: 6 }}>
-          <div style={{ background: "rgba(74,222,128,.15)", border: "1px solid rgba(74,222,128,.3)", color: "#4ade80", fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 5 }}>+ Neu</div>
-          <div style={{ background: "rgba(255,255,255,.08)", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.6)", padding: "3px 8px", borderRadius: 5 }}>Excel</div>
-        </div>
-      </div>
-      {[
-        { name: "Shenzhen Parts Co.", country: "🇨🇳 China", risk: "h" },
-        { name: "Ankara Tekstil A.Ş.", country: "🇹🇷 Türkei", risk: "m" },
-        { name: "Schmidt GmbH", country: "🇩🇪 Deutschland", risk: "l" },
-        { name: "Hanoi Electro", country: "🇻🇳 Vietnam", risk: "m" },
-      ].map(s => (
-        <div key={s.name} className="dmock-card" style={{ padding: "10px 12px" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff", marginBottom: 2 }}>{s.name}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)" }}>{s.country}</div>
-            </div>
-            <span className={`dmock-badge dmock-${s.risk}-badge`}>{s.risk === "h" ? "Hoch" : s.risk === "m" ? "Mittel" : "Niedrig"}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  ),
-  complaints: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="dmock-card" style={{ background: "rgba(239,68,68,.08)", border: "1px solid rgba(239,68,68,.2)" }}>
-        <div style={{ fontSize: 11, fontWeight: 800, color: "#f87171", marginBottom: 6 }}>⚠ Neue Beschwerde</div>
-        <div style={{ fontSize: 12, color: "rgba(255,255,255,.7)", lineHeight: 1.5 }}>Kinderarbeit bei Tier-2 Lieferant beobachtet. Referenz: BSWD-ABC-123.</div>
-        <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-          <span className="dmock-badge dmock-h-badge">Kritisch</span>
-          <span className="dmock-badge" style={{ background: "rgba(255,255,255,.08)", color: "rgba(255,255,255,.5)" }}>§2 Nr.1 LkSG</span>
-        </div>
-      </div>
-      {[
-        { ref: "BSWD-1A2B", cat: "Umweltverstoss", status: "In Prüfung", s: "m" },
-        { ref: "BSWD-3C4D", cat: "Diskriminierung", status: "Gelöst", s: "l" },
-      ].map(c => (
-        <div key={c.ref} className="dmock-card" style={{ padding: "10px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 800, color: "rgba(255,255,255,.4)", fontFamily: "monospace" }}>{c.ref}</div>
-              <div style={{ fontSize: 12, color: "#fff", marginTop: 2 }}>{c.cat}</div>
-            </div>
-            <span className={`dmock-badge dmock-${c.s}-badge`}>{c.status}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  ),
-  actions: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="dmock-card" style={{ background: "rgba(239,68,68,.06)", border: "1px solid rgba(239,68,68,.15)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 11, color: "#f87171", fontWeight: 800, marginBottom: 4 }}>⏰ ÜBERFÄLLIG — 3 Tage</div>
-            <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>Code of Conduct einfordern</div>
-            <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Shenzhen Parts Co. · §6 Abs.2</div>
-          </div>
-          <span className="dmock-badge dmock-h-badge">Kritisch</span>
-        </div>
-      </div>
-      {[
-        { title: "Audit-Bericht anfordern", due: "15.04.2025", pri: "m" },
-        { title: "Lieferanten-SAQ versenden", due: "30.04.2025", pri: "l" },
-      ].map(a => (
-        <div key={a.title} className="dmock-card" style={{ padding: "10px 12px" }}>
-          <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <div>
-              <div style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>{a.title}</div>
-              <div style={{ fontSize: 11, color: "rgba(255,255,255,.4)", marginTop: 2 }}>Fällig: {a.due}</div>
-            </div>
-            <span className={`dmock-badge dmock-${a.pri}-badge`}>{a.pri === "m" ? "Hoch" : "Mittel"}</span>
-          </div>
-        </div>
-      ))}
-    </div>
-  ),
-  reports: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="dmock-card" style={{ background: "rgba(74,222,128,.06)", border: "1px solid rgba(74,222,128,.2)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#fff" }}>BAFA-Bericht 2024</div>
-          <span className="dmock-badge dmock-l-badge">Genehmigt</span>
-        </div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", lineHeight: 1.5 }}>§5 Risikoanalyse · §6 Maßnahmen · §9 Wirksamkeit · §10 Dokumentation</div>
-        <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-          <div style={{ flex: 1, background: "#1B3D2B", borderRadius: 6, padding: "8px", textAlign: "center", fontSize: 11, fontWeight: 800, color: "#4ade80" }}>PDF exportieren</div>
-          <div style={{ background: "rgba(255,255,255,.08)", borderRadius: 6, padding: "8px", textAlign: "center", fontSize: 11, fontWeight: 700, color: "rgba(255,255,255,.6)" }}>Vorschau</div>
-        </div>
-      </div>
-      <div className="dmock-card">
-        <div className="dmock-h">KI-Entwurf</div>
-        <div style={{ fontSize: 11, color: "rgba(255,255,255,.5)", lineHeight: 1.6 }}>
-          "Das Unternehmen hat gemäß §5 LkSG eine anlassbezogene Risikoanalyse für 5 direkte Lieferanten durchgeführt. 1 Lieferant wurde als hochriskant eingestuft..."
-        </div>
-        <div style={{ marginTop: 8, display: "flex", gap: 4 }}>
-          {["Weiter schreiben", "Kürzen", "Formaler"].map(a => (
-            <div key={a} style={{ background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 5, padding: "3px 8px", fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,.5)" }}>{a}</div>
-          ))}
-        </div>
-      </div>
-    </div>
-  ),
-  team: (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      <div className="dmock-card">
-        <div className="dmock-h">Team einladen</div>
-        <div style={{ display: "flex", gap: 6, marginBottom: 8 }}>
-          <div style={{ flex: 1, background: "rgba(255,255,255,.06)", border: "1px solid rgba(255,255,255,.1)", borderRadius: 6, padding: "8px 10px", fontSize: 11, color: "rgba(255,255,255,.3)" }}>kollegin@muster-gmbh.de</div>
-          <div style={{ background: "#1B3D2B", borderRadius: 6, padding: "8px 12px", fontSize: 11, fontWeight: 800, color: "#fff", whiteSpace: "nowrap" }}>Einladen</div>
-        </div>
-      </div>
-      <div className="dmock-card">
-        <div className="dmock-h">Mitglieder</div>
-        {[
-          { email: "max@muster-gmbh.de", role: "Admin", status: "l" },
-          { email: "anna@muster-gmbh.de", role: "Member", status: "l" },
-          { email: "jo@extern.de", role: "Viewer", status: "m" },
-        ].map(m => (
-          <div key={m.email} className="dmock-row">
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>{m.email}</div>
-              <div style={{ fontSize: 10, color: "rgba(255,255,255,.4)" }}>{m.role}</div>
-            </div>
-            <span className={`dmock-badge dmock-${m.status}-badge`}>{m.status === "l" ? "Aktiv" : "Eingeladen"}</span>
-          </div>
-        ))}
-      </div>
-      <div className="dmock-card" style={{ background: "rgba(124,58,237,.08)", border: "1px solid rgba(124,58,237,.2)" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
-            <div style={{ fontSize: 12, fontWeight: 800, color: "#fff" }}>Pro Plan</div>
-            <div style={{ fontSize: 10, color: "rgba(255,255,255,.5)", marginTop: 2 }}>€149/mo · bis zu 5 Nutzer</div>
-          </div>
-          <span className="dmock-badge" style={{ background: "rgba(74,222,128,.15)", color: "#4ade80", border: "1px solid rgba(74,222,128,.2)" }}>Aktiv</span>
-        </div>
-      </div>
-    </div>
-  ),
-};
+const STEP_DURATION = 6000; // ms per step
 
+// ─── Demo page ───────────────────────────────────────────────────────────────
 export default function DemoPage() {
   const [step, setStep] = useState(0);
-  const [autoPlay, setAutoPlay] = useState(false);
+  const [playing, setPlaying] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [visited, setVisited] = useState<Set<number>>(new Set([0]));
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const progressRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function goTo(i: number) {
+    setStep(i);
+    setProgress(0);
+    setVisited(v => new Set([...v, i]));
+  }
+
+  function startProgress() {
+    if (progressRef.current) clearInterval(progressRef.current);
+    setProgress(0);
+    progressRef.current = setInterval(() => {
+      setProgress(p => {
+        if (p >= 100) return 100;
+        return p + (100 / (STEP_DURATION / 100));
+      });
+    }, 100);
+  }
+
+  function startTimer() {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    intervalRef.current = setInterval(() => {
+      setStep(s => {
+        const next = s + 1 >= STEPS.length ? 0 : s + 1;
+        setVisited(v => new Set([...v, next]));
+        setProgress(0);
+        return next;
+      });
+    }, STEP_DURATION);
+    startProgress();
+  }
+
+  function stopAll() {
+    if (intervalRef.current) clearInterval(intervalRef.current);
+    if (progressRef.current) clearInterval(progressRef.current);
+  }
 
   useEffect(() => {
-    if (!autoPlay) return;
-    const t = setInterval(() => {
-      setStep(s => {
-        if (s >= STEPS.length - 1) { setAutoPlay(false); return s; }
-        return s + 1;
-      });
-    }, 5000);
-    return () => clearInterval(t);
-  }, [autoPlay]);
+    if (playing) startTimer();
+    else stopAll();
+    return stopAll;
+  }, [playing]);
 
-  const current = STEPS[step];
+  useEffect(() => {
+    if (playing) startProgress();
+  }, [step, playing]);
+
+  const Screen = STEPS[step].screen;
+  const pct = ((step) / STEPS.length) * 100;
 
   return (
     <>
       <style dangerouslySetInnerHTML={{ __html: css }} />
-      <div className="dw">
-        <nav className="dnav">
-          <a href="/" className="dlogo">LkSG<em>Compass</em></a>
-          <div className="dnav-links">
-            <a href="/pricing">Pricing</a>
-            <a href="/login">Login</a>
-            <a href="/register" className="dbtn">Kostenlos starten</a>
-          </div>
-        </nav>
-
-        <div className="dhero">
-          <div className="dhero-tag">
-            <span>▶</span> Interaktive Produkt-Demo
-          </div>
-          <h1>LkSGCompass in <em>7 Schritten</em></h1>
-          <p>Vollständige LkSG-Compliance vom ersten Lieferanten bis zum BAFA-Bericht. Sehen Sie wie die Plattform in der Praxis funktioniert.</p>
-          <div className="dhero-btns">
-            <button className="dbtn" onClick={() => setAutoPlay(a => !a)} style={{ padding: "13px 28px", fontSize: 15 }}>
-              {autoPlay ? "⏸ Pause" : "▶ Auto-Play"}
-            </button>
-            <a href="/register" className="dbtn-outline" style={{ padding: "13px 28px", fontSize: 15 }}>Jetzt testen →</a>
+      <div className="demo-shell">
+        {/* Top bar */}
+        <div className="demo-topbar">
+          <a href="/" className="demo-logo">LkSG<em>Compass</em></a>
+          <div className="demo-topbar-r">
+            <div className="demo-pill">▶ Produkt-Demo</div>
+            <a href="/register" className="demo-cta">Kostenlos starten →</a>
           </div>
         </div>
 
-        <div className="dsteps">
-          {STEPS.map((s, i) => (
-            <button key={i} className={`dstep${step === i ? " on" : ""}`} onClick={() => { setStep(i); setAutoPlay(false); }}>
-              <span className="dstep-n">{i + 1}</span>
-              {s.tag.split("—")[1]?.trim() || s.tag}
-            </button>
-          ))}
+        {/* Progress bar */}
+        <div className="demo-progress" style={{ height: 2, background: "rgba(255,255,255,.08)" }}>
+          <div className="demo-progress-fill" style={{ width: `${pct + (progress / STEPS.length)}%`, height: "100%", background: "linear-gradient(90deg,#1B3D2B,#4ade80)", transition: "width 0.1s linear" }} />
         </div>
 
-        <div className="dscreen">
-          <div className="dscreen-left">
-            <div className="dscreen-tag">{current.tag}</div>
-            <div className="dscreen-h">{current.title}</div>
-            <div className="dscreen-s">{current.sub}</div>
-            <div className="dscreen-pts">
-              {current.points.map((pt, i) => (
-                <div key={i} className="dscreen-pt">
-                  <div className="dscreen-pt-ic">{pt.ic}</div>
-                  <div className="dscreen-pt-tx"><strong>{pt.title}</strong>{pt.text}</div>
+        <div className="demo-body">
+          {/* Sidebar */}
+          <div className="demo-sidebar">
+            <div className="demo-sidebar-h">Produkt-Tour</div>
+            {STEPS.map((s, i) => (
+              <button
+                key={s.id}
+                className={`demo-step-btn${step === i ? " active" : ""}${visited.has(i) && step !== i ? " done" : ""}`}
+                onClick={() => { goTo(i); setPlaying(false); }}
+              >
+                <div className="demo-step-num">{i + 1}</div>
+                <div className="demo-step-info">
+                  <div className="demo-step-title">{s.title}</div>
+                  <div className="demo-step-sub">{s.law}</div>
                 </div>
-              ))}
-            </div>
-            <div className="dscreen-law">{current.law}</div>
+                <div className="demo-step-check">✓</div>
+              </button>
+            ))}
           </div>
 
-          <div className="dscreen-right">
-            <div className="dpreview">
-              <div className="dpreview-bar">
-                <div className="dpreview-dot" style={{ background: "#ef4444" }} />
-                <div className="dpreview-dot" style={{ background: "#f59e0b" }} />
-                <div className="dpreview-dot" style={{ background: "#22c55e" }} />
-                <div className="dpreview-url">lksgcompass.de/{current.preview === "register" ? "register" : `app/${current.preview}`}</div>
-              </div>
-              <div className="dpreview-body">
-                {PREVIEW_CONTENTS[current.preview]}
-              </div>
+          {/* Screen area */}
+          <div className="demo-content">
+            <div className="demo-screen-wrap">
+              {STEPS.map((s, i) => {
+                const S = s.screen;
+                return (
+                  <div key={s.id} className={`demo-screen${step === i ? " visible" : ""}`}>
+                    <S />
+                  </div>
+                );
+              })}
             </div>
-          </div>
-        </div>
 
-        <div className="dnav-footer">
-          <button className="dstep-btn" onClick={() => { setStep(s => Math.max(0, s - 1)); setAutoPlay(false); }} disabled={step === 0}>
-            ← Zurück
-          </button>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
-            <div className="dprog">
-              {STEPS.map((_, i) => (
-                <div key={i} className={`dprog-dot${step === i ? " on" : ""}`} onClick={() => { setStep(i); setAutoPlay(false); }} />
-              ))}
+            {/* Controls */}
+            <div className="demo-controls">
+              <button
+                className="demo-ctrl-btn"
+                onClick={() => { goTo(Math.max(0, step - 1)); setPlaying(false); }}
+                disabled={step === 0}
+              >
+                ← Zurück
+              </button>
+
+              <div className="demo-ctrl-center">
+                <div className="demo-dots">
+                  {STEPS.map((_, i) => (
+                    <div
+                      key={i}
+                      className={`demo-dot${step === i ? " on" : ""}`}
+                      onClick={() => { goTo(i); setPlaying(false); }}
+                    />
+                  ))}
+                </div>
+                <button className="demo-play-btn" onClick={() => setPlaying(p => !p)}>
+                  {playing ? "⏸ Pause" : "▶ Play"} — {STEPS[step].title}
+                </button>
+                <div className="timer-bar">
+                  <div className="timer-fill" style={{ width: playing ? `${progress}%` : "0%", transition: `width ${playing ? 0.1 : 0}s linear` }} />
+                </div>
+              </div>
+
+              {step < STEPS.length - 1 ? (
+                <button
+                  className="demo-ctrl-btn primary"
+                  onClick={() => { goTo(step + 1); setPlaying(false); }}
+                >
+                  Weiter →
+                </button>
+              ) : (
+                <a href="/register" className="demo-ctrl-btn primary" style={{ textDecoration: "none" }}>
+                  Jetzt starten →
+                </a>
+              )}
             </div>
-            <div style={{ fontSize: 12, color: "rgba(255,255,255,.3)" }}>{step + 1} / {STEPS.length}</div>
           </div>
-          {step < STEPS.length - 1 ? (
-            <button className="dstep-btn primary" onClick={() => { setStep(s => Math.min(STEPS.length - 1, s + 1)); setAutoPlay(false); }}>
-              Weiter →
-            </button>
-          ) : (
-            <a href="/register" className="dstep-btn primary" style={{ textDecoration: "none" }}>
-              Jetzt starten →
-            </a>
-          )}
         </div>
       </div>
     </>

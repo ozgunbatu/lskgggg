@@ -3,11 +3,7 @@ import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
 import { requestLogger } from "./middleware/requestLogger";
-import {
-  authRateLimit,
-  complaintRateLimit,
-  aiRateLimit,
-} from "./middleware/rateLimit";
+import { authRateLimit, complaintRateLimit, aiRateLimit } from "./middleware/rateLimit";
 import { healthcheck } from "./lib/db";
 import billingRouter from "./modules/billing";
 import teamRouter from "./modules/team";
@@ -32,21 +28,17 @@ const port = parseInt(process.env.PORT || "4000", 10);
 
 // In-memory rate limiting for auth endpoints (reset per process restart)
 const loginAttempts = new Map<string, { count: number; resetAt: number }>();
-
 function checkLoginRateLimit(ip: string): boolean {
   const now = Date.now();
   const rec = loginAttempts.get(ip);
-
   if (!rec || rec.resetAt < now) {
     loginAttempts.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 });
     return true;
   }
-
   rec.count++;
   if (rec.count > 20) return false; // 20 attempts per 15min per IP
   return true;
 }
-
 (app as any).checkLoginRateLimit = checkLoginRateLimit;
 
 // ─── CORS: registered FIRST so preflight OPTIONS always works ─────────────────
@@ -55,10 +47,7 @@ const ORIGINS = [
   "https://www.lksgcompass.de",
   "http://localhost:3000",
   "http://localhost:3001",
-  ...(process.env.CORS_ORIGIN || "")
-    .split(",")
-    .map((s) => s.trim())
-    .filter(Boolean),
+  ...(process.env.CORS_ORIGIN || "").split(",").map(s => s.trim()).filter(Boolean),
 ];
 
 const corsOpts: cors.CorsOptions = {
@@ -67,34 +56,26 @@ const corsOpts: cors.CorsOptions = {
     if (ORIGINS.includes(origin)) return cb(null, true);
     if (origin.endsWith(".vercel.app")) return cb(null, true);
     if (origin.includes("railway.app")) return cb(null, true);
-
     console.warn("[cors] blocked:", origin);
-    return cb(null, false);
+    cb(null, false);
   },
   credentials: true,
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With"],
+  methods: ["GET","POST","PUT","PATCH","DELETE","OPTIONS"],
+  allowedHeaders: ["Content-Type","Authorization","X-Requested-With"],
   optionsSuccessStatus: 200,
 };
-
 app.use(cors(corsOpts));
-app.options("*", cors(corsOpts));
+app.options("*", cors(corsOpts)); // handle all preflight
 
 app.use(helmet({ crossOriginResourcePolicy: { policy: "cross-origin" } }));
 app.use(requestLogger);
-
 // Stripe webhook needs raw body — must come BEFORE express.json
-app.post(
-  "/billing/webhook",
-  express.raw({ type: "application/json" }),
-  async (req, _res, next) => {
-    (req as any).rawBody = req.body;
-    next();
-  }
-);
-
+app.post("/billing/webhook", express.raw({ type: "application/json" }), async (req, res, next) => {
+  // Pass raw body to billing router
+  (req as any).rawBody = req.body;
+  next();
+});
 app.use(express.json({ limit: "6mb" }));
-
 app.use("/auth", authRateLimit);
 app.use("/complaints", complaintRateLimit);
 app.use("/ai", aiRateLimit);
@@ -103,24 +84,13 @@ app.use("/ai", aiRateLimit);
 app.get("/health", async (_req, res) => {
   const version = process.env.APP_VERSION || "v80";
   const uptimeSec = Math.round(process.uptime());
-
   let dbStatus: "ok" | "down" = "down";
   try {
     const ok = await healthcheck();
     dbStatus = ok ? "ok" : "down";
-  } catch {
-    dbStatus = "down";
-  }
-
-  res.status(dbStatus === "ok" ? 200 : 503).json({
-    ok: dbStatus === "ok",
-    version,
-    uptimeSec,
-    db: dbStatus,
-    now: new Date().toISOString(),
-  });
+  } catch {}
+  res.status(dbStatus === "ok" ? 200 : 503).json({ ok: dbStatus === "ok", version, uptimeSec, db: dbStatus, now: new Date().toISOString() });
 });
-
 app.get("/ready", async (_req, res) => {
   try {
     const ok = await healthcheck();
@@ -129,76 +99,75 @@ app.get("/ready", async (_req, res) => {
     return res.status(503).json({ ready: false });
   }
 });
+app.get("/ping",   (_req, res) => res.send("pong"));
 
-app.get("/ping", (_req, res) => res.send("pong"));
+// ─── Global error handlers ───────────────────────────────────────────────────
+// 404 catch-all
+app.use((_req: any, res: any) => {
+  res.status(404).json({ error: "Not found" });
+});
 
-// ─── Bind port FIRST, then bootstrap everything else ──────────────────────────
+// Unhandled errors
+app.use((err: any, _req: any, res: any, _next: any) => {
+  console.error("[error]", err?.message || err);
+  res.status(500).json({ error: err?.message || "Internal server error" });
+});
+
+// ─── Bind port FIRST, then bootstrap everything else ─────────────────────────
 app.listen(port, "0.0.0.0", () => {
   console.log(`[v80] LkSGCompass backend listening on 0.0.0.0:${port}`);
-  bootstrap().catch((e) => console.error("[bootstrap] fatal:", e?.message));
+  bootstrap().catch(e => console.error("[bootstrap] fatal:", e?.message));
 });
 
 async function bootstrap() {
+  // Load all route modules
   const [
-    auth,
-    suppliers,
-    complaints,
-    reports,
-    auto_,
-    companies,
-    publicApi,
-    countries,
-    integrations,
-    monitoring,
-    ai,
-    actions,
-    evidence,
-    saq,
-    kpi,
-    auditlog,
-    reminders,
-  ] = (
-    await Promise.all([
-      import("./modules/auth"),
-      import("./modules/suppliers"),
-      import("./modules/complaints"),
-      import("./modules/reports"),
-      import("./modules/auto"),
-      import("./modules/companies"),
-      import("./modules/public"),
-      import("./modules/countries"),
-      import("./modules/integrations"),
-      import("./modules/monitoring"),
-      import("./modules/ai"),
-      import("./modules/actions"),
-      import("./modules/evidence"),
-      import("./modules/saq"),
-      import("./modules/kpi"),
-      import("./modules/auditlog"),
-      import("./modules/reminders"),
-    ])
-  ).map((m) => m.default);
+    auth, suppliers, complaints, reports, auto_,
+    companies, publicApi, countries, integrations,
+    monitoring, ai, actions, evidence, saq,
+    kpi, auditlog, reminders,
+  ] = (await Promise.all([
+    import("./modules/auth"),
+    import("./modules/suppliers"),
+    import("./modules/complaints"),
+    import("./modules/reports"),
+    import("./modules/auto"),
+    import("./modules/companies"),
+    import("./modules/public"),
+    import("./modules/countries"),
+    import("./modules/integrations"),
+    import("./modules/monitoring"),
+    import("./modules/ai"),
+    import("./modules/actions"),
+    import("./modules/evidence"),
+    import("./modules/saq"),
+    import("./modules/kpi"),
+    import("./modules/auditlog"),
+    import("./modules/reminders"),
+  ])).map(m => m.default);
 
-  // Register ALL routes before 404/error handlers
-  app.use("/auth", auth);
-  app.use("/companies", companies);
-  app.use("/public", publicApi);
-  app.use("/countries", countries);
+  app.use("/auth",         auth);
+  app.use("/companies",    companies);
+  app.use("/public",       publicApi);
+  app.use("/countries",    countries);
   app.use("/integrations", integrations);
-  app.use("/monitoring", monitoring);
-  app.use("/auto", auto_);
-  app.use("/suppliers", suppliers);
-  app.use("/complaints", complaints);
-  app.use("/reports", reports);
-  app.use("/ai", ai);
-  app.use("/actions", actions);
-  app.use("/evidence", evidence);
-  app.use("/saq", saq);
-  app.use("/kpi", kpi);
-  app.use("/audit", auditlog);
-  app.use("/reminders", reminders);
-  app.use("/billing", billingRouter);
-  app.use("/team", teamRouter);
+  app.use("/monitoring",   monitoring);
+  app.use("/auto",         auto_);
+  app.use("/suppliers",    suppliers);
+  app.use("/complaints",   complaints);
+  app.use("/reports",      reports);
+  app.use("/ai",           ai);
+  app.use("/actions",      actions);
+  app.use("/evidence",     evidence);
+  app.use("/saq",          saq);
+  app.use("/kpi",          kpi);
+  app.use("/audit",        auditlog);
+  app.use("/reminders",    reminders);
+
+  // Global error handler
+  app.use((err: any, _req: any, res: any, _next: any) => {
+    res.status(500).json({ error: String(err?.message ?? "Server error") });
+  });
 
   console.log("[bootstrap] routes ok");
 
@@ -207,9 +176,7 @@ async function bootstrap() {
 
   // Seed country risk data
   try {
-    const { ensureCountrySeed, refreshCountryCache } = await import(
-      "./risk/countryRepo"
-    );
+    const { ensureCountrySeed, refreshCountryCache } = await import("./risk/countryRepo");
     await ensureCountrySeed();
     await refreshCountryCache();
     console.log("[bootstrap] country seed ok");
@@ -220,35 +187,15 @@ async function bootstrap() {
   // Start cron (email reminders every 6h)
   try {
     const { runRemindersInternal } = await import("./modules/reminders");
-    setInterval(async () => {
-      try {
-        await runRemindersInternal();
-      } catch {
-        // ignore cron tick errors
-      }
-    }, 6 * 60 * 60 * 1000);
+    setInterval(async () => { try { await runRemindersInternal(); } catch {} }, 6 * 60 * 60 * 1000);
     console.log("[bootstrap] cron started");
-  } catch {
-    // ignore cron bootstrap errors
-  }
+  } catch {}
 
   console.log("[bootstrap] complete");
-
-  // 404 catch-all MUST be after all route registrations
-  app.use((_req: any, res: any) => {
-    res.status(404).json({ error: "Not found" });
-  });
-
-  // Global error handler MUST be last
-  app.use((err: any, _req: any, res: any, _next: any) => {
-    console.error("[error]", err?.message || err);
-    res.status(500).json({ error: String(err?.message ?? "Server error") });
-  });
 }
 
 async function migrate() {
   const { db } = await import("./lib/db");
-
   const stmts = [
     // Core tables
     `CREATE TABLE IF NOT EXISTS companies (
@@ -332,8 +279,7 @@ async function migrate() {
     )`,
     `ALTER TABLE pending_registrations ADD COLUMN IF NOT EXISTS otp_attempts INT NOT NULL DEFAULT 0`,
     `CREATE INDEX IF NOT EXISTS idx_pending_email ON pending_registrations(email)`,
-
-    // Suppliers
+    // Suppliers - ALL columns
     `CREATE TABLE IF NOT EXISTS suppliers (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -357,8 +303,7 @@ async function migrate() {
     `ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS hinschg_relevant BOOLEAN DEFAULT false`,
     `ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS tier_level INT NOT NULL DEFAULT 1`,
     `ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS parent_supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL`,
-
-    // Action plans
+    // Action plans - ALL columns including progress_percent
     `CREATE TABLE IF NOT EXISTS action_plans (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -375,8 +320,7 @@ async function migrate() {
     `ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS relationship_status TEXT DEFAULT 'active' CHECK (relationship_status IN ('active','suspended','terminated'))`,
     `ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS relationship_status_reason TEXT`,
     `ALTER TABLE action_plans ADD COLUMN IF NOT EXISTS relationship_status_at TIMESTAMPTZ`,
-
-    // Complaints
+    // Complaints - ALL columns including source
     `CREATE TABLE IF NOT EXISTS complaints (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -396,8 +340,7 @@ async function migrate() {
     `ALTER TABLE complaints ADD COLUMN IF NOT EXISTS feedback_due_at TIMESTAMPTZ`,
     `ALTER TABLE complaints ADD COLUMN IF NOT EXISTS feedback_sent_at TIMESTAMPTZ`,
     `ALTER TABLE complaints ADD COLUMN IF NOT EXISTS hinschg_relevant BOOLEAN DEFAULT false`,
-
-    // Reports
+    // Reports (NOT report_drafts)
     `CREATE TABLE IF NOT EXISTS reports (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -409,8 +352,7 @@ async function migrate() {
       updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
       UNIQUE(company_id, year)
     )`,
-
-    // Evidence
+    // Evidence (NOT evidence_vault)
     `CREATE TABLE IF NOT EXISTS evidence (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -423,7 +365,6 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
     `CREATE INDEX IF NOT EXISTS idx_evidence_company ON evidence(company_id)`,
-
     `CREATE TABLE IF NOT EXISTS monitoring_events (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -432,7 +373,6 @@ async function migrate() {
       title TEXT, url TEXT, raw_data JSONB, acknowledged BOOLEAN DEFAULT false,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
-
     `CREATE TABLE IF NOT EXISTS sanctions_entities (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       source TEXT NOT NULL, name TEXT NOT NULL, program TEXT,
@@ -442,7 +382,6 @@ async function migrate() {
     `ALTER TABLE sanctions_entities ADD COLUMN IF NOT EXISTS listed_at TEXT`,
     `ALTER TABLE sanctions_entities ADD COLUMN IF NOT EXISTS raw JSONB`,
     `CREATE INDEX IF NOT EXISTS idx_sanctions_name ON sanctions_entities(name)`,
-
     `CREATE TABLE IF NOT EXISTS esg_entities (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       source TEXT NOT NULL, name TEXT NOT NULL, score INT DEFAULT 0,
@@ -450,7 +389,6 @@ async function migrate() {
     )`,
     `ALTER TABLE esg_entities ADD COLUMN IF NOT EXISTS raw JSONB`,
     `CREATE INDEX IF NOT EXISTS idx_esg_name ON esg_entities(name)`,
-
     `CREATE TABLE IF NOT EXISTS supplier_screenings (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -460,7 +398,6 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
     `CREATE INDEX IF NOT EXISTS idx_screenings_company ON supplier_screenings(company_id)`,
-
     `CREATE TABLE IF NOT EXISTS auto_runs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -469,20 +406,17 @@ async function migrate() {
       medium_risk_count INT DEFAULT 0, low_risk_count INT DEFAULT 0,
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
-
     `CREATE TABLE IF NOT EXISTS sync_runs (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       job TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'success',
       details JSONB, created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
-
     `CREATE TABLE IF NOT EXISTS country_risks (
       country_code TEXT PRIMARY KEY, country_name TEXT NOT NULL,
       risk_score INT NOT NULL DEFAULT 50, risk_level TEXT NOT NULL DEFAULT 'medium',
       hr_index INT DEFAULT 3, cpi_score INT DEFAULT 3,
       source TEXT DEFAULT 'built-in', updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
-
     `CREATE TABLE IF NOT EXISTS audit_log (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -492,7 +426,6 @@ async function migrate() {
       created_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
     `CREATE INDEX IF NOT EXISTS idx_audit_company ON audit_log(company_id, created_at DESC)`,
-
     `CREATE TABLE IF NOT EXISTS supplier_saq (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -506,7 +439,6 @@ async function migrate() {
     )`,
     `CREATE INDEX IF NOT EXISTS idx_saq_company ON supplier_saq(company_id)`,
     `CREATE INDEX IF NOT EXISTS idx_saq_token ON supplier_saq(token)`,
-
     `CREATE TABLE IF NOT EXISTS kpi_snapshots (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -521,7 +453,6 @@ async function migrate() {
       UNIQUE(company_id, snapshot_at)
     )`,
     `CREATE INDEX IF NOT EXISTS idx_snap_company ON kpi_snapshots(company_id, snapshot_at)`,
-
     `CREATE TABLE IF NOT EXISTS reminder_log (
       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
@@ -529,7 +460,6 @@ async function migrate() {
       sent_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )`,
     `CREATE INDEX IF NOT EXISTS idx_reminder_company ON reminder_log(company_id, type, sent_at)`,
-
     // Safety ALTERs for existing databases
     `ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS certification_count INT DEFAULT 0`,
     `ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS sub_supplier_count INT DEFAULT 0`,
@@ -545,22 +475,17 @@ async function migrate() {
   ];
 
   let ok = 0;
-
   for (const sql of stmts) {
     try {
       await db.query(sql);
       ok++;
     } catch (e: any) {
-      if (
-        !e.message?.includes("already exists") &&
-        !e.message?.includes("duplicate")
-      ) {
+      if (!e.message?.includes("already exists") && !e.message?.includes("duplicate")) {
         console.warn("[migrate]", e.message?.slice(0, 120));
       } else {
         ok++;
       }
     }
   }
-
   console.log(`[migrate] ${ok}/${stmts.length} ok`);
 }
