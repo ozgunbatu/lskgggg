@@ -1,6 +1,6 @@
 "use client";
 
-import type { Supplier, WorkspaceTabProps } from "../../lib/workspace-types";
+import type { Supplier, WorkspaceTabProps } from "@/lib/workspace-types";
 
 export type WorkspaceFeatureSliceArgs = {
   ui: any;

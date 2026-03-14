@@ -1,6 +1,6 @@
 "use client";
 
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function useReportsSlice(base: WorkspaceTabProps): WorkspaceTabProps {
   const evidenceSorted = [...base.evidences].sort((a, b) => {

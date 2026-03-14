@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Map, { Layer, Source } from "react-map-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import { getToken } from "../lib/auth";
+import { getToken } from "@/lib/auth";
 
 const API = process.env.NEXT_PUBLIC_API_URL!;
 

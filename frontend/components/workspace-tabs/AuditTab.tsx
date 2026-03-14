@@ -5,7 +5,7 @@ import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
 import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
 import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
 import WorkspaceApprovalAging from "../workspace/WorkspaceApprovalAging";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function AuditTab(props: WorkspaceTabProps) {
   const {

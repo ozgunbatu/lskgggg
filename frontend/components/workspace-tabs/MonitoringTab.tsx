@@ -4,7 +4,7 @@ import WorkspaceSectionMeta from "../workspace/WorkspaceSectionMeta";
 import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
 import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
 import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function MonitoringTab(props: WorkspaceTabProps) {
   const { L, requestState, reloads, events, screenings, sendAi } = props;

@@ -29,6 +29,8 @@ yarn-debug.log*
 .DS_Store
 Thumbs.db
 
+.vercel/
+
 # Editor
 .vscode/
 .idea/

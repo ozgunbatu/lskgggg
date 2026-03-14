@@ -1,5 +1,5 @@
 import React from "react";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function AiTab(props: WorkspaceTabProps) {
   const { L, aiMsgs, aiInput, setAiInput, aiLd, sendAi, kpis, score } = props;

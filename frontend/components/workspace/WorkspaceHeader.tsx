@@ -1,4 +1,4 @@
-import type { Lang, TabId } from "../../lib/workspace-types";
+import type { Lang, TabId } from "@/lib/workspace-types";
 
 type Props = {
   L: Lang;

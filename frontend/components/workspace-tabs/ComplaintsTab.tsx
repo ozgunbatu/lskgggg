@@ -5,10 +5,10 @@ import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
 import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
 import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
 import WorkspaceModuleReadOnly from "../workspace/WorkspaceModuleReadOnly";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
-import { COMPLAINT_CATS } from "../../lib/workspace-constants";
-import { canWrite, canManageCases } from "../../lib/workspace-access";
-import { getSessionRole } from "../../lib/auth";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
+import { COMPLAINT_CATS } from "@/lib/workspace-constants";
+import { canWrite, canManageCases } from "@/lib/workspace-access";
+import { getSessionRole } from "@/lib/auth";
 
 export default function ComplaintsTab(props: WorkspaceTabProps) {
   const {

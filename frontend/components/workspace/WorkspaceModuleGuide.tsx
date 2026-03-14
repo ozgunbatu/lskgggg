@@ -1,5 +1,5 @@
 import React from "react";
-import type { Lang } from "../../lib/workspace-types";
+import type { Lang } from "@/lib/workspace-types";
 
 type Step = {
   id: string;

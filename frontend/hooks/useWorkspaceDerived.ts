@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { buildActionStats, buildPortfolioKpis } from "../lib/workspace-metrics";
-import { calcPortfolioScore } from "../lib/workspace-constants";
-import type { Action, Company, Complaint, Evidence, KPILive, Lang, SAQ, Supplier, TabId, WorkspaceCard } from "../lib/workspace-types";
+import { buildActionStats, buildPortfolioKpis } from "@/lib/workspace-metrics";
+import { calcPortfolioScore } from "@/lib/workspace-constants";
+import type { Action, Company, Complaint, Evidence, KPILive, Lang, SAQ, Supplier, TabId, WorkspaceCard } from "@/lib/workspace-types";
 
 type Args = {
   L: Lang;

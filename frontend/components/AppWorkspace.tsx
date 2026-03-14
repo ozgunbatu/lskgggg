@@ -1,7 +1,7 @@
 "use client";
 import { useMemo } from "react";
-import { clearToken, getToken } from "../lib/auth";
-import { createApiClient } from "../lib/api";
+import { clearToken, getToken } from "@/lib/auth";
+import { createApiClient } from "@/lib/api";
 import WorkspaceNav from "./workspace/WorkspaceNav";
 import WorkspaceHeader from "./workspace/WorkspaceHeader";
 import WorkspaceFocus from "./workspace/WorkspaceFocus";
@@ -21,15 +21,15 @@ import MonitoringTab from "./workspace-tabs/MonitoringTab";
 import AiTab from "./workspace-tabs/AiTab";
 import AuditTab from "./workspace-tabs/AuditTab";
 import SettingsTab from "./workspace-tabs/SettingsTab";
-import useWorkspaceStore from "../hooks/useWorkspaceStore";
-import useWorkspaceSession from "../hooks/useWorkspaceSession";
-import { COUNTRIES, INDUSTRIES, BAFA_DE, BAFA_EN, gradeColor, gradeLabel } from "../lib/workspace-constants";
-import { WORKSPACE_CSS, WORKSPACE_STAGE_V52_CSS, WORKSPACE_STAGE_V57_CSS } from "../lib/workspace-styles";
-import { chipRL, sevChip, cStatusChip, aStatusChip, pChip, dueBadge } from "../lib/workspace-ui";
+import useWorkspaceStore from "@/hooks/useWorkspaceStore";
+import useWorkspaceSession from "@/hooks/useWorkspaceSession";
+import { COUNTRIES, INDUSTRIES, BAFA_DE, BAFA_EN, gradeColor, gradeLabel } from "@/lib/workspace-constants";
+import { WORKSPACE_CSS, WORKSPACE_STAGE_V52_CSS, WORKSPACE_STAGE_V57_CSS } from "@/lib/workspace-styles";
+import { chipRL, sevChip, cStatusChip, aStatusChip, pChip, dueBadge } from "@/lib/workspace-ui";
 import RiskBreakdownComponent from "./workspace/RiskBreakdown";
-import type { Supplier, TabId } from "../lib/workspace-types";
-import useWorkspaceFeatureSlices from "../hooks/useWorkspaceFeatureSlices";
-import useReportApprovals from "../hooks/useReportApprovals";
+import type { Supplier, TabId } from "@/lib/workspace-types";
+import useWorkspaceFeatureSlices from "@/hooks/useWorkspaceFeatureSlices";
+import useReportApprovals from "@/hooks/useReportApprovals";
 
 const CSS = WORKSPACE_CSS + WORKSPACE_STAGE_V52_CSS + WORKSPACE_STAGE_V57_CSS;
 

@@ -3,8 +3,8 @@
 import { useCallback, useRef, useState } from "react";
 import useWorkspaceCache from "../useWorkspaceCache";
 import useWorkspaceQueryResource from "../useWorkspaceQueryResource";
-import { auditKey, queryKeys } from "../../lib/workspace-query-keys";
-import type { AuditEntry, Evidence, SAQ } from "../../lib/workspace-types";
+import { auditKey, queryKeys } from "@/lib/workspace-query-keys";
+import type { AuditEntry, Evidence, SAQ } from "@/lib/workspace-types";
 import type { WorkspaceDomainKey } from "../useWorkspaceRequestState";
 
 type ApiFn = (url: string, options?: RequestInit) => Promise<any>;

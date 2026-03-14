@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Supplier, Toast } from "../lib/workspace-types";
+import type { Supplier, Toast } from "@/lib/workspace-types";
 
 export default function useWorkspaceUi() {
   const [L, setL] = useState<"de" | "en">("de");

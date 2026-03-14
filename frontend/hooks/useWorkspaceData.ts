@@ -3,8 +3,8 @@
 import { useCallback, useRef, useState } from "react";
 import useWorkspaceCache from "./useWorkspaceCache";
 import useWorkspaceRequestState from "./useWorkspaceRequestState";
-import type { KPILive } from "../lib/workspace-types";
-import { queryKeys } from "../lib/workspace-query-keys";
+import type { KPILive } from "@/lib/workspace-types";
+import { queryKeys } from "@/lib/workspace-query-keys";
 import useSuppliersData from "./feature-data/useSuppliersData";
 import useComplaintsData from "./feature-data/useComplaintsData";
 import useReportsData from "./feature-data/useReportsData";

@@ -1,8 +1,8 @@
 import React from "react";
 import WorkspaceModuleReadOnly from "../workspace/WorkspaceModuleReadOnly";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
-import { canWrite, canManageCases } from "../../lib/workspace-access";
-import { getSessionRole } from "../../lib/auth";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
+import { canWrite, canManageCases } from "@/lib/workspace-access";
+import { getSessionRole } from "@/lib/auth";
 
 export default function ActionsTab(props: WorkspaceTabProps) {
   const {

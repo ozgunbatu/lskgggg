@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import type useWorkspaceCache from "./useWorkspaceCache";
-import { auditKey, queryGroups, queryKeys } from "../lib/workspace-query-keys";
+import { auditKey, queryGroups, queryKeys } from "@/lib/workspace-query-keys";
 
 type AsyncFn<T = any> = (opts?: { force?: boolean }) => Promise<T>;
 

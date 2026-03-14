@@ -1,5 +1,5 @@
 import React from "react";
-import type { WorkspaceApprovalMeta } from "../../lib/workspace-types";
+import type { WorkspaceApprovalMeta } from "@/lib/workspace-types";
 
 function fmt(ts?: string | null) {
   if (!ts) return "-";

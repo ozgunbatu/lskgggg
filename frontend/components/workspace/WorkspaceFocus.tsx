@@ -1,4 +1,4 @@
-import type { WorkspaceCard } from "../../lib/workspace-types";
+import type { WorkspaceCard } from "@/lib/workspace-types";
 
 export default function WorkspaceFocus({ cards }: { cards: WorkspaceCard[] }) {
   return (

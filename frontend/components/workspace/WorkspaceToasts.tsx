@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import type { Toast } from "../../lib/workspace-types";
+import type { Toast } from "@/lib/workspace-types";
 
 export default function WorkspaceToasts({ toasts }: { toasts: Toast[] }) {
   const [dismissed, setDismissed] = useState<Set<number>>(new Set());

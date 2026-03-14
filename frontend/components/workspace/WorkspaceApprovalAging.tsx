@@ -1,4 +1,4 @@
-import type { WorkspaceApprovalMeta } from "../../lib/workspace-types";
+import type { WorkspaceApprovalMeta } from "@/lib/workspace-types";
 
 export default function WorkspaceApprovalAging({
   L,

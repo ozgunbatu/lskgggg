@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { API } from "../lib/api";
-import { getSessionRole, getToken } from "../lib/auth";
+import { API } from "@/lib/api";
+import { getSessionRole, getToken } from "@/lib/auth";
 
 export type ApprovalRow = {
   id: string;

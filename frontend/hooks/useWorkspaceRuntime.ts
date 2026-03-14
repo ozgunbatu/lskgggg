@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { TAB_ROUTES } from "../lib/workspace-config";
-import type { Msg, TabId } from "../lib/workspace-types";
+import { TAB_ROUTES } from "@/lib/workspace-config";
+import type { Msg, TabId } from "@/lib/workspace-types";
 
 export default function useWorkspaceRuntime(initialTab: TabId) {
   const router = useRouter();

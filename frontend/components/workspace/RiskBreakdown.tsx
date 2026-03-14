@@ -1,6 +1,6 @@
 import React from "react";
-import { RC, PARAM_META, PARAM_GROUPS_DE, PARAM_GROUPS_EN } from "../../lib/workspace-constants";
-import type { Lang, Supplier } from "../../lib/workspace-types";
+import { RC, PARAM_META, PARAM_GROUPS_DE, PARAM_GROUPS_EN } from "@/lib/workspace-constants";
+import type { Lang, Supplier } from "@/lib/workspace-types";
 
 type Props = { sup: Supplier; compact?: boolean; L: Lang; hoverParam?: string | null; setHoverParam?: (key: string | null) => void };
 

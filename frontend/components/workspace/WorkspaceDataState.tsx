@@ -1,6 +1,6 @@
 import React from "react";
-import type { Lang, WorkspaceRequestStateView } from "../../lib/workspace-types";
-import type { WorkspaceDomainKey } from "../../hooks/useWorkspaceRequestState";
+import type { Lang, WorkspaceRequestStateView } from "@/lib/workspace-types";
+import type { WorkspaceDomainKey } from "@/hooks/useWorkspaceRequestState";
 
 type DomainItem = {
   key: WorkspaceDomainKey;

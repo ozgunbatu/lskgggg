@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { clearToken, setToken, validateSession } from "../../lib/auth";
+import { clearToken, setToken, validateSession } from "@/lib/auth";
 
 const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";
 const API = NEXT_PUBLIC.startsWith("http") ? NEXT_PUBLIC : "/api";

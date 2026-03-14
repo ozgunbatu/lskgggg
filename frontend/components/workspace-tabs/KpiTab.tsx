@@ -6,7 +6,7 @@ import WorkspaceApprovalAging from "../workspace/WorkspaceApprovalAging";
 import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
 import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
 import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function KpiTab(props: WorkspaceTabProps) {
   const {

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useState } from "react";
-import { clearToken, setToken, validateSession } from "../../lib/auth";
+import { clearToken, setToken, validateSession } from "@/lib/auth";
 
 // Uses /api proxy (Next.js rewrites to backend) — no CORS, no env var needed
 const NEXT_PUBLIC = process.env.NEXT_PUBLIC_API_URL || "";

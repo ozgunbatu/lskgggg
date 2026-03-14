@@ -126,3 +126,35 @@ Frontend proxies all `/api/*` calls to the backend container.
 GET https://your-api.railway.app/health
 → { ok: true, version: "v80", db: "ok", uptimeSec: 3600 }
 ```
+
+---
+
+## Vercel — Quick Setup (3 steps)
+
+### Step 1: Import repo
+- Go to vercel.com → New Project → Import `lskgggg`
+- **Root directory:** `frontend` ← IMPORTANT
+- Framework: Next.js (auto-detected)
+
+### Step 2: Set ONE environment variable
+In Vercel Project Settings → Environment Variables:
+
+| Name | Value |
+|------|-------|
+| `BACKEND_URL` | `https://your-railway-backend.up.railway.app` |
+
+That's it. No `NEXT_PUBLIC_API_URL` needed.
+
+### Step 3: Deploy
+Click Deploy. Every push to `main` auto-deploys.
+
+---
+
+## Common errors
+
+| Error | Fix |
+|-------|-----|
+| `Module not found: Can't resolve '../../../components/AppWorkspace'` | All imports now use `@/` alias — fixed in v80.1 |
+| `api.lksgcompass.de 404` | Set `BACKEND_URL` in Vercel (not `NEXT_PUBLIC_API_URL`) |
+| `Node.js version warning` | `engines: ">=20"` set in package.json |
+| Login works locally but not on Vercel | `BACKEND_URL` not set, or Railway not running |

@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect } from "react";
-import { clearToken, validateSession } from "../lib/auth";
-import type { Lang, TabId } from "../lib/workspace-types";
+import { clearToken, validateSession } from "@/lib/auth";
+import type { Lang, TabId } from "@/lib/workspace-types";
 
 function readLang(): Lang {
   return typeof window === "undefined" ? "de" : ((localStorage.getItem("lang") || "de") as Lang);

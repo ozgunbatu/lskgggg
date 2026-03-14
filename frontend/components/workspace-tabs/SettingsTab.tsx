@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
-import { API } from "../../lib/api";
-import { getToken } from "../../lib/auth";
+import { API } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 
 type Props = {
   L: string;

@@ -1,4 +1,4 @@
-import type { WorkspaceApprovalMeta } from "../../lib/workspace-types";
+import type { WorkspaceApprovalMeta } from "@/lib/workspace-types";
 
 export default function WorkspaceApprovalSummary({ L, approval, onOpenReports }: { L: "de" | "en"; approval: WorkspaceApprovalMeta; onOpenReports?: () => void }) {
   const tone = approval.pending > 0 ? "#D97706" : approval.rejected > 0 ? "#DC2626" : approval.approved > 0 ? "#16A34A" : "#2563EB";

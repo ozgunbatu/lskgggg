@@ -12,8 +12,8 @@ import useReportsFeatureState from "./feature-state/useReportsFeatureState";
 import useSuppliersMutations from "./feature-mutations/useSuppliersMutations";
 import useComplaintsMutations from "./feature-mutations/useComplaintsMutations";
 import useReportsMutations from "./feature-mutations/useReportsMutations";
-import { getToken } from "../lib/auth";
-import type { Supplier, TabId } from "../lib/workspace-types";
+import { getToken } from "@/lib/auth";
+import type { Supplier, TabId } from "@/lib/workspace-types";
 
 type ApiFn = (url: string, options?: RequestInit) => Promise<any>;
 

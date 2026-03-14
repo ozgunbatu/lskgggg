@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { downloadWithAuth } from "../lib/api";
-import { snapshotValue, withRollback } from "../lib/optimistic";
-import type { Action, Complaint, Evidence, SAQ, Supplier } from "../lib/workspace-types";
+import { downloadWithAuth } from "@/lib/api";
+import { snapshotValue, withRollback } from "@/lib/optimistic";
+import type { Action, Complaint, Evidence, SAQ, Supplier } from "@/lib/workspace-types";
 
 type Args = {
   L: "de" | "en";

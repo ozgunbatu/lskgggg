@@ -8,10 +8,10 @@ import WorkspaceApprovalInbox from "../workspace/WorkspaceApprovalInbox";
 import WorkspaceApprovalSummary from "../workspace/WorkspaceApprovalSummary";
 import WorkspaceApprovalTimeline from "../workspace/WorkspaceApprovalTimeline";
 import WorkspaceModuleReadOnly from "../workspace/WorkspaceModuleReadOnly";
-import { API } from "../../lib/api";
-import { getSessionRole, getToken } from "../../lib/auth";
-import { gradeColor } from "../../lib/workspace-constants";
-import type { WorkspaceTabProps } from "../../lib/workspace-types";
+import { API } from "@/lib/api";
+import { getSessionRole, getToken } from "@/lib/auth";
+import { gradeColor } from "@/lib/workspace-constants";
+import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function ReportsTab(props: WorkspaceTabProps) {
   const { L, requestState, reloads, company, complaints, rYear, setRYear, draft, setDraft, draftTs, genLd, kpiLive, loadDraft, saveDraft, genSection, sendAi, kpis, actionStats, BF, score, approvalMeta } = props;

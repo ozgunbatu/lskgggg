@@ -1,5 +1,5 @@
-import { NAV_GROUPS, TABS } from "../../lib/workspace-config";
-import type { Lang, TabId, Company, Complaint } from "../../lib/workspace-types";
+import { NAV_GROUPS, TABS } from "@/lib/workspace-config";
+import type { Lang, TabId, Company, Complaint } from "@/lib/workspace-types";
 
 type Props = {
   L: Lang;
