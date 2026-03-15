@@ -1,18 +1,19 @@
 /** @type {import('next').NextConfig} */
 
-// BACKEND_URL: server-side only, used for Next.js rewrites
-// Must point to your Railway backend URL
-const BACKEND_URL = process.env.BACKEND_URL || 
-                    process.env.NEXT_PUBLIC_API_URL ||  // fallback for compat
-                    "http://backend:4000";               // docker-compose
+// Backend URL for server-side API proxy (Next.js rewrites)
+// Priority: BACKEND_URL env var → NEXT_PUBLIC_API_URL → hardcoded Railway URL
+// Set BACKEND_URL in Vercel dashboard to override
+const BACKEND_URL =
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_API_URL ||
+  "https://lskgggg-production.up.railway.app"; // your Railway backend
 
 const nextConfig = {
-  output: 'standalone',
+  output: "standalone",
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
-  // All /api/* requests proxied to backend server-side
-  // Browser never calls backend directly → no CORS, no hardcoded URLs
+  // Proxy /api/* to backend — browser never calls backend directly
   async rewrites() {
     return [
       {
