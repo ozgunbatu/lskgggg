@@ -12,6 +12,7 @@ export const TABS: Array<{ id: TabId; de: string; en: string }> = [
   { id: "monitoring", de: "Monitoring",      en: "Monitoring" },
   { id: "ai",         de: "KI-Assistent",    en: "AI Assistant" },
   { id: "audit",      de: "Audit Trail",     en: "Audit Trail" },
+  { id: "legal",      de: "Rechtsassistent", en: "Legal Assistant" },
   { id: "settings",   de: "Einstellungen",   en: "Settings" },
 ];
 
@@ -27,6 +28,7 @@ export const TAB_ROUTES: Record<TabId, string> = {
   monitoring: "/app/monitoring",
   ai: "/app/ai",
   audit: "/app/audit",
+  legal: "/app/legal",
   settings: "/app/settings",
 };
 
@@ -34,5 +36,5 @@ export const NAV_GROUPS: Array<{ key: string; de: string; en: string; tabs: TabI
   { key: "overview", de: "Überblick", en: "Overview", tabs: ["dashboard", "kpi", "reports"] },
   { key: "operations", de: "Betrieb", en: "Operations", tabs: ["suppliers", "actions", "complaints", "evidence"] },
   { key: "assurance", de: "Prüfung & Monitoring", en: "Assurance & Monitoring", tabs: ["saq", "monitoring", "audit"] },
-  { key: "platform", de: "Plattform", en: "Platform", tabs: ["ai", "settings"] },
+  { key: "platform", de: "Plattform", en: "Platform", tabs: ["ai", "legal", "settings"] },
 ];

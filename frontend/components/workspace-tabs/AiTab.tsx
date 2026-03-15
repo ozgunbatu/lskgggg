@@ -1,27 +1,37 @@
 import React from "react";
 import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
+const QUICK_DE = [
+  { label: "Mein Portfolio-Risiko zusammenfassen", cat: "analysis" },
+  { label: "BAFA-Bericht §9 Wirksamkeit verfassen", cat: "report" },
+  { label: "CAPs priorisieren & Empfehlungen", cat: "action" },
+  { label: "Welche Lieferanten brauchen sofort einen Audit?", cat: "action" },
+  { label: "§5 Risikoanalysepflicht erklären", cat: "legal" },
+  { label: "Score verbessern — konkrete Schritte", cat: "action" },
+  { label: "§8 Beschwerdeverfahren: Was muss ich tun?", cat: "legal" },
+  { label: "Meine größten Compliance-Risiken heute", cat: "analysis" },
+];
+const QUICK_EN = [
+  { label: "Summarise my portfolio risk", cat: "analysis" },
+  { label: "Draft §9 BAFA effectiveness section", cat: "report" },
+  { label: "Prioritise CAPs with recommendations", cat: "action" },
+  { label: "Which suppliers need an audit immediately?", cat: "action" },
+  { label: "Explain §5 risk analysis obligation", cat: "legal" },
+  { label: "Improve score — concrete steps", cat: "action" },
+  { label: "§8 complaint procedure: what must I do?", cat: "legal" },
+  { label: "My biggest compliance risks right now", cat: "analysis" },
+];
+
+const CAT_COLOR: Record<string, string> = {
+  analysis: "#EFF6FF", report: "#F0FDF4", action: "#FFFBEB", legal: "#F5F3FF",
+};
+const CAT_TEXT: Record<string, string> = {
+  analysis: "#2563EB", report: "#16A34A", action: "#D97706", legal: "#7C3AED",
+};
+
 export default function AiTab(props: WorkspaceTabProps) {
   const { L, aiMsgs, aiInput, setAiInput, aiLd, sendAi, kpis, score } = props;
-
-  const quickPrompts =
-    L === "de"
-      ? [
-          "Portfolio-Risiko zusammenfassen",
-          "BAFA-Bericht §10 erstellen",
-          "CAPs priorisieren",
-          "Was verlangt §5 LkSG?",
-          "Score verbessern - Empfehlungen",
-          "§8 Beschwerdeverfahren erklaeren",
-        ]
-      : [
-          "Summarise portfolio risk",
-          "Draft §10 BAFA report",
-          "Prioritise CAPs",
-          "What does §5 LkSG require?",
-          "Improve score - recommendations",
-          "Explain §8 complaints procedure",
-        ];
+  const quickPrompts = L === "de" ? QUICK_DE : QUICK_EN;
 
   return (
     <>
@@ -32,97 +42,86 @@ export default function AiTab(props: WorkspaceTabProps) {
             {L === "de" ? "LkSG KI-Assistent" : "LkSG AI Assistant"}
           </div>
           <div style={{ fontSize: 12, color: "#6B7280" }}>
-            Claude &middot; {L === "de" ? "LkSG-Compliance-Experte" : "LkSG compliance expert"} &middot;{" "}
+            Claude AI &middot; {L === "de" ? "LkSG-Compliance-Experte" : "LkSG compliance expert"} &middot;{" "}
             {kpis.total} {L === "de" ? "Lieferanten" : "suppliers"} &middot; Score {score.score}/100
           </div>
         </div>
         <div style={{ display: "flex", gap: 6 }}>
           <span className={kpis.total > 0 ? "chip cl" : "chip cm"} style={{ fontSize: 10 }}>
-            {kpis.total > 0 ? (L === "de" ? "Daten geladen" : "Data loaded") : (L === "de" ? "Keine Daten" : "No data")}
+            {kpis.total} {L === "de" ? "Lieferanten" : "Suppliers"}
+          </span>
+          <span className={score.score >= 70 ? "chip cl" : score.score >= 50 ? "chip cm" : "chip ch"} style={{ fontSize: 10 }}>
+            {score.score}/100
           </span>
         </div>
       </div>
 
-      {!process.env.NEXT_PUBLIC_AI_ENABLED && (
-        <div className="al al-warn" style={{ margin: "12px 16px 0", borderRadius: 10 }}>
-          <span className="al-icon">!</span>
-          <div style={{ fontSize: 12.5 }}>
-            <strong>{L === "de" ? "KI benoetigt ANTHROPIC_API_KEY" : "AI requires ANTHROPIC_API_KEY"}</strong>
-            {L === "de"
-              ? " -- Bitte in Railway unter Variables eintragen: ANTHROPIC_API_KEY=sk-ant-..."
-              : " -- Please add in Railway under Variables: ANTHROPIC_API_KEY=sk-ant-..."}
+      {aiMsgs.length === 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <div style={{ fontSize: 12, fontWeight: 700, color: "#9CA3AF", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 10 }}>
+            {L === "de" ? "Schnellzugriff" : "Quick access"}
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(260px, 1fr))", gap: 7 }}>
+            {quickPrompts.map((p) => (
+              <button
+                key={p.label}
+                style={{
+                  textAlign: "left", padding: "9px 12px", border: `1px solid ${CAT_COLOR[p.cat]}`,
+                  borderRadius: 9, background: CAT_COLOR[p.cat], cursor: "pointer", fontSize: 12.5,
+                  fontWeight: 600, color: CAT_TEXT[p.cat], lineHeight: 1.4, transition: "transform .15s, box-shadow .15s",
+                }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-1px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 3px 12px rgba(0,0,0,.1)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "none"; }}
+                onClick={() => sendAi(p.label)}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="ai-msgs">
-        {aiMsgs.length === 0 && (
-          <div className="empty" style={{ padding: "40px 0" }}>
-            <div className="ai-av" style={{ margin: "0 auto 16px", width: 48, height: 48, fontSize: 22 }}>
-              &#129302;
+      <div className="ai-chat">
+        {aiMsgs.map((msg: any) => (
+          <div key={msg.id} className={msg.role === "user" ? "ai-msg user" : "ai-msg bot"}>
+            {msg.role === "assistant" && (
+              <div className="ai-av-sm">🤖</div>
+            )}
+            <div className="ai-bubble">
+              <pre style={{ whiteSpace: "pre-wrap", margin: 0, fontFamily: "inherit", fontSize: 13.5, lineHeight: 1.65 }}>
+                {msg.content}
+              </pre>
             </div>
-            <div className="empty-t">{L === "de" ? "LkSG-Experte bereit" : "LkSG Expert Ready"}</div>
-            <div style={{ fontSize: 12.5, color: "#9CA3AF", maxWidth: 420, margin: "0 auto" }}>
-              {L === "de"
-                ? "Fragen zu Risikobewertung, §5-§10 LkSG, BAFA-Berichten, CAPs und Massnahmen beantworten. Endlich spricht hier etwas in ganzen Saetzen."
-                : "Ask about risk scoring, §5-§10 LkSG, BAFA reporting, CAPs and remediation. At least something here speaks in complete sentences."}
-            </div>
-          </div>
-        )}
-
-        {aiMsgs.map((m, i) => (
-          <div key={i} className={"ai-msg" + (m.role === "user" ? " u" : "")}>
-            <div className="ai-ico">{m.role === "user" ? "U" : "AI"}</div>
-            <div className={"ai-bub" + (m.role === "user" ? " u" : " a")}>{m.content}</div>
           </div>
         ))}
-
         {aiLd && (
-          <div className="ai-msg">
-            <div className="ai-ico">AI</div>
-            <div className="ai-bub a" style={{ display: "flex", gap: 6, alignItems: "center" }}>
-              <span className="spin spin-d" />
-              <span style={{ color: "#9CA3AF", fontSize: 12 }}>{L === "de" ? "Analysiere..." : "Analysing..."}</span>
+          <div className="ai-msg bot">
+            <div className="ai-av-sm">🤖</div>
+            <div className="ai-bubble" style={{ display: "flex", gap: 6, alignItems: "center" }}>
+              {[0,1,2].map(i => (
+                <div key={i} style={{ width: 7, height: 7, borderRadius: "50%", background: "#9CA3AF", animation: "aiDot 1.2s infinite", animationDelay: `${i * 0.2}s` }} />
+              ))}
+              <style>{`@keyframes aiDot{0%,100%{opacity:.3;transform:translateY(0)}50%{opacity:1;transform:translateY(-3px)}}`}</style>
             </div>
           </div>
         )}
       </div>
 
-      <div className="ai-qs">
-        {quickPrompts.map((q) => (
-          <button key={q} className="ai-q" onClick={() => setAiInput(q)}>
-            {q}
-          </button>
-        ))}
-      </div>
-
-      <div className="ai-dis">
-        {L === "de"
-          ? "KI-Antworten koennen Fehler enthalten. Fuer rechtsverbindliche Entscheidungen bitte Fachanwalt oder internes Compliance-Team einbeziehen."
-          : "AI responses may contain errors. For legally binding decisions, involve counsel or your internal compliance team."}
-      </div>
-
-      <div className="ai-ir">
-        <textarea
-          className="ai-ta"
-          rows={2}
+      <div className="ai-inp-row">
+        <input
+          className="ai-inp"
           value={aiInput}
-          onChange={(e) => setAiInput(e.target.value)}
-          placeholder={
-            L === "de"
-              ? "z.B. Welche Massnahmen brauche ich fuer Hochrisiko-Lieferanten in Bangladesch?"
-              : "e.g. What measures do I need for high-risk suppliers in Bangladesh?"
-          }
-          onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
-              e.preventDefault();
-              sendAi();
-            }
-          }}
+          onChange={e => setAiInput(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && !e.shiftKey && sendAi(aiInput)}
+          placeholder={L === "de" ? "LkSG-Frage oder Auftrag eingeben..." : "Enter LkSG question or task..."}
+          disabled={aiLd}
         />
-        <button className="btn btn-p" style={{ alignSelf: "flex-end", height: 44 }} onClick={() => sendAi()} disabled={aiLd || !aiInput.trim()}>
-          {aiLd ? <span className="spin" /> : "▶"}
+        <button className="ai-send" onClick={() => sendAi(aiInput)} disabled={aiLd || !aiInput.trim()}>
+          {aiLd ? <span className="spin" /> : "↑"}
         </button>
+      </div>
+      <div style={{ fontSize: 11, color: "#9CA3AF", marginTop: 6, textAlign: "center" }}>
+        {L === "de" ? "KI-Einschätzungen sind kein Rechtsrat. Für verbindliche Entscheidungen Fachanwalt konsultieren." : "AI assessments are not legal advice. Consult a qualified lawyer for binding decisions."}
       </div>
     </>
   );

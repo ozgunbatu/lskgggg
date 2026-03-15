@@ -21,6 +21,7 @@ import MonitoringTab from "./workspace-tabs/MonitoringTab";
 import AiTab from "./workspace-tabs/AiTab";
 import AuditTab from "./workspace-tabs/AuditTab";
 import SettingsTab from "./workspace-tabs/SettingsTab";
+import LegalTab from "./workspace-tabs/LegalTab";
 import useWorkspaceStore from "@/hooks/useWorkspaceStore";
 import useWorkspaceSession from "@/hooks/useWorkspaceSession";
 import { COUNTRIES, INDUSTRIES, BAFA_DE, BAFA_EN, gradeColor, gradeLabel } from "@/lib/workspace-constants";
@@ -206,6 +207,7 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
         {runtime.tab === "monitoring" && <MonitoringTab {...monitoringCtx} />}
         {runtime.tab === "ai" && <AiTab {...aiCtx} />}
         {runtime.tab === "audit" && <AuditTab {...auditCtx} />}
+        {runtime.tab === "legal" && <LegalTab {...{L:ui.L,apiFn:api,toastFn:toast} as any} />}
         {runtime.tab === "settings" && <SettingsTab L={ui.L} company={data.company} apiFn={api} toastFn={toast} />}
       </div></div>
     </>

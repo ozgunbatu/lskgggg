@@ -7,6 +7,7 @@ import { authRateLimit, complaintRateLimit, aiRateLimit } from "./middleware/rat
 import { healthcheck } from "./lib/db";
 import billingRouter from "./modules/billing";
 import teamRouter from "./modules/team";
+import legalRouter from "./modules/legal";
 
 dotenv.config();
 
