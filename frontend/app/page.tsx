@@ -636,13 +636,13 @@ export default function LandingPage() {
           <div className="hero-left">
             <div className="hero-badge">
               <span className="badge-pulse" />
-              LkSG  -  BAFA  -  CSDDD-ready
+              LkSG · §4–§10 · KI-Rechtsassistent · BAFA-ready
             </div>
             <h1 className="hero-h1" style={{ opacity: 1 }}>
               {lang==="de"?<>Supply-Chain-<br/>Compliance fur<br/><em>8 Schlussel&shy;branchen.</em></>:<>Supply Chain<br/>Compliance for<br/><em>German law.</em></>}
             </h1>
             <p className="hero-sub">
-              {lang==="de"?"LkSGCompass automatisiert Risikoanalyse, Lieferanten-Screening und BAFA-Berichterstattung -- fur Unternehmen mit internationalen Lieferketten in Textil, Logistik, Automotive und mehr.":"LkSGCompass automates risk analysis, supplier screening and BAFA reporting -- for companies with international supply chains in textile, logistics, automotive and more."}
+              {lang==="de"?"LkSGCompass automatisiert §5-Risikoanalyse, BAFA-Berichterstattung, Rechtsvorlagen und Verteidigungsakte — für Unternehmen mit internationalen Lieferketten in Textil, Logistik, Automotive und mehr.":"LkSGCompass automates §5 risk analysis, BAFA reporting, legal templates and defense documentation — for companies with international supply chains in textile, logistics, automotive and more."}
             </p>
             <div className="hero-ctas">
               <a href="/demo" className="btn-primary">
@@ -716,7 +716,7 @@ export default function LandingPage() {
         <div className="lp-sec-i">
           <div {...a("feat-hd")}>
             <div className="lp-chip-label">Funktionen</div>
-            <h2 className="lp-h2">Vom Import bis zum<br /><em>BAFA-Bericht.</em></h2>
+            <h2 className="lp-h2">Von §4 bis §10 —<br /><em>vollständig abgedeckt.</em></h2>
           </div>
 
           <div className="features-layout">
@@ -814,6 +814,69 @@ export default function LandingPage() {
               </div>
             </div>
           </div>
+
+          {/* Feature 5 — Legal Assistant */}
+          <div className="feature-row" {...a("f5")}>
+            <div>
+              <div className="feature-tag" style={{ background: "rgba(124,58,237,.08)", border: "1px solid rgba(124,58,237,.2)", color: "#7C3AED" }}>Rechtsassistent — NEU</div>
+              <h3 className="feature-title">6 rechtssichere Vorlagen.<br />KI-Rechtsberatung. Vertragscheck.</h3>
+              <p className="feature-desc">Der neue Rechtsassistent generiert vollständige LkSG-Dokumente auf Knopfdruck — Verhaltenskodex, Vertragsklauseln, SAQ, Auditprotokoll. Dazu: spezifische Rechtsfragen mit §-Verweisen und KI-gestützter Vertragsprüfung.</p>
+              <div className="feature-points">
+                {["6 sofort verwendbare Dokumentenvorlagen (CoC, Vertrag, SAQ, Audit, HinSchG, §5-Methodik)","LkSG-Rechtsfragen mit Paragraphenverweisen und Handlungsempfehlungen","Vertragstext hochladen — KI prüft LkSG-Lücken und schlägt Korrekturen vor"].map((p, i) => (
+                  <div key={i} className="fp">
+                    <div className="fp-icon" style={{ background: "rgba(124,58,237,.08)", color: "#7C3AED" }}><Icon.Check /></div>
+                    {p}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,.06)" }}>
+              <div style={{ display: "flex", gap: 7, marginBottom: 16, flexWrap: "wrap" }}>
+                {["📄 Vorlagen", "❓ Rechtsfrage", "🔍 Vertragscheck", "🛡 Verteidigungsakte"].map(t => (
+                  <div key={t} style={{ padding: "4px 9px", borderRadius: 6, background: t.includes("Vorlagen") ? "#1B3D2B" : "#F3F4F6", color: t.includes("Vorlagen") ? "#fff" : "#6b7280", fontSize: 11, fontWeight: 700 }}>{t}</div>
+                ))}
+              </div>
+              {[{t:"Verhaltenskodex Lieferanten",r:"§6 Abs.2",tag:"Pflicht"},{t:"Vertragsklausel LkSG",r:"§6 Abs.3",tag:"Vertrag"},{t:"Lieferanten-SAQ",r:"§5 Abs.2",tag:"Fragebogen"},{t:"Hinweisgeberschutz",r:"§8, HinSchG",tag:"Pflicht"}].map(({t,r,tag}) => (
+                <div key={t} style={{ border: "1px solid #e6e6e6", borderRadius: 9, padding: "9px 12px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "#0b0f0c" }}>{t}</div>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <span style={{ background: "#f0f5f1", border: "1px solid #d1e7d9", color: "#1B3D2B", fontSize: 9.5, fontWeight: 700, padding: "1px 6px", borderRadius: 4 }}>{r}</span>
+                    <span style={{ background: "#F3F4F6", color: "#6b7280", fontSize: 9.5, fontWeight: 600, padding: "1px 6px", borderRadius: 4 }}>{tag}</span>
+                  </div>
+                </div>
+              ))}
+              <div style={{ background: "#1B3D2B", borderRadius: 9, padding: "10px 14px", color: "#fff", fontSize: 12.5, fontWeight: 700, textAlign: "center", cursor: "pointer" }}>Dokument generieren →</div>
+            </div>
+          </div>
+
+          {/* Feature 6 — BAFA Defense File */}
+          <div className="feature-row rev" {...a("f6")}>
+            <div>
+              <div className="feature-tag" style={{ background: "rgba(37,99,235,.07)", border: "1px solid rgba(37,99,235,.2)", color: "#2563EB" }}>BAFA-Verteidigungsakte — NEU</div>
+              <h3 className="feature-title">Ein Klick.<br />Alle §5–§10-Nachweise.</h3>
+              <p className="feature-desc">Wenn die BAFA ein Kontrollverfahren einleitet, brauchen Sie innerhalb kurzer Zeit eine vollständige Dokumentation. Die Verteidigungsakte exportiert alle Compliance-Nachweise strukturiert in einem Dokument — was Anwälte früher tagelang zusammengestellt haben.</p>
+              <div className="feature-points">
+                {["§5–§10 Compliance-Nachweise in einem strukturierten JSON-Export","Vollständiger Audit-Trail mit Zeitstempeln (200+ Einträge)","Automatisch nach BAFA-Prüfstruktur gegliedert — direkt dem Anwalt übergeben"].map((p, i) => (
+                  <div key={i} className="fp">
+                    <div className="fp-icon" style={{ background: "rgba(37,99,235,.07)", color: "#2563EB" }}><Icon.Shield /></div>
+                    {p}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,.06)" }}>
+              <div style={{ fontSize: 14, fontWeight: 800, color: "#0b0f0c", marginBottom: 4 }}>🛡 BAFA-Verteidigungsakte</div>
+              <div style={{ fontSize: 12.5, color: "#6b7280", lineHeight: 1.6, marginBottom: 16 }}>Generiert für Berichtsjahr 2024 — bereit für BAFA-Kontrollverfahren.</div>
+              {["§5 Risikoanalyse","§6 Präventionsmaßnahmen","§7 Abhilfemaßnahmen","§8 Beschwerdeverfahren","§9 Wirksamkeitskontrolle","§10 Dokumentation & Audit-Trail"].map((s, i) => (
+                <div key={s} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 5 ? "1px solid #F3F4F6" : "none", fontSize: 12.5 }}>
+                  <span style={{ fontWeight: 600, color: "#0b0f0c" }}>{s}</span>
+                  <span style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#16A34A", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4 }}>✓ Enthalten</span>
+                </div>
+              ))}
+              <div style={{ marginTop: 16, background: "#2563EB", borderRadius: 9, padding: "10px 14px", color: "#fff", fontSize: 12.5, fontWeight: 700, textAlign: "center", cursor: "pointer" }}>⬇ Akte herunterladen</div>
+            </div>
+          </div>
+
         </div>
       </section>
 
@@ -828,10 +891,10 @@ export default function LandingPage() {
           <div className="steps-grid">
             <div className="steps-line" />
             {[
-              { n: "1", icon: <Icon.Zap />, title: "Lieferanten importieren", desc: "CSV hochladen oder manuell erfassen. Bulk-Import fur bestehende Lieferantenlisten." },
-              { n: "2", icon: <Icon.Globe />, title: "Automatische Risikoanalyse", desc: "Landerspezifisches Scoring nach 4 gewichteten Dimensionen pro Lieferant." },
-              { n: "3", icon: <Icon.Bell />, title: "Monitoring starten", desc: "Sanktionslisten, ESG und News werden kontinuierlich und automatisch gepruft." },
-              { n: "4", icon: <Icon.FileText />, title: "BAFA-Bericht generieren", desc: "Einen Klick -- vollstandiger LkSG-Jahresbericht als PDF, bereit zur Prufung." },
+              { n: "1", icon: <Icon.Zap />, title: "Lieferanten importieren", desc: "Excel oder CSV hochladen. Automatische Spaltenerkennung, auch für bestehende Listen." },
+              { n: "2", icon: <Icon.Globe />, title: "Risiken automatisch analysieren", desc: "190 Länderprofile, Branchengewichtung, §5 LkSG-Scoring in Sekunden." },
+              { n: "3", icon: <Icon.FileText />, title: "KI-BAFA-Bericht erstellen", desc: "Claude liest Ihre Echtdaten und schreibt den strukturierten Jahresbericht." },
+              { n: "4", icon: <Icon.Shield />, title: "Rechtsvorlagen & Verteidigungsakte", desc: "CoC, SAQ, Vertragsklauseln generieren — und BAFA-Prüfungsakte auf Knopfdruck." },
             ].map((s, i) => (
               <div key={i} className="step-card" {...a(`step-${i}`, i * 0.12)}>
                 <div className="step-num">{s.n}</div>
@@ -848,32 +911,35 @@ export default function LandingPage() {
         <div className="lp-sec-i">
           <div {...a("price-hd")} style={{ textAlign: "center" }}>
             <div className="lp-chip-label">Preise</div>
-            <h2 className="lp-h2">Transparent.<br /><em>Keine versteckten Kosten.</em></h2>
-            <p className="lp-sub" style={{ margin: "0 auto" }}>Alle Plane beinhalten Kernfunktionen. Jederzeit kundbar. Keine Kreditkarte fur den Einstieg.</p>
+            <h2 className="lp-h2">Einfache Preise.<br /><em>Voller Funktionsumfang.</em></h2>
+            <p className="lp-sub" style={{ margin: "0 auto" }}>Von der kostenlosen Testversion bis zur Enterprise-Lösung. Jederzeit kündbar, keine Einrichtungsgebühr, keine versteckten Kosten.</p>
           </div>
           <div className="pricing-grid">
             {[
               {
-                tier: "Starter", price: "149", period: "? / Monat, jahrlich",
-                feats: ["Bis zu 50 Lieferanten","Automatische Risikoanalyse","BAFA-PDF-Bericht","Hinweisgebersystem","E-Mail-Support"],
-                off: ["Sanctions Screening","ESG & News Monitoring"],
-                cta: "Starter wahlen", solid: false, featured: false, href: "/register",
+                tier: "Free", price: "0", period: "/ Monat — kostenlos starten",
+                badge: null,
+                feats: ["Bis zu 5 Lieferanten","Automatische Risikoanalyse","BAFA-Dashboard","Hinweisgeberportal","1 Nutzer"],
+                off: ["KI-Assistent & BAFA-Entwurf","Rechtsvorlagen & Vertragscheck","BAFA-Verteidigungsakte","Excel-Import","Team-Einladungen"],
+                cta: "Kostenlos starten", solid: false, featured: false, href: "/register",
               },
               {
-                tier: "Growth", price: "499", period: "? / Monat, jahrlich",
-                feats: ["Bis zu 500 Lieferanten","Automatische Risikoanalyse","BAFA-PDF-Bericht","Hinweisgebersystem","Sanctions Screening (EU + OFAC)","ESG & News Monitoring","Priority-Support"],
+                tier: "Pro", price: "149", period: "/ Monat · 14 Tage kostenlos testen",
+                badge: "Beliebtester Plan",
+                feats: ["Bis zu 50 Lieferanten","Automatische Risikoanalyse §5","KI-BAFA-Berichtsgenerator","6 Rechtsvorlagen (CoC, SAQ, ...)","Vertragscheck & Rechtsfrage","BAFA-Verteidigungsakte","Excel-Bulk-Import","Hinweisgeberportal §8","5 Nutzer & Team-Einladungen","Audit-Trail & Nachweise","E-Mail-Support"],
                 off: [],
-                cta: "Growth wahlen", solid: true, featured: true, href: "/register",
+                cta: "Pro testen — 14 Tage gratis", solid: true, featured: true, href: "/register",
               },
               {
                 tier: "Enterprise", price: null, period: "Individuelles Angebot",
-                feats: ["Unbegrenzte Lieferanten","Alle Growth-Features","API-Zugang","SAP / ERP Integration","Dedicated Account Manager","AVV nach Art. 28 DSGVO"],
+                badge: null,
+                feats: ["Unbegrenzte Lieferanten","Alle Pro-Features","Unbegrenzte Nutzer & Teams","SSO / SAML","API-Zugang","SAP / ERP Integration","Dedizierter Account Manager","SLA & AVV nach Art. 28 DSGVO","CSDDD-Readiness-Check"],
                 off: [],
                 cta: "Kontakt aufnehmen", solid: false, featured: false, href: "mailto:hello@lksgcompass.de",
               },
             ].map((plan, i) => (
               <div key={i} className={`plan${plan.featured ? " featured" : ""}`} {...a(`plan-${i}`, i * 0.1)}>
-                {plan.featured && <div className="plan-badge">Beliebtester Plan</div>}
+                {(plan as any).badge && <div className="plan-badge">{(plan as any).badge}</div>}
                 <div className="plan-tier">{plan.tier}</div>
                 <div className="plan-price">
                   {plan.price ? <><sup>?</sup>{plan.price}</> : <span className="plan-price-text">Individuell</span>}
