@@ -917,23 +917,23 @@ export default function LandingPage() {
           <div className="pricing-grid">
             {[
               {
-                tier: "Free", price: "0", period: "/ Monat — kostenlos starten",
+                tier: "Starter", price: "149", period: "/ Monat · 14 Tage kostenlos",
                 badge: null,
-                feats: ["Bis zu 5 Lieferanten","Automatische Risikoanalyse","BAFA-Dashboard","Hinweisgeberportal","1 Nutzer"],
-                off: ["KI-Assistent & BAFA-Entwurf","Rechtsvorlagen & Vertragscheck","BAFA-Verteidigungsakte","Excel-Import","Team-Einladungen"],
-                cta: "Kostenlos starten", solid: false, featured: false, href: "/register",
+                feats: ["Bis zu 25 Lieferanten", "Automatische Risikoanalyse §5", "BAFA-PDF-Bericht", "Hinweisgeberportal §8", "Excel-Import", "Audit-Trail", "3 Nutzer", "E-Mail-Support"],
+                off: ["KI-BAFA-Berichtsgenerator", "6 Rechtsvorlagen & Vertragscheck", "BAFA-Verteidigungsakte", "Rechtsfrage-Assistent"],
+                cta: "Starter testen — 14 Tage gratis", solid: false, featured: false, href: "/register",
               },
               {
-                tier: "Pro", price: "149", period: "/ Monat · 14 Tage kostenlos testen",
-                badge: "Beliebtester Plan",
-                feats: ["Bis zu 50 Lieferanten","Automatische Risikoanalyse §5","KI-BAFA-Berichtsgenerator","6 Rechtsvorlagen (CoC, SAQ, ...)","Vertragscheck & Rechtsfrage","BAFA-Verteidigungsakte","Excel-Bulk-Import","Hinweisgeberportal §8","5 Nutzer & Team-Einladungen","Audit-Trail & Nachweise","E-Mail-Support"],
+                tier: "Pro", price: "499", period: "/ Monat · 14 Tage kostenlos",
+                badge: "Vollständiger LkSG-Stack",
+                feats: ["Unbegrenzte Lieferanten", "Automatische Risikoanalyse §5", "🤖 KI-BAFA-Berichtsgenerator", "6 Rechtsvorlagen (CoC, SAQ, ...)", "🔍 Vertragscheck & Rechtsfrage-Assistent", "🛡 BAFA-Verteidigungsakte §10", "Excel-Bulk-Import", "Hinweisgeberportal §8 + HinSchG", "10 Nutzer & Team-Rollen", "Vollständiger Audit-Trail", "Priority-Support"],
                 off: [],
                 cta: "Pro testen — 14 Tage gratis", solid: true, featured: true, href: "/register",
               },
               {
                 tier: "Enterprise", price: null, period: "Individuelles Angebot",
                 badge: null,
-                feats: ["Unbegrenzte Lieferanten","Alle Pro-Features","Unbegrenzte Nutzer & Teams","SSO / SAML","API-Zugang","SAP / ERP Integration","Dedizierter Account Manager","SLA & AVV nach Art. 28 DSGVO","CSDDD-Readiness-Check"],
+                feats: ["Alles in Pro", "Unbegrenzte Nutzer", "SSO / SAML", "API-Zugang", "SAP / ERP Integration", "CSDDD-Readiness-Check", "Dedizierter Account Manager", "SLA & AVV nach Art. 28 DSGVO"],
                 off: [],
                 cta: "Kontakt aufnehmen", solid: false, featured: false, href: "mailto:hello@lksgcompass.de",
               },
