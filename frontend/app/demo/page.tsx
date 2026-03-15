@@ -582,7 +582,6 @@ const CSS = `
   .ch-btn{display:flex;align-items:center;gap:10px;width:100%;padding:10px 16px;background:none;border:none;cursor:pointer;text-align:left;position:relative;transition:background .15s}
   .ch-btn:hover{background:rgba(255,255,255,.04)}
   .ch-btn.on{background:rgba(255,255,255,.06)}
-  .ch-btn.on::before{content:"";position:absolute;left:0;top:15%;bottom:15%;width:2.5px;border-radius:0 2px 2px 0}
   .ch-num{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;font-family:monospace;background:rgba(255,255,255,.06);color:rgba(255,255,255,.3);transition:all .2s}
   .on .ch-num{color:#060d05}
   .done .ch-num{background:rgba(74,222,128,.15);color:#4ade80}
@@ -756,15 +755,18 @@ export default function DemoPage() {
           {/* Sidebar chapters */}
           <div className="sidebar">
             <div style={{ padding: "0 16px 10px", fontSize: 9.5, fontWeight: 800, color: "rgba(255,255,255,.22)", textTransform: "uppercase", letterSpacing: "1.5px" }}>Kapitel</div>
-            {CHAPTERS.map((c, i) => (
-              <button key={c.id} className={`ch-btn${cIdx===i?" on":""}${visited.has(i)&&cIdx!==i?" done":""}`}
-                style={{ "--before-bg": c.color } as React.CSSProperties}
-                onClick={() => jumpTo(i)}>
-                {cIdx === i && <style>{`.ch-btn.on::before{background:${c.color}}`}</style>}
-                <div className="ch-num" style={cIdx===i?{background:c.color}:{}}>{c.num}</div>
+            {CHAPTERS.map((ch, i) => (
+              <button key={ch.id}
+                className={`ch-btn${cIdx===i?" on":""}${visited.has(i)&&cIdx!==i?" done":""}`}
+                onClick={() => jumpTo(i)}
+                style={{ position: "relative" }}>
+                {cIdx === i && (
+                  <div style={{ position: "absolute", left: 0, top: "15%", bottom: "15%", width: 3, borderRadius: "0 2px 2px 0", background: ch.color }} />
+                )}
+                <div className="ch-num" style={cIdx===i ? { background: ch.color, color: "#060d05" } : {}}>{ch.num}</div>
                 <div className="ch-info">
-                  <div className="ch-title">{c.title}</div>
-                  <div className="ch-law">{c.law}</div>
+                  <div className="ch-title">{ch.title}</div>
+                  <div className="ch-law">{ch.law}</div>
                 </div>
                 <div className="ch-done">✓</div>
               </button>
