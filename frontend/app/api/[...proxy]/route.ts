@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from "next/server";
 const BACKEND =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.BACKEND_URL ||
-  "https://lskgggg-production.up.railway.app";
+  "https://api.lksgcompass.de"; // Custom domain → Railway backend
 
 async function handler(
   req: NextRequest,

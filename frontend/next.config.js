@@ -8,7 +8,7 @@
 const BACKEND_URL =
   process.env.NEXT_PUBLIC_API_URL ||
   process.env.BACKEND_URL ||
-  "https://lskgggg-production.up.railway.app";
+  "https://api.lksgcompass.de"; // Custom domain → Railway backend
 
 console.log("[next.config.js] BACKEND_URL =", BACKEND_URL);
 
