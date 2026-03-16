@@ -1,0 +1,41 @@
+"use client";
+
+export default function useSuppliersFeatureState(ui: any) {
+  return {
+    expanded: ui.expanded,
+    setExpanded: ui.setExpanded,
+    supFilter: ui.supFilter,
+    setSupFilter: ui.setSupFilter,
+    hoverParam: ui.hoverParam,
+    setHoverParam: ui.setHoverParam,
+    supplierForm: {
+      editingSup: ui.editingSup,
+      sName: ui.sName,
+      setSName: ui.setSName,
+      sCountry: ui.sCountry,
+      setSCountry: ui.setSCountry,
+      sInd: ui.sInd,
+      setSInd: ui.setSInd,
+      sSpend: ui.sSpend,
+      setSSpend: ui.setSSpend,
+      sWorkers: ui.sWorkers,
+      setSWorkers: ui.setSWorkers,
+      sAudit: ui.sAudit,
+      setSAudit: ui.setSAudit,
+      sCoc: ui.sCoc,
+      setSCoc: ui.setSCoc,
+      sCerts: ui.sCerts,
+      setSCerts: ui.setSCerts,
+      sSubSup: ui.sSubSup,
+      setSSubSup: ui.setSSubSup,
+      sTransp: ui.sTransp,
+      setSTransp: ui.setSTransp,
+      sViolations: ui.sViolations,
+      setSViolations: ui.setSViolations,
+      sNotes: ui.sNotes,
+      setSNotes: ui.setSNotes,
+      csv: ui.csv,
+      setCsv: ui.setCsv,
+    },
+  };
+}
