@@ -1,10 +1,8 @@
 import { useCallback, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { TAB_ROUTES } from "@/lib/workspace-config";
 import type { Msg, TabId } from "@/lib/workspace-types";
 
 export default function useWorkspaceRuntime(initialTab: TabId) {
-  const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
@@ -32,8 +30,11 @@ export default function useWorkspaceRuntime(initialTab: TabId) {
 
   const setTab = useCallback((next: TabId) => {
     setTabState(next);
-    router.push(TAB_ROUTES[next]);
-  }, [router]);
+    // Shallow URL update without navigation/remount
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", TAB_ROUTES[next]);
+    }
+  }, []);
 
   return {
     mounted, setMounted,

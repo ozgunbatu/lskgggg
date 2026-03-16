@@ -1,123 +1,141 @@
 import React from "react";
 import WorkspaceDataState from "../workspace/WorkspaceDataState";
-import WorkspaceSectionMeta from "../workspace/WorkspaceSectionMeta";
-import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
-import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
-import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
-import WorkspaceApprovalInbox from "../workspace/WorkspaceApprovalInbox";
 import WorkspaceApprovalSummary from "../workspace/WorkspaceApprovalSummary";
-import WorkspaceApprovalTimeline from "../workspace/WorkspaceApprovalTimeline";
-import WorkspaceModuleReadOnly from "../workspace/WorkspaceModuleReadOnly";
-import { API } from "@/lib/api";
-import { getSessionRole, getToken } from "@/lib/auth";
-import { gradeColor } from "@/lib/workspace-constants";
+import WorkspaceApprovalAging from "../workspace/WorkspaceApprovalAging";
 import type { WorkspaceTabProps } from "@/lib/workspace-types";
+import { canWrite } from "@/lib/workspace-access";
+import { getSessionRole } from "@/lib/auth";
+
+const SECTIONS = [
+  {id:"overview",   para:"§4",  de:"Grundsatzerklärung",         en:"Policy statement"},
+  {id:"risk",       para:"§5",  de:"Risikoanalyse",               en:"Risk analysis"},
+  {id:"prevention", para:"§6",  de:"Präventionsmaßnahmen",        en:"Preventive measures"},
+  {id:"remediation",para:"§7",  de:"Abhilfemaßnahmen",            en:"Remedial measures"},
+  {id:"complaints", para:"§8",  de:"Beschwerdekanal",             en:"Complaint channel"},
+  {id:"reporting",  para:"§10", de:"Rechenschaftsbericht",        en:"Accountability report"},
+];
 
 export default function ReportsTab(props: WorkspaceTabProps) {
-  const { L, requestState, reloads, company, complaints, rYear, setRYear, draft, setDraft, draftTs, genLd, kpiLive, loadDraft, saveDraft, genSection, sendAi, kpis, actionStats, BF, score, approvalMeta } = props;
-  const sc = score.score;
-  const sg = kpiLive?.grade || (sc >= 85 ? "A" : sc >= 70 ? "B" : sc >= 50 ? "C" : sc >= 30 ? "D" : "F");
-  const scCol = gradeColor(sg);
-  const openPdf = () => {
-    const token = getToken();
-    window.open(`${API}/reports/bafa/${rYear}?token=${encodeURIComponent(token)}`, "_blank");
-  };
-  const currentRole = approvalMeta.currentRole || getSessionRole();
-  const canEditDraft = currentRole !== "viewer" && !approvalMeta.draftLocked;
+  const {
+    L,requestState,reloads,draft,setDraft,draftTs,rYear,setRYear,
+    genLd,setTab,loadDraft,saveDraft,genSection,exportCSV,
+    suppliers,complaints,actions,score,kpis,actionStats,approvalMeta,
+  } = props;
+
+  const role = approvalMeta?.currentRole || getSessionRole();
+  const writable = canWrite(role);
+
+  const sections = SECTIONS.map(s=>({
+    ...s,
+    label:L==="de"?s.de:s.en,
+    generated:!!(draft as string)?.includes(s.para),
+  }));
+  const genCount = sections.filter(s=>s.generated).length;
 
   return (
     <>
       <WorkspaceDataState L={L} requestState={requestState} domains={[
-        { key: "saqs", label: "SAQ", onRetry: reloads.reloadReportsDomain },
-        { key: "evidences", label: L === "de" ? "Nachweise" : "Evidence", onRetry: reloads.reloadReportsDomain },
-      ]} />
-      <WorkspaceSectionMeta L={L} title={L === "de" ? "Berichts-Domain" : "Reports domain"} requestState={requestState} domains={["saqs", "evidences"]} onRefresh={reloads.reloadReportsDomain} />
-      <WorkspaceApprovalSummary L={L} approval={approvalMeta} />
-      {currentRole === "viewer" && <WorkspaceModuleReadOnly L={L} title={L === "de" ? "Reports sind schreibgeschützt" : "Reports are read-only"} copy={L === "de" ? "Ihre Rolle darf Berichte lesen, aber nicht bearbeiten oder zur Freigabe senden. Sehr deutsch, sehr ordentlich." : "Your role can read reports, but not edit or submit them for approval. Very orderly, very corporate."} actionLabel={L === "de" ? "Audit öffnen" : "Open audit"} onAction={() => props.setTab("audit")} />}
-      <WorkspaceModuleGuide
-        L={L}
-        storageKey="lksg-guide-reports"
-        title={L === "de" ? "Modul-Guide: Reports" : "Module guide: reports"}
-        subtitle={L === "de" ? "Berichte werden stabil, wenn Evidenz, SAQ und Maßnahmen nicht hinterherhinken." : "Reports get stable when evidence, SAQ and actions stop lagging behind."}
-        steps={[
-          { id: "saq", label: L === "de" ? "Mindestens einen SAQ versenden" : "Send at least one SAQ", done: props.saqs.length > 0, copy: L === "de" ? "Ein Fragebogen ist kein Allheilmittel, aber ein sehr nützliches Minimum." : "A questionnaire is not magic, but it is a useful minimum.", actionLabel: L === "de" ? "Zum SAQ" : "Open SAQ", onAction: () => props.setTab("saq") },
-          { id: "evidence", label: L === "de" ? "Nachweise sammeln" : "Collect evidence", done: props.evidences.length > 0, copy: L === "de" ? "Ohne Nachweise wird jeder schöne Satz im Bericht erstaunlich verletzlich." : "Without evidence, every nice sentence in the report becomes fragile.", actionLabel: L === "de" ? "Zu Nachweisen" : "Open evidence", onAction: () => props.setTab("evidence") },
-          { id: "draft", label: L === "de" ? "Berichtsentwurf pflegen" : "Maintain the report draft", done: !!draftTs || !!draft, copy: L === "de" ? "Ein gepflegter Entwurf spart den üblichen BAFA-Endspurt-Schmerz." : "A maintained draft saves you the usual BAFA endgame pain.", actionLabel: L === "de" ? "Entwurf laden" : "Load draft", onAction: loadDraft },
-        ]}
-      />
-      {approvalMeta.draftLocked && (
-        <WorkspaceActionPrompt
-          tone="amber"
-          title={L === "de" ? "Entwurf ist im Freigabelauf gesperrt" : "Draft is locked during approval"}
-          copy={L === "de" ? "Mindestens eine Freigabe ist offen. Bearbeitung bleibt bis zur Entscheidung gesperrt, damit niemand parallel am Bericht zerrt." : "At least one approval is pending. Editing stays locked until a decision is made, so the report is not being pulled apart from both sides."}
-          actionLabel={L === "de" ? "Freigaben ansehen" : "Open approvals"}
-          onAction={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        />
-      )}
-      {(!draft && (!kpis.total || !actionStats.total)) && (
-        <WorkspaceActionPrompt
-          tone="amber"
-          title={L === "de" ? "Bericht zuerst mit Daten füttern" : "Feed the report with real inputs first"}
-          copy={L === "de" ? "Ohne Lieferanten, Maßnahmen oder Nachweise bleibt auch der schönste BAFA-Entwurf sehr theoretisch." : "Without suppliers, actions or evidence, even the prettiest BAFA draft stays mostly theoretical."}
-          actionLabel={L === "de" ? "Nachweise öffnen" : "Open evidence"}
-          onAction={() => props.setTab("evidence")}
-        />
-      )}
-      <div className="sec-hd">
+        {key:"reports",label:"Reports",onRetry:reloads.reloadCoreData},
+      ]}/>
+      <WorkspaceApprovalSummary L={L} meta={approvalMeta} setTab={setTab}/>
+
+      {/* Header + actions */}
+      <div className="workspace-bar" style={{marginBottom:14}}>
         <div>
-          <div className="sec-title">{L === "de" ? "BAFA Jahresbericht" : "BAFA Annual Report"}<span className="ltag">§10 LkSG</span></div>
-          <div className="sec-sub">{L === "de" ? "Strukturierter Bericht nach BAFA-Fragebogen. Pflicht bis 15. Juni. KI unterstützt alle Abschnitte." : "Structured report aligned with BAFA questionnaire. Due by 15 June. AI supports all sections."}</div>
+          <div className="workspace-kicker">§10 LkSG · BAFA</div>
+          <div className="workspace-title">{L==="de"?"BAFA-Rechenschaftsbericht":"BAFA Accountability Report"}</div>
+          <div className="workspace-sub">{L==="de"?"KI-generierter Jahresbericht nach §10 LkSG — vollständig BAFA-konform.":"AI-generated annual report under §10 LkSG — fully BAFA-compliant."}</div>
         </div>
         <div className="brow">
-          <input className="inp" type="number" value={rYear} onChange={e => { setRYear(Number(e.target.value)); setDraft(null); }} style={{ width: 88 }} />
-          <button className="btn btn-g" onClick={loadDraft}>{L === "de" ? "Laden" : "Load"}</button>
-          <button className="btn btn-ai" disabled={!canEditDraft} onClick={() => sendAi(L === "de" ? `Erstelle einen professionellen, vollständigen BAFA-Jahresbericht für ${company?.name || "unser Unternehmen"} für das Jahr ${rYear}. Eckdaten: ${kpis.total} Lieferanten, davon ${kpis.high} hochrisiko und ${kpis.med} mittelrisiko. Portfolio-Compliance-Score: ${sc}/100 (Note ${sg}). ${actionStats.total} CAPs, davon ${actionStats.done} abgeschlossen. ${complaints.length} Beschwerden eingegangen. Bericht soll alle 6 Pflichtabschnitte gemäß §10 LkSG enthalten.` : `Create a professional, complete BAFA annual report for ${company?.name || "our company"} for ${rYear}. Data: ${kpis.total} suppliers, ${kpis.high} high-risk, ${kpis.med} medium-risk. Portfolio compliance score: ${sc}/100 (grade ${sg}). ${actionStats.total} CAPs, ${actionStats.done} completed. ${complaints.length} complaints received. Report must cover all 6 mandatory sections under §10 LkSG.`)}>&#9998; {L === "de" ? "KI-Vollbericht" : "AI Full Report"}</button>
-          <button className="btn btn-p" onClick={openPdf}>&#8595; PDF</button>
+          <select className="sel" style={{width:100,height:34}} value={rYear as number} onChange={e=>(setRYear as any)(+e.target.value)}>
+            {[2024,2025,2026].map(y=><option key={y} value={y}>{y}</option>)}
+          </select>
+          <button className="btn btn-g btn-sm" onClick={()=>loadDraft()} disabled={genLd as boolean}>
+            {genLd?<span className="spin-d"/>:"↓"} {L==="de"?"Laden":"Load"}
+          </button>
+          <button className="btn btn-g btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>
+            ✓ {L==="de"?"Speichern":"Save"}
+          </button>
+          {draftTs&&<span style={{fontSize:11,color:"var(--t3)"}}>{L==="de"?"Gespeichert":"Saved"}: {draftTs}</span>}
         </div>
       </div>
-      <div style={{ display: "flex", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
-        <span className="stat-pill">&#127970; {kpis.total} {L === "de" ? "Lieferanten" : "Suppliers"}</span>
-        <span className="stat-pill" style={{ color: scCol }}>Score {sc}/100 ({sg})</span>
-        <span className="stat-pill" style={{ color: actionStats.overdue > 0 ? "#DC2626" : "#16A34A" }}>{actionStats.done}/{actionStats.total} CAPs</span>
-        <span className="stat-pill">{complaints.length} {L === "de" ? "Beschwerden" : "Complaints"}</span>
-        <span className="stat-pill" style={{ color: approvalMeta.pending > 0 ? "#D97706" : approvalMeta.rejected > 0 ? "#DC2626" : "#374151" }}>{approvalMeta.pending} {L === "de" ? "Approval offen" : "approval pending"}</span>
-      </div>
-      <div className="al al-blue" style={{ marginBottom: 18 }}>
-        <span className="al-icon">i</span>
-        <div style={{ fontSize: 12.5 }}>{L === "de" ? "Berichtspflicht §10 Abs. 2 LkSG. Einreichung beim BAFA bis 15. Juni. Dieser Entwurf muss vor Einreichung juristisch geprüft werden." : "Reporting obligation under §10 para. 2 LkSG. Submit to BAFA by 15 June. This draft must be reviewed by a lawyer before submission."}</div>
-      </div>
-      <WorkspaceApprovalInbox
-        L={L}
-        rows={approvalMeta.rows || []}
-        loading={approvalMeta.loading}
-        currentRole={approvalMeta.currentRole}
-        notes={approvalMeta.notes || ""}
-        setNotes={approvalMeta.setNotes || (() => {})}
-        onRefresh={() => { void approvalMeta.loadApprovals?.(); }}
-        onRequest={() => { void approvalMeta.requestApproval?.(rYear, props.toast, L); }}
-        onApprove={() => { void approvalMeta.reviewApproval?.(rYear, "approved", props.toast, L); }}
-        onReject={() => { void approvalMeta.reviewApproval?.(rYear, "rejected", props.toast, L); }}
-      />
-      <WorkspaceApprovalTimeline L={L} approval={approvalMeta} />
-      {draft !== null ? (
-        <>
-          <div className="brow" style={{ marginBottom: 16, justifyContent: "flex-end" }}>
-            {draftTs && <span style={{ fontSize: 11.5, color: "#9CA3AF" }}>{L === "de" ? "Gespeichert:" : "Saved:"} {draftTs}</span>}
-            <button className="btn btn-p btn-sm" onClick={saveDraft} disabled={!canEditDraft}>&#10003; {L === "de" ? "Entwurf speichern" : "Save draft"}</button>
+
+      <div className="g2">
+        {/* Left: sections */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <div className="card-sm" style={{display:"flex",alignItems:"center",justifyContent:"space-between"}}>
+            <div>
+              <div style={{fontSize:13,fontWeight:600,color:"var(--t1)"}}>{L==="de"?"Abschnitte":"Sections"}</div>
+              <div style={{fontSize:12,color:"var(--t3)"}}>{genCount}/{sections.length} {L==="de"?"generiert":"generated"}</div>
+            </div>
+            <div className="prog" style={{width:80,height:5}}>
+              <div className="prog-fill" style={{width:`${(genCount/sections.length)*100}%`,background:"var(--g2)"}}/>
+            </div>
           </div>
-          {BF.map(f => (
-            <div key={f.key} className="fl">
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 }}>
-                <label style={{ marginBottom: 0, textTransform: "none", fontSize: 12.5, fontWeight: 800, letterSpacing: 0, color: "#374151" }}>{f.lbl}</label>
-                <button className="btn btn-ai btn-xs" onClick={() => genSection(f.key)} disabled={genLd === f.key || !canEditDraft}>{genLd === f.key ? <span className="spin" /> : "✎"} {L === "de" ? "KI-Text" : "AI Text"}</button>
-              </div>
-              <textarea className="ta" rows={f.rows} disabled={!canEditDraft} placeholder={f.ph} value={(draft || {})[f.key] || ""} onChange={e => setDraft(d => ({ ...(d || {}), [f.key]: e.target.value }))} />
+          {sections.map(s=>(
+            <div key={s.id} style={{
+              display:"flex",alignItems:"center",gap:10,
+              padding:"11px 14px",
+              borderRadius:"var(--r-md)",
+              background:"var(--bg-1)",
+              border:`1px solid ${s.generated?"var(--g-border)":"var(--border)"}`,
+              transition:"border-color 0.15s",
+            }}>
+              <span style={{
+                fontSize:10,fontWeight:700,
+                fontFamily:"'DM Mono',monospace",
+                color:s.generated?"var(--g1)":"var(--t3)",
+                background:s.generated?"var(--g-bg)":"var(--bg-3)",
+                border:`1px solid ${s.generated?"var(--g-border)":"var(--border)"}`,
+                borderRadius:20,padding:"2px 8px",flexShrink:0,
+              }}>{s.para}</span>
+              <span style={{flex:1,fontSize:13,color:s.generated?"var(--t1)":"var(--t2)",fontWeight:s.generated?600:400}}>{s.label}</span>
+              {s.generated
+                ? <span style={{fontSize:10,color:"var(--g1)"}}>✓</span>
+                : <button className="btn btn-g btn-xs" onClick={()=>genSection(s.id)} disabled={genLd as boolean||!writable}>
+                    {genLd?<span className="spin-d"/>:"✦"} {L==="de"?"Generieren":"Generate"}
+                  </button>
+              }
             </div>
           ))}
-        </>
-      ) : (
-        <WorkspaceEmptyState L={L} icon="📄" title={L === "de" ? "Kein Entwurf geladen" : "No draft loaded"} copy={L === "de" ? "Laden Sie einen bestehenden Entwurf oder starten Sie mit KI-Unterstützung. Berichte schreiben sich leider noch nicht aus moralischer Pflicht." : "Load an existing draft or start with AI support. Reports still refuse to write themselves out of civic duty."} primary={{ label: L === "de" ? "Entwurf laden" : "Load draft", onClick: loadDraft }} secondary={{ label: L === "de" ? "KI-Vollbericht" : "AI full report", onClick: () => sendAi(L === "de" ? `Erstelle einen professionellen BAFA-Jahresbericht für ${company?.name || "unser Unternehmen"} für ${rYear}.` : `Create a professional BAFA annual report for ${company?.name || "our company"} for ${rYear}.`), tone: "secondary" }} />
-      )}
+          <button className="btn btn-ai" onClick={()=>genSection("all")} disabled={genLd as boolean||!writable} style={{width:"100%"}}>
+            {genLd?<span className="spin"/>:"✦"} {L==="de"?"Vollständigen Bericht generieren":"Generate full report"}
+          </button>
+        </div>
+
+        {/* Right: editor */}
+        <div style={{display:"flex",flexDirection:"column",gap:10}}>
+          <div className="card-sm" style={{display:"flex",gap:16,flexWrap:"wrap" as React.CSSProperties["flexWrap"]}}>
+            {[
+              {l:L==="de"?"Lieferanten":"Suppliers",v:kpis.total,c:"var(--blue)"},
+              {l:L==="de"?"CAPs":"CAPs",v:actionStats.total,c:"var(--amber)"},
+              {l:L==="de"?"Meldungen":"Complaints",v:complaints.length,c:"var(--purple)"},
+              {l:"Score",v:score?.total??0,c:"var(--g1)"},
+            ].map(s=>(
+              <div key={s.l} style={{textAlign:"center",flex:1}}>
+                <div style={{fontSize:20,fontWeight:700,color:s.c}}>{s.v}</div>
+                <div style={{fontSize:11,color:"var(--t3)"}}>{s.l}</div>
+              </div>
+            ))}
+          </div>
+          <textarea
+            className="ta"
+            style={{flex:1,minHeight:420,fontFamily:"'DM Mono',monospace",fontSize:12,lineHeight:1.7,resize:"none"}}
+            value={(draft as string)||""}
+            onChange={e=>setDraft(e.target.value)}
+            placeholder={L==="de"?"Bericht hier eingeben oder KI-Generierung starten…":"Enter report here or start AI generation…"}
+            disabled={!writable}
+          />
+          <div className="brow">
+            <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/reports/export/pdf","bafa-bericht.txt")}>↓ {L==="de"?"Exportieren":"Export"}</button>
+            <button className="btn btn-p btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>✓ {L==="de"?"Speichern":"Save"}</button>
+          </div>
+        </div>
+      </div>
+
+      <div style={{marginTop:14}}>
+        <WorkspaceApprovalAging L={L} meta={approvalMeta}/>
+      </div>
     </>
   );
 }

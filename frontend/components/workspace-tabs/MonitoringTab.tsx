@@ -1,127 +1,88 @@
 import React from "react";
-import WorkspaceDataState from "../workspace/WorkspaceDataState";
-import WorkspaceSectionMeta from "../workspace/WorkspaceSectionMeta";
-import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
-import WorkspaceEmptyState from "../workspace/WorkspaceEmptyState";
-import WorkspaceModuleGuide from "../workspace/WorkspaceModuleGuide";
 import type { WorkspaceTabProps } from "@/lib/workspace-types";
 
 export default function MonitoringTab(props: WorkspaceTabProps) {
-  const { L, requestState, reloads, events, screenings, sendAi } = props;
+  const {L,events,screenings,suppliers,reloads,requestState} = props;
+  const evs = (events as any[])||[];
+  const scr = (screenings as any[])||[];
+
+  const riskCountries = ["BD","MM","PK","CN","IN","VN","KH","ET","NG","CD"];
+  const monSups = (suppliers as any[]).filter((s:any)=>riskCountries.includes(s.country));
 
   return (
-    <>
-      <WorkspaceDataState L={L} requestState={requestState} domains={[
-        { key: "insights", label: L === "de" ? "Monitoring" : "Monitoring", onRetry: reloads.reloadInsights },
-      ]} />
-      <WorkspaceSectionMeta
-        L={L}
-        title={L === "de" ? "Monitoring-Domain" : "Monitoring domain"}
-        requestState={requestState}
-        domains={["insights"]}
-        onRefresh={reloads.reloadInsights}
-      />
-      <WorkspaceModuleGuide
-        L={L}
-        storageKey="lksg-guide-monitoring"
-        title={L === "de" ? "Modul-Guide: Monitoring" : "Module guide: monitoring"}
-        subtitle={L === "de" ? "Monitoring soll Sie nerven, bevor BAFA oder die Presse es tun." : "Monitoring should annoy you before BAFA or the press gets the chance."}
-        steps={[
-          { id: "insights", label: L === "de" ? "Insights laden" : "Load insights", done: events.length > 0 || screenings.length > 0, copy: L === "de" ? "Sonst bleibt das Modul nur ein sehr höflicher Platzhalter." : "Otherwise the module stays a very polite placeholder.", actionLabel: L === "de" ? "Neu laden" : "Reload", onAction: reloads.reloadInsights },
-          { id: "flags", label: L === "de" ? "Treffer prüfen" : "Review flagged items", done: screenings.some((s: any) => s.status === "clear") || events.length > 0, copy: L === "de" ? "Mindestens ein Durchlauf sollte dokumentiert geprüft worden sein." : "At least one pass should be visibly reviewed." },
-          { id: "followup", label: L === "de" ? "Folgeaktion anstoßen" : "Trigger follow-up action", done: props.actions.length > 0 || props.complaints.length > 0, copy: L === "de" ? "Erkenntnisse ohne Folgeaktion sind nur dekorative Erkenntnisse." : "Insights without follow-up are just decorative insights." },
-        ]}
-      />
-      {!events.length && !screenings.length && (
-        <WorkspaceActionPrompt
-          tone="amber"
-          title={L === "de" ? "Noch kein laufendes Monitoring sichtbar" : "No visible monitoring activity yet"}
-          copy={L === "de" ? "Starten Sie einen Monitoring-Lauf oder laden Sie die Insights neu. Sonst bleibt das hier nur eine hübsche Compliance-Vitrine." : "Run monitoring or reload insights. Otherwise this remains a decorative compliance cabinet."}
-          actionLabel={L === "de" ? "Insights aktualisieren" : "Refresh insights"}
-          onAction={reloads.reloadInsights}
-        />
-      )}
-
-      <div className="sec-hd" style={{ marginBottom: 16 }}>
+    <div style={{display:"flex",flexDirection:"column",gap:16}}>
+      <div className="workspace-bar">
         <div>
-          <div className="sec-title">{L === "de" ? "Lieferanten-Monitoring" : "Supplier Monitoring"}<span className="ltag">§6 Abs. 5 LkSG</span></div>
-          <div className="sec-sub">{L === "de" ? "Anlassbezogene Risikouberwachung. Sanktionspruefung und ESG-Signale. Quartalsweise empfohlen." : "Event-based risk monitoring. Sanctions screening and ESG signals. Recommended quarterly."}</div>
+          <div className="workspace-kicker">§5 LkSG — Continuous Monitoring</div>
+          <div className="workspace-title">{L==="de"?"Monitoring & Frühwarnung":"Monitoring & Early Warning"}</div>
+          <div className="workspace-sub">{L==="de"?"Kontinuierliche Überwachung von Lieferanten und Risikoländern.":"Continuous monitoring of suppliers and risk countries."}</div>
         </div>
-        <div className="brow">
-          <button className="btn btn-ai btn-sm" onClick={() => sendAi(L === "de" ? "Erklaere mir die §6 Abs. 5 LkSG anlassbezogene Risikoanalyse. Wann muss ich handeln?" : "Explain §6 para. 5 LkSG event-based risk analysis. When must I act?")}>✎ {L === "de" ? "§6 Erklaerung" : "§6 explanation"}</button>
-          <button className="btn btn-p btn-sm" onClick={reloads.reloadInsights}>↻ {L === "de" ? "Monitoring prüfen" : "Check monitoring"}</button>
-        </div>
+        <button className="btn btn-g btn-sm" onClick={()=>reloads.reloadMonitoringData()}>↺ {L==="de"?"Aktualisieren":"Refresh"}</button>
       </div>
 
-      <div className="g2" style={{ marginBottom: 16 }}>
+      {/* Stats */}
+      <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:12}}>
+        {[
+          {l:L==="de"?"Überwachte Lieferanten":"Monitored suppliers",v:monSups.length,c:"var(--blue)"},
+          {l:L==="de"?"Ereignisse (30 Tage)":"Events (30 days)",v:evs.length,c:evs.length>0?"var(--amber)":"var(--t3)"},
+          {l:L==="de"?"Screenings":"Screenings",v:scr.length,c:"var(--purple)"},
+        ].map(s=>(
+          <div key={s.l} className="kpi" style={{padding:"14px 16px"}}>
+            <div className="kpi-accent" style={{background:s.c}}/>
+            <div className="kpi-lbl">{s.l}</div>
+            <div className="kpi-val" style={{color:s.c,fontSize:24}}>{s.v}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="g2">
+        {/* Risk country suppliers */}
         <div className="card">
-          <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: "-.2px", marginBottom: 14 }}>Sanctions & Screenings <span className="ltag">§2 Abs. 2 LkSG</span></div>
-          {screenings.length ? (
-            <div className="tbl-wrap">
-              <table>
-                <thead><tr><th>{L === "de" ? "Typ" : "Type"}</th><th>Status</th><th>Score</th><th>{L === "de" ? "Datum" : "Date"}</th></tr></thead>
-                <tbody>
-                  {screenings.map((s: any) => (
-                    <tr key={s.id}>
-                      <td className="mono">{s.screening_type}</td>
-                      <td><span className={s.status === "clear" ? "chip cl" : s.status === "flagged" ? "chip ch" : "chip cm"}>{s.status}</span></td>
-                      <td><strong style={{ color: s.score > 50 ? "#DC2626" : "#16A34A" }}>{s.score}</strong></td>
-                      <td style={{ color: "#9CA3AF", fontSize: 11.5 }}>{new Date(s.created_at).toLocaleDateString(L === "de" ? "de-DE" : "en-GB")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="sec-hd" style={{marginBottom:12}}>
+            <div className="sec-title">{L==="de"?"Risikoland-Lieferanten":"Risk country suppliers"}</div>
+          </div>
+          {monSups.length>0 ? (
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {monSups.slice(0,8).map((s:any)=>(
+                <div key={s.id} style={{display:"flex",alignItems:"center",gap:10,padding:"9px 12px",borderRadius:"var(--r-md)",background:"var(--bg-2)",border:"1px solid var(--border)"}}>
+                  <span className="mono" style={{fontSize:12,color:"var(--red)",fontWeight:700,flexShrink:0}}>{s.country}</span>
+                  <span style={{flex:1,fontSize:13,color:"var(--t1)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{s.name}</span>
+                  <span className={s.risk_level==="high"?"chip ch":s.risk_level==="medium"?"chip cm":"chip cu"} style={{fontSize:10}}>{s.risk_level}</span>
+                </div>
+              ))}
+              {monSups.length>8&&<div style={{fontSize:12,color:"var(--t3)",textAlign:"center",paddingTop:4}}>+{monSups.length-8} {L==="de"?"weitere":"more"}</div>}
             </div>
           ) : (
-            <WorkspaceEmptyState
-              L={L}
-              compact
-              icon="🛡️"
-              title={L === "de" ? "Noch keine Screenings" : "No screenings yet"}
-              copy={L === "de" ? "Sobald Insights geladen sind, erscheinen hier Treffer und Entwarnungen. Im Idealfall mehr Entwarnungen als Treffer." : "Once insights are loaded, hits and clearances appear here. Ideally more clearances than hits."}
-              secondary={{ label: L === "de" ? "Neu laden" : "Reload", onClick: reloads.reloadInsights, tone: "secondary" }}
-            />
+            <div className="empty empty-compact">
+              <div className="empty-ic">◌</div>
+              <div className="empty-t">{L==="de"?"Keine Risikoland-Lieferanten":"No risk country suppliers"}</div>
+            </div>
           )}
         </div>
 
+        {/* Events feed */}
         <div className="card">
-          <div style={{ fontSize: 14, fontWeight: 800, letterSpacing: "-.2px", marginBottom: 14 }}>{L === "de" ? "ESG-Ereignisse" : "ESG events"} <span className="ltag">§6 LkSG</span></div>
-          {events.length ? (
-            <div className="tbl-wrap">
-              <table>
-                <thead><tr><th>{L === "de" ? "Schwere" : "Severity"}</th><th>Titel</th><th>{L === "de" ? "Datum" : "Date"}</th></tr></thead>
-                <tbody>
-                  {events.slice(0, 8).map((e: any) => (
-                    <tr key={e.id}>
-                      <td><span className={e.severity === "high" || e.severity === "critical" ? "chip ch" : e.severity === "medium" ? "chip cm" : "chip cl"}>{e.severity}</span></td>
-                      <td style={{ fontSize: 12.5 }}>
-                        {e.url ? <a href={e.url} target="_blank" rel="noreferrer" style={{ color: "#1B3D2B", fontWeight: 600 }}>{e.title || e.event_type} ↗</a> : (e.title || e.event_type)}
-                      </td>
-                      <td style={{ color: "#9CA3AF", fontSize: 11 }}>{new Date(e.created_at).toLocaleDateString(L === "de" ? "de-DE" : "en-GB")}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+          <div className="sec-hd" style={{marginBottom:12}}>
+            <div className="sec-title">{L==="de"?"Ereignis-Feed":"Event feed"}</div>
+          </div>
+          {evs.length>0 ? (
+            <div style={{display:"flex",flexDirection:"column",gap:6}}>
+              {evs.slice(0,6).map((e:any,i:number)=>(
+                <div key={i} style={{padding:"10px 12px",borderRadius:"var(--r-md)",background:"var(--bg-2)",border:"1px solid var(--border)"}}>
+                  <div style={{fontSize:12,fontWeight:600,color:"var(--t1)",marginBottom:2}}>{e.title||e.type}</div>
+                  <div style={{fontSize:11,color:"var(--t3)"}}>{e.date||e.created_at}</div>
+                </div>
+              ))}
             </div>
           ) : (
-            <WorkspaceEmptyState
-              L={L}
-              compact
-              icon="🌍"
-              title={L === "de" ? "Keine ESG-Ereignisse" : "No ESG events"}
-              copy={L === "de" ? "Aktuell liegen keine Ereignisse vor. Das ist angenehm, aber trotzdem kein Grund für Selbstzufriedenheit." : "There are no ESG events right now. Nice, but still not a reason for self-congratulation."}
-              secondary={{ label: L === "de" ? "Monitoring prüfen" : "Review monitoring", onClick: reloads.reloadInsights, tone: "secondary" }}
-            />
+            <div className="empty empty-compact">
+              <div className="empty-ic">◌</div>
+              <div className="empty-t">{L==="de"?"Keine Ereignisse":"No events"}</div>
+              <div className="empty-c">{L==="de"?"Das Monitoring-System ist aktiv und überwacht automatisch.":"The monitoring system is active and monitoring automatically."}</div>
+            </div>
           )}
         </div>
       </div>
-
-      <div className="al al-info">
-        <span className="al-icon">i</span>
-        <div style={{ fontSize: 12.5 }}>
-          <strong>§6 Abs. 5 LkSG:</strong> {L === "de" ? "Anlassbezogene Risikoanalyse bei Verschlechterung der Menschenrechtslage im Lieferland, neuen NGO- oder Medienhinweisen, wesentlichen Anderungen bei Lieferanten oder Beschwerden. Empfehlung: quartalsweises Monitoring." : "Event-based risk analysis is required when the human-rights situation in a supplier country deteriorates, when NGOs or media reveal new concerns, when suppliers change materially, or when complaints are received. Recommendation: quarterly monitoring."}
-        </div>
-      </div>
-    </>
+    </div>
   );
 }

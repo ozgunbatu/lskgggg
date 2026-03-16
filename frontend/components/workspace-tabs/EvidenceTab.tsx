@@ -1,219 +1,174 @@
 import React from "react";
+import { API } from "@/lib/api";
+import { getToken } from "@/lib/auth";
 import type { WorkspaceTabProps } from "@/lib/workspace-types";
+
+type Evidence = { id:string;title:string;type:string;lksg_ref?:string;supplier_name?:string;file_name?:string;file_size?:number;description?:string;created_at:string; };
 
 export default function EvidenceTab(props: WorkspaceTabProps) {
   const {
-    L,
-    company,
-    suppliers,
-    complaints,
-    actions,
-    events,
-    screenings,
-    loading,
-    expanded,
-    editingSup,
-    sName,
-    setSName,
-    sCountry,
-    setSCountry,
-    sInd,
-    setSInd,
-    csv,
-    setCsv,
-    showCapModal,
-    setShowCapModal,
-    capPara,
-    setCapPara,
-    triageRes,
-    setTriageRes,
-    triageLd,
-    actionNotes,
-    setActionNotes,
-    supAI,
-    supCAP,
-    supLd,
-    rYear,
-    setRYear,
-    draft,
-    setDraft,
-    draftTs,
-    genLd,
-    aiMsgs,
-    setAiMsgs,
-    aiInput,
-    setAiInput,
-    aiLd,
-    saqs,
-    saqEmail,
-    setSaqEmail,
-    saqSup,
-    setSaqSup,
-    saqDays,
-    setSaqDays,
-    saqSending,
-    kpiLive,
-    kpiTrend,
-    kpiLd,
-    supFilter,
-    setSupFilter,
-    auditLog,
-    auditFilter,
-    setAuditFilter,
-    auditLd,
-    showQuickstart,
-    evidences,
-    evTitle,
-    setEvTitle,
-    evType,
-    setEvType,
-    evLksg,
-    setEvLksg,
-    evDesc,
-    setEvDesc,
-    evSupId,
-    setEvSupId,
-    evFile,
-    setEvFile,
-    evUploading,
-    openAddSupModal,
-    openEditSupModal,
-    delSupplier,
-    recalc,
-    importCsv,
-    submitComplaint,
-    triageComplaint,
-    updateComplaintStatus,
-    saveComplaintNote,
-    createCap,
-    updateActionStatus,
-    saveActionNote,
-    deleteAction,
-    loadDraft,
-    saveDraft,
-    genSection,
-    getSupAI,
-    getSupCAP,
-    sendAi,
-    loadAuditLog,
-    exportCSV,
-    sendSaq,
-    deleteSaq,
-    loadKpi,
-    saveKpiSnapshot,
-    uploadEvidence,
-    deleteEvidence,
-    chipRL,
-    sevChip,
-    cStatusChip,
-    aStatusChip,
-    pChip,
-    dueBadge,
-    RiskBreakdown,
-    setTab,
-    fileRef,
-    score,
-    kpis,
-    actionStats,
-    workspaceAssist,
-    BF
+    L,suppliers,evidences,evTitle,setEvTitle,evType,setEvType,evLksg,setEvLksg,
+    evDesc,setEvDesc,evSupId,setEvSupId,evFile,setEvFile,evUploading,
+    uploadEvidence,deleteEvidence,setTab,sendAi,fileRef,toast,
   } = props;
 
+  const evs = (evidences as Evidence[])||[];
+
+  const EV_TYPES = [
+    ["audit_report",L==="de"?"Auditbericht":"Audit report"],
+    ["coc_signed",L==="de"?"CoC unterschrieben":"Signed CoC"],
+    ["training_record",L==="de"?"Trainingsnachweis":"Training record"],
+    ["cap_document",L==="de"?"CAP-Dokument":"CAP document"],
+    ["certificate",L==="de"?"Zertifikat":"Certificate"],
+    ["saq_response","SAQ Response"],
+    ["screenshot","Screenshot"],
+    ["email","Email"],
+    ["other",L==="de"?"Sonstiges":"Other"],
+  ];
+
+  const TYPE_COLOR: Record<string,string> = {
+    audit_report:"var(--blue)",coc_signed:"var(--g1)",training_record:"var(--purple)",
+    certificate:"var(--amber)",cap_document:"var(--red)",other:"var(--t3)",
+  };
+
   return (
-    <>
-      <div className="sec-hd" style={{ marginBottom: 16 }}>
+    <div style={{display:"flex",flexDirection:"column",gap:14}}>
+      <div className="workspace-bar">
         <div>
-          <div className="sec-title">{L === "de" ? "Nachweis-Tresor" : "Evidence Vault"}<span className="ltag">§10 LkSG</span></div>
-          <div className="sec-sub">{L === "de" ? "§10 Abs. 1 LkSG: Aufbewahrungspflicht 7 Jahre. PDF, JPG, PNG bis 4MB." : "§10 para. 1 LkSG: Retention 7 years. PDF, JPG, PNG up to 4MB."}</div>
+          <div className="workspace-kicker">§10 LkSG — 7 Jahre Aufbewahrung</div>
+          <div className="workspace-title">{L==="de"?"Nachweis-Tresor":"Evidence Vault"}</div>
+          <div className="workspace-sub">{L==="de"?"Auditberichte, CoC, Zertifikate und alle §10-Nachweise an einem Ort.":"Audit reports, CoC, certificates and all §10 evidence in one place."}</div>
         </div>
-        <button className="btn btn-ai btn-sm" onClick={() => { setTab("ai"); setTimeout(() => sendAi(L === "de" ? "Welche Nachweise fehlen mir noch fuer ein BAFA-Audit? Pruefe §§ 4-10 LkSG." : "What evidence am I missing for a BAFA audit? Check §§ 4-10 LkSG."), 100); }}>&#9998; {L === "de" ? "Lueckenanalyse" : "Gap analysis"}</button>
+        <button className="btn btn-ai btn-sm" onClick={()=>{ (setTab as any)("ai"); setTimeout(()=>(sendAi as any)(L==="de"?"Welche Nachweise fehlen mir für ein BAFA-Audit?":"What evidence am I missing for a BAFA audit?"),100); }}>
+          ✦ {L==="de"?"Lückenanalyse":"Gap analysis"}
+        </button>
       </div>
+
       <div className="g2">
+        {/* Upload */}
         <div className="card">
-          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 4 }}>{L === "de" ? "Dokument hochladen" : "Upload Document"}</div>
-          <div style={{ fontSize: 12.5, color: "#6B7280", marginBottom: 14 }}>{L === "de" ? "Auditberichte, CoC, Zertifikate, Trainings-Nachweise..." : "Audit reports, CoC, certificates, training records..."}</div>
-          <div className="fl"><label>{L === "de" ? "Titel *" : "Title *"}</label><input className="inp" value={evTitle} onChange={e => setEvTitle(e.target.value)} placeholder={L === "de" ? "z.B. SMETA-Audit Textile Group 2025" : "e.g. SMETA Audit Textile Group 2025"} /></div>
+          <div className="sec-title" style={{marginBottom:4}}>{L==="de"?"Dokument hochladen":"Upload document"}</div>
+          <div className="sec-sub" style={{marginBottom:14}}>{L==="de"?"PDF, JPG, PNG bis 4 MB — 7 Jahre Aufbewahrungspflicht.":"PDF, JPG, PNG up to 4 MB — 7 year retention requirement."}</div>
+
+          <div className="fl">
+            <label>{L==="de"?"Titel *":"Title *"}</label>
+            <input className="inp" value={(evTitle as string)||""} onChange={e=>(setEvTitle as any)(e.target.value)} placeholder={L==="de"?"z.B. SMETA-Audit 2025":"e.g. SMETA Audit 2025"}/>
+          </div>
           <div className="inp-row">
-            <div className="fl"><label>{L === "de" ? "Typ" : "Type"}</label>
-              <select className="sel" value={evType} onChange={e => setEvType(e.target.value)}>
-                {([["audit_report","Auditbericht","Audit report"],["coc_signed","CoC unterschrieben","Signed CoC"],["training_record","Trainingsnachweis","Training record"],["cap_document","CAP-Dokument","CAP document"],["certificate","Zertifikat","Certificate"],["saq_response","SAQ-Antwort","SAQ response"],["screenshot","Screenshot","Screenshot"],["email","E-Mail","Email"],["other","Sonstiges","Other"]] as const).map(([v,de,en]) => <option key={v} value={v}>{L === "de" ? de : en}</option>)}
+            <div className="fl">
+              <label>{L==="de"?"Typ":"Type"}</label>
+              <select className="sel" value={(evType as string)||"other"} onChange={e=>(setEvType as any)(e.target.value)}>
+                {EV_TYPES.map(([v,l])=><option key={v} value={v}>{l}</option>)}
               </select>
             </div>
-            <div className="fl"><label>LkSG §</label>
-              <select className="sel" value={evLksg} onChange={e => setEvLksg(e.target.value)}>
-                {([["","Allgemein","General"],["4","§4"],["5","§5"],["6","§6"],["7","§7"],["8","§8"],["9","§9"],["10","§10"]] as const).map(([v,de,en]) => <option key={v} value={v}>{L === "de" ? de : en}</option>)}
+            <div className="fl">
+              <label>LkSG §</label>
+              <select className="sel" value={(evLksg as string)||""} onChange={e=>(setEvLksg as any)(e.target.value)}>
+                {[["","—"],["4","§4"],["5","§5"],["6","§6"],["7","§7"],["8","§8"],["9","§9"],["10","§10"]].map(([v,l])=><option key={v} value={v}>{l}</option>)}
               </select>
             </div>
           </div>
-          <div className="fl"><label>{L === "de" ? "Lieferant" : "Supplier"}</label>
-            <select className="sel" value={evSupId} onChange={e => setEvSupId(e.target.value)}>
-              <option value="">--</option>
-              {suppliers.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+          <div className="fl">
+            <label>{L==="de"?"Lieferant":"Supplier"}</label>
+            <select className="sel" value={(evSupId as string)||""} onChange={e=>(setEvSupId as any)(e.target.value)}>
+              <option value="">—</option>
+              {(suppliers as any[]).map((s:any)=><option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </div>
-          <div className="fl"><label>{L === "de" ? "Notiz" : "Note"}</label><textarea className="ta" rows={2} value={evDesc} onChange={e => setEvDesc(e.target.value)} placeholder={L === "de" ? "Audit-Befunde, Ergebnis..." : "Audit findings, outcome..."} /></div>
           <div className="fl">
-            <label>{L === "de" ? "Datei (PDF/JPG/PNG, max 4MB)" : "File (PDF/JPG/PNG, max 4MB)"}</label>
-            <div style={{ border: "2px dashed #E2E8E2", borderRadius: 10, padding: "14px 16px", textAlign: "center" as React.CSSProperties["textAlign"], cursor: "pointer", background: evFile ? "#F0FDF4" : "#FAFBFA" }}
-              onClick={() => fileRef.current?.click()}
-              onDragOver={e => e.preventDefault()}
-              onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.size < 4.5*1024*1024) setEvFile(f); else toast("err","max 4MB"); }}>
-              <input ref={fileRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{ display:"none" }}
-                onChange={e => { const f = e.target.files?.[0]; if (f && f.size < 4.5*1024*1024) setEvFile(f); else if(f) toast("err","max 4MB"); }} />
+            <label>{L==="de"?"Notiz":"Note"}</label>
+            <textarea className="ta" rows={2} value={(evDesc as string)||""} onChange={e=>(setEvDesc as any)(e.target.value)} placeholder={L==="de"?"Audit-Befunde, Ergebnis…":"Audit findings, outcome…"}/>
+          </div>
+          <div className="fl">
+            <label>{L==="de"?"Datei":"File"}</label>
+            <div
+              onClick={()=>(fileRef as any)?.current?.click()}
+              onDragOver={e=>e.preventDefault()}
+              onDrop={e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f&&f.size<4.5*1024*1024)(setEvFile as any)(f); else (toast as any)("err","max 4MB"); }}
+              style={{
+                border:`1px dashed ${evFile?"var(--g-border)":"var(--border-2)"}`,
+                borderRadius:"var(--r-md)",padding:"16px",textAlign:"center" as React.CSSProperties["textAlign"],
+                cursor:"pointer",background:evFile?"rgba(110,231,160,0.04)":"var(--bg-2)",
+                transition:"all 0.15s",
+              }}
+            >
+              <input ref={fileRef as any} type="file" accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" style={{display:"none"}}
+                onChange={e=>{ const f=e.target.files?.[0]; if(f&&f.size<4.5*1024*1024)(setEvFile as any)(f); else if(f)(toast as any)("err","max 4MB"); }}
+              />
               {evFile
-                ? <div style={{ color:"#16A34A",fontWeight:700,fontSize:13 }}>{evFile.name} ({(evFile.size/1024).toFixed(0)}KB)</div>
-                : <div style={{ color:"#9CA3AF",fontSize:13 }}>{L === "de" ? "Datei hier ablegen oder klicken" : "Drop file or click"}</div>}
+                ? <div style={{color:"var(--g1)",fontWeight:600,fontSize:13}}>📎 {(evFile as File).name} ({((evFile as File).size/1024).toFixed(0)}KB)</div>
+                : <div style={{color:"var(--t3)",fontSize:13}}>{L==="de"?"Datei ablegen oder klicken":"Drop file or click"}</div>
+              }
             </div>
           </div>
-          <button className="btn btn-p" style={{ width:"100%",marginTop:4 }} onClick={uploadEvidence} disabled={evUploading || !evTitle.trim()}>
-            {evUploading ? <span className="spin" /> : null}{L === "de" ? "Dokument speichern" : "Save document"}
+          <button className="btn btn-p" style={{width:"100%",marginTop:4}} onClick={()=>(uploadEvidence as any)()} disabled={(evUploading as boolean)||!(evTitle as string)?.trim()}>
+            {evUploading?<span className="spin"/>:null}
+            {L==="de"?"Dokument speichern":"Save document"}
           </button>
         </div>
+
+        {/* Evidence list */}
         <div className="card">
-          <div style={{ fontSize: 15, fontWeight: 800, marginBottom: 14 }}>{L === "de" ? "Gespeicherte Nachweise" : "Saved Evidence"} <span style={{ color:"#9CA3AF",fontWeight:600 }}>({evidences.length})</span></div>
-          {evidences.length > 0 && (
-            <div style={{ display:"flex",gap:8,marginBottom:12,flexWrap:"wrap" }}>
-              {Array.from(new Set(evidences.map((e: Evidence) => e.type))).map(t => {
-                const n = evidences.filter((e: Evidence) => e.type === t).length;
-                return <span key={t} className="stat-pill">{t.replace(/_/g," ")}: {n}</span>;
+          <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+            <div className="sec-title">{L==="de"?"Gespeicherte Nachweise":"Saved evidence"}</div>
+            <span style={{fontSize:12,color:"var(--t3)"}}>{evs.length} {L==="de"?"gesamt":"total"}</span>
+          </div>
+
+          {evs.length>0&&(
+            <div style={{display:"flex",gap:6,flexWrap:"wrap" as React.CSSProperties["flexWrap"],marginBottom:12}}>
+              {Array.from(new Set(evs.map(e=>e.type))).map(t=>{
+                const n=evs.filter(e=>e.type===t).length;
+                const c=TYPE_COLOR[t]||"var(--t3)";
+                return <span key={t} style={{fontSize:10,fontWeight:600,padding:"2px 8px",borderRadius:20,background:`${c}12`,color:c,border:`1px solid ${c}25`}}>{t.replace(/_/g," ")}: {n}</span>;
               })}
             </div>
           )}
-          <div style={{ display:"flex",flexDirection:"column",gap:8,maxHeight:480,overflowY:"auto" }}>
-            {evidences.map((ev: Evidence) => (
-              <div key={ev.id} className="card-xs" style={{ borderLeft:"3px solid #1B3D2B" }}>
-                <div style={{ display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8 }}>
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontWeight:700,fontSize:13,marginBottom:3 }}>{ev.title}</div>
-                    <div style={{ fontSize:11.5,color:"#6B7280",display:"flex",gap:8,flexWrap:"wrap" }}>
-                      <span className="chip cu" style={{ fontSize:10 }}>{ev.type.replace(/_/g," ")}</span>
-                      {ev.lksg_ref && <span className="ltag">§{ev.lksg_ref}</span>}
-                      {ev.supplier_name && <span>&#127970; {ev.supplier_name}</span>}
-                      {ev.file_name && <span>&#128206; {ev.file_name}{ev.file_size ? ` (${(ev.file_size/1024).toFixed(0)}KB)` : ""}</span>}
-                      <span>{new Date(ev.created_at).toLocaleDateString(L === "de" ? "de-DE" : "en-GB")}</span>
+
+          <div style={{display:"flex",flexDirection:"column",gap:7,maxHeight:480,overflowY:"auto"}}>
+            {evs.map(ev=>{
+              const c=TYPE_COLOR[ev.type]||"var(--t3)";
+              return (
+                <div key={ev.id} style={{
+                  padding:"11px 14px",
+                  borderRadius:"var(--r-md)",
+                  background:"var(--bg-2)",
+                  border:`1px solid ${c}20`,
+                  borderLeft:`3px solid ${c}`,
+                }}>
+                  <div style={{display:"flex",justifyContent:"space-between",alignItems:"flex-start",gap:8}}>
+                    <div style={{flex:1}}>
+                      <div style={{fontSize:13,fontWeight:600,color:"var(--t1)",marginBottom:3}}>{ev.title}</div>
+                      <div style={{fontSize:11,color:"var(--t3)",display:"flex",gap:8,flexWrap:"wrap" as React.CSSProperties["flexWrap"]}}>
+                        <span style={{color:c,fontWeight:600}}>{ev.type.replace(/_/g," ")}</span>
+                        {ev.lksg_ref&&<span className="ltag">§{ev.lksg_ref}</span>}
+                        {ev.supplier_name&&<span>◎ {ev.supplier_name}</span>}
+                        {ev.file_name&&<span>📎 {ev.file_name}{ev.file_size?` (${(ev.file_size/1024).toFixed(0)}KB)`:""}</span>}
+                        <span>{new Date(ev.created_at).toLocaleDateString(L==="de"?"de-DE":"en-GB")}</span>
+                      </div>
+                      {ev.description&&<div style={{fontSize:11.5,color:"var(--t3)",marginTop:4}}>{ev.description}</div>}
                     </div>
-                    {ev.description && <div style={{ fontSize:11.5,color:"#4B5563",marginTop:4 }}>{ev.description}</div>}
-                  </div>
-                  <div style={{ display:"flex",gap:5,flexShrink:0 }}>
-                    {ev.file_name && (
-                      <a className="btn btn-g btn-xs"
-                        href={`${API}/evidence/${ev.id}/download?token=${encodeURIComponent(tok())}`}
-                        target="_blank" rel="noreferrer">&#8595;</a>
-                    )}
-                    <button className="btn btn-r btn-xs" onClick={() => deleteEvidence(ev.id)}>x</button>
+                    <div style={{display:"flex",gap:5,flexShrink:0}}>
+                      {ev.file_name&&(
+                        <a className="btn btn-g btn-xs"
+                          href={`${API}/evidence/${ev.id}/download?token=${encodeURIComponent(getToken())}`}
+                          target="_blank" rel="noreferrer">↓</a>
+                      )}
+                      <button className="btn btn-r btn-xs" onClick={()=>(deleteEvidence as any)(ev.id)}>✕</button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-            {!evidences.length && (
-              <div className="empty" style={{ padding:"32px 0" }}>
-                <div className="empty-ic">&#128194;</div>
-                <div className="empty-t">{L === "de" ? "Noch keine Nachweise" : "No evidence yet"}</div>
+              );
+            })}
+            {!evs.length&&(
+              <div className="empty empty-compact">
+                <div className="empty-ic">📁</div>
+                <div className="empty-t">{L==="de"?"Noch keine Nachweise":"No evidence yet"}</div>
+                <div className="empty-c">{L==="de"?"Laden Sie Auditberichte, CoC und Zertifikate hoch.":"Upload audit reports, CoC and certificates."}</div>
               </div>
             )}
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
