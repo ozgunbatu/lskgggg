@@ -102,23 +102,17 @@ app.get("/ready", async (_req, res) => {
 });
 app.get("/ping",   (_req, res) => res.send("pong"));
 
-// ─── Global error handlers ───────────────────────────────────────────────────
-// 404 catch-all
-app.use((_req: any, res: any) => {
-  res.status(404).json({ error: "Not found" });
-});
-
-// Unhandled errors
-app.use((err: any, _req: any, res: any, _next: any) => {
-  console.error("[error]", err?.message || err);
-  res.status(500).json({ error: err?.message || "Internal server error" });
-});
-
-// ─── Bind port FIRST, then bootstrap everything else ─────────────────────────
-app.listen(port, "0.0.0.0", () => {
-  console.log(`[v95] LkSGCompass backend listening on 0.0.0.0:${port}`);
-  bootstrap().catch(e => console.error("[bootstrap] fatal:", e?.message));
-});
+// ─── Bootstrap: load routes, THEN start listening ────────────────────────────
+bootstrap()
+  .then(() => {
+    app.listen(port, "0.0.0.0", () => {
+      console.log(`[v95] LkSGCompass backend listening on 0.0.0.0:${port}`);
+    });
+  })
+  .catch(e => {
+    console.error("[bootstrap] fatal:", e?.message || e);
+    process.exit(1);
+  });
 
 async function bootstrap() {
   // Load all route modules
@@ -165,12 +159,17 @@ async function bootstrap() {
   app.use("/audit",        auditlog);
   app.use("/reminders",    reminders);
 
+  // 404 must be LAST — after all routes are registered
+  app.use((_req: any, res: any) => {
+    res.status(404).json({ error: "Not found" });
+  });
   // Global error handler
   app.use((err: any, _req: any, res: any, _next: any) => {
+    console.error("[error]", err?.message || err);
     res.status(500).json({ error: String(err?.message ?? "Server error") });
   });
 
-  console.log("[bootstrap] routes ok");
+  console.log("[bootstrap] routes ok — all handlers registered");
 
   // Run DB migrations
   await migrate();
