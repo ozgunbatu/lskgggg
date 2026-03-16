@@ -645,15 +645,15 @@ export default function LandingPage() {
               {lang==="de"?"LkSGCompass automatisiert §5-Risikoanalyse, BAFA-Berichterstattung, Rechtsvorlagen und Verteidigungsakte — für Unternehmen mit internationalen Lieferketten in Textil, Logistik, Automotive und mehr.":"LkSGCompass automates §5 risk analysis, BAFA reporting, legal templates and defense documentation — for companies with international supply chains in textile, logistics, automotive and more."}
             </p>
             <div className="hero-ctas">
-              <a href="/demo" className="btn-primary">
-                {lang==="de"?"Live-Demo ansehen":"View live demo"} <Icon.Arrow />
+              <a href="/register" className="btn-primary">
+                {lang==="de"?"Kostenlos starten — 14 Tage":"Start free — 14 days"} <Icon.Arrow />
               </a>
-              <a href="/pricing" className="btn-ghost">
-                {lang==="de"?"Preise ansehen":"View pricing"}
+              <a href="/demo" className="btn-ghost">
+                {lang==="de"?"Live-Demo ansehen":"View live demo"}
               </a>
             </div>
             <div className="hero-proof">
-              {["Keine Kreditkarte notig","DSGVO-konform","EU-Hosting"].map(t => (
+              {["Keine Kreditkarte nötig","DSGVO-konform","EU-Hosting"].map(t => (
                 <div key={t} className="hero-proof-item">
                   <Icon.Check /> {t}
                 </div>
@@ -997,8 +997,8 @@ export default function LandingPage() {
           <h2 className="cta-h2">LkSG-Compliance.<br /><em>Ab heute.</em></h2>
           <p className="cta-sub">Kein Kreditkarte. In 5 Minuten einsatzbereit. Jederzeit kundbar.</p>
           <div className="cta-btns">
-            <a href="/demo" className="btn-white">Interaktive Demo starten →</a>
-            <a href="/pricing" className="btn-white-ghost">Pakete vergleichen</a>
+            <a href="/register" className="btn-white">Kostenlos starten → 14 Tage gratis</a>
+            <a href="/demo" className="btn-white-ghost">Live-Demo ansehen</a>
           </div>
           <p className="cta-note">• DSGVO-konform · • EU-Hosting · • Keine Vertragsbindung · • AVV auf Anfrage</p>
         </div>

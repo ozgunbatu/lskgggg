@@ -83,7 +83,7 @@ app.use("/ai", aiRateLimit);
 
 // ─── Health & readiness ───────────────────────────────────────────────────────
 app.get("/health", async (_req, res) => {
-  const version = process.env.APP_VERSION || "v80";
+  const version = process.env.APP_VERSION || "v95";
   const uptimeSec = Math.round(process.uptime());
   let dbStatus: "ok" | "down" = "down";
   try {
@@ -116,7 +116,7 @@ app.use((err: any, _req: any, res: any, _next: any) => {
 
 // ─── Bind port FIRST, then bootstrap everything else ─────────────────────────
 app.listen(port, "0.0.0.0", () => {
-  console.log(`[v80] LkSGCompass backend listening on 0.0.0.0:${port}`);
+  console.log(`[v95] LkSGCompass backend listening on 0.0.0.0:${port}`);
   bootstrap().catch(e => console.error("[bootstrap] fatal:", e?.message));
 });
 
