@@ -83,12 +83,16 @@ export default function useWorkspaceSession({
   }, [aiMsgs, aiEnd]);
 
   useEffect(() => {
-    if (tab === "monitoring") loadMonitoringData();
-    if (tab === "kpi") loadKpi();
-    if (tab === "saq") loadSaqData();
-    if (tab === "evidence") loadEvidenceData();
-    if (tab === "audit") loadAuditLog();
-    if (tab === "reports" && !draft) loadDraft();
+    const swallow = (task?: void | Promise<void>) => {
+      void Promise.resolve(task).catch(() => undefined);
+    };
+
+    if (tab === "monitoring") swallow(loadMonitoringData());
+    if (tab === "kpi") swallow(loadKpi());
+    if (tab === "saq") swallow(loadSaqData());
+    if (tab === "evidence") swallow(loadEvidenceData());
+    if (tab === "audit") swallow(loadAuditLog());
+    if (tab === "reports" && !draft) swallow(loadDraft());
   }, [tab, draft, loadMonitoringData, loadKpi, loadSaqData, loadEvidenceData, loadAuditLog, loadDraft]);
 
   const dismissQuickstart = () => {

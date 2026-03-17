@@ -7,45 +7,45 @@ export const WORKSPACE_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
 :root {
-  /* Canvas */
-  --bg:       #0a0c0b;
-  --bg-1:     #0f1210;
-  --bg-2:     #141714;
-  --bg-3:     #1a1e1a;
-  --bg-4:     #1f241f;
+  /* Canvas aligned with landing */
+  --bg:       #f3f5f3;
+  --bg-1:     #ffffff;
+  --bg-2:     #f7faf7;
+  --bg-3:     #eef4ef;
+  --bg-4:     #e3ece5;
   /* Borders */
-  --border:   rgba(255,255,255,0.07);
-  --border-2: rgba(255,255,255,0.10);
-  --border-3: rgba(255,255,255,0.14);
+  --border:   rgba(27,61,43,0.10);
+  --border-2: rgba(27,61,43,0.14);
+  --border-3: rgba(27,61,43,0.18);
   /* Text */
-  --t1: #f0f2f0;
-  --t2: #a0aba2;
-  --t3: #5c665e;
-  --t4: #3d453f;
+  --t1: #102418;
+  --t2: #496252;
+  --t3: #6f8375;
+  --t4: #95a398;
   /* Brand */
-  --g:   #6ee7a0;
-  --g1:  #4fd881;
-  --g2:  #22c55e;
-  --g-bg: rgba(110,231,160,0.07);
-  --g-border: rgba(110,231,160,0.18);
+  --g:   #1B3D2B;
+  --g1:  #27563c;
+  --g2:  #2f6b48;
+  --g-bg: rgba(27,61,43,0.08);
+  --g-border: rgba(27,61,43,0.16);
   /* Status */
-  --red:    #f87171;
-  --red-bg: rgba(248,113,113,0.08);
-  --red-border: rgba(248,113,113,0.2);
-  --amber:     #fbbf24;
-  --amber-bg:  rgba(251,191,36,0.08);
-  --amber-border: rgba(251,191,36,0.2);
-  --blue:    #60a5fa;
-  --blue-bg: rgba(96,165,250,0.08);
-  --blue-border: rgba(96,165,250,0.2);
-  --purple:    #c084fc;
-  --purple-bg: rgba(192,132,252,0.08);
-  --purple-border: rgba(192,132,252,0.2);
+  --red:    #C0392B;
+  --red-bg: rgba(192,57,43,0.08);
+  --red-border: rgba(192,57,43,0.16);
+  --amber:     #B7791F;
+  --amber-bg:  rgba(183,121,31,0.08);
+  --amber-border: rgba(183,121,31,0.16);
+  --blue:    #2B6CB0;
+  --blue-bg: rgba(43,108,176,0.08);
+  --blue-border: rgba(43,108,176,0.16);
+  --purple:    #6B46C1;
+  --purple-bg: rgba(107,70,193,0.08);
+  --purple-border: rgba(107,70,193,0.16);
   /* Shadows */
-  --shadow-sm: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3);
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.5), 0 2px 6px rgba(0,0,0,0.3);
-  --shadow-lg: 0 16px 48px rgba(0,0,0,0.6), 0 4px 16px rgba(0,0,0,0.4);
-  --shadow-glow: 0 0 0 1px rgba(110,231,160,0.15), 0 4px 20px rgba(110,231,160,0.08);
+  --shadow-sm: 0 1px 2px rgba(16,36,24,0.06), 0 1px 1px rgba(16,36,24,0.04);
+  --shadow-md: 0 10px 30px rgba(16,36,24,0.08), 0 2px 6px rgba(16,36,24,0.05);
+  --shadow-lg: 0 20px 50px rgba(16,36,24,0.10), 0 8px 24px rgba(16,36,24,0.06);
+  --shadow-glow: 0 0 0 1px rgba(27,61,43,0.08), 0 10px 30px rgba(27,61,43,0.08);
   /* Radius */
   --r-sm: 8px;
   --r-md: 12px;
@@ -71,15 +71,15 @@ textarea, input, select { font-family: inherit; }
 /* ── SCROLLBAR ─────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 4px; height: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-4); border-radius: 2px; }
-::-webkit-scrollbar-thumb:hover { background: var(--bg-4); }
+::-webkit-scrollbar-thumb { background: #cfdacf; border-radius: 2px; }
+::-webkit-scrollbar-thumb:hover { background: #b8c8ba; }
 
 /* ── NAV ───────────────────────────────────────────────────────────────────── */
 .nav {
   position: sticky;
   top: 0;
   z-index: 100;
-  background: rgba(10,12,11,0.92);
+  background: rgba(243,245,243,0.92);
   backdrop-filter: blur(20px) saturate(180%);
   -webkit-backdrop-filter: blur(20px) saturate(180%);
   border-bottom: 1px solid var(--border);
@@ -102,17 +102,17 @@ textarea, input, select { font-family: inherit; }
   width: 26px;
   height: 26px;
   border-radius: 7px;
-  background: linear-gradient(135deg, #1a4a2e 0%, #2d7a4f 100%);
+  background: linear-gradient(135deg, #1B3D2B 0%, #2f6b48 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 11px;
   font-weight: 800;
-  color: var(--g);
+  color: #f0f5f1;
   letter-spacing: -0.5px;
   flex-shrink: 0;
-  border: 1px solid rgba(110,231,160,0.2);
-  box-shadow: 0 0 12px rgba(110,231,160,0.12);
+  border: 1px solid rgba(27,61,43,0.12);
+  box-shadow: 0 10px 24px rgba(27,61,43,0.12);
 }
 .nav-logo-text {
   font-size: 14px;
@@ -262,7 +262,7 @@ textarea, input, select { font-family: inherit; }
   max-width: 320px;
   border: 1px solid var(--border-2);
 }
-.toast-ok  { background: #0f2a1a; color: var(--g); border-color: var(--g-border); }
+.toast-ok  { background: #0f2a1a; color: #f0f5f1; border-color: var(--g-border); }
 .toast-err { background: #2a0f0f; color: var(--red); border-color: var(--red-border); }
 .toast-info { background: #0f1a2a; color: var(--blue); border-color: var(--blue-border); }
 @keyframes toastin { from { transform: translateY(12px) scale(0.95); opacity: 0; } to { transform: none; opacity: 1; } }
@@ -453,7 +453,7 @@ textarea, input, select { font-family: inherit; }
 .btn-r:hover:not(:disabled) { background: rgba(248,113,113,0.14); }
 .btn-ai {
   background: linear-gradient(135deg, #0f2a1a, #1a4a2e);
-  color: var(--g);
+  color: #f0f5f1;
   border: 1px solid var(--g-border);
   box-shadow: 0 0 12px rgba(110,231,160,0.08);
 }

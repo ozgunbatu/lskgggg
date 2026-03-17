@@ -47,21 +47,30 @@ export default function useReportApprovals(): ApprovalHookState {
   const [notes, setNotes] = useState("");
 
   const loadApprovals = useCallback(async () => {
+    if (!token) {
+      setRows([]);
+      return;
+    }
+
     try {
       setLoading(true);
       const res = await fetch(`${API}/reports/approvals`, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
+        headers: { Authorization: `Bearer ${token}` },
         cache: "no-store",
       });
       if (!res.ok) throw new Error(`Error ${res.status}`);
       const data = await res.json().catch(() => []);
       setRows(Array.isArray(data) ? data : []);
+    } catch {
+      setRows([]);
     } finally {
       setLoading(false);
     }
   }, [token]);
 
-  useEffect(() => { void loadApprovals(); }, [loadApprovals]);
+  useEffect(() => {
+    void loadApprovals().catch(() => undefined);
+  }, [loadApprovals]);
 
   const requestApproval = useCallback(async (year: number, toast, L: "de" | "en" = "en") => {
     try {
