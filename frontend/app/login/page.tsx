@@ -181,7 +181,7 @@ export default function LoginPage() {
                 </div>
                 <div className="liw">
                   <input className="linp" type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ paddingRight: 80 }} onKeyDown={e => e.key === "Enter" && submit()} />
-                  <button className="lpwt" onClick={() => setShowPw(s => !s)}>{showPw ? t("Verbergen", "Hide") : t("Anzeigen", "Show")}</button>
+                  <button className="lpwt" onClick={() => setShowPw(s => !s)} type="button">{showPw ? t("Verbergen", "Hide") : t("Anzeigen", "Show")}</button>
                 </div>
               </div>
             )}

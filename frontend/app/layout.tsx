@@ -1,4 +1,5 @@
 import "./globals.css";
+import "./workspace.css";
 import type { Metadata } from "next";
 import AnalyticsProvider from "@/components/AnalyticsProvider";
 

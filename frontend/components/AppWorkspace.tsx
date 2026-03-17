@@ -25,14 +25,11 @@ import LegalTab from "./workspace-tabs/LegalTab";
 import useWorkspaceStore from "@/hooks/useWorkspaceStore";
 import useWorkspaceSession from "@/hooks/useWorkspaceSession";
 import { COUNTRIES, INDUSTRIES, BAFA_DE, BAFA_EN, gradeColor, gradeLabel } from "@/lib/workspace-constants";
-import { WORKSPACE_CSS, WORKSPACE_STAGE_V52_CSS, WORKSPACE_STAGE_V57_CSS } from "@/lib/workspace-styles";
 import { chipRL, sevChip, cStatusChip, aStatusChip, pChip, dueBadge } from "@/lib/workspace-ui";
 import RiskBreakdownComponent from "./workspace/RiskBreakdown";
 import type { Supplier, TabId } from "@/lib/workspace-types";
 import useWorkspaceFeatureSlices from "@/hooks/useWorkspaceFeatureSlices";
 import useReportApprovals from "@/hooks/useReportApprovals";
-
-const CSS = WORKSPACE_CSS + WORKSPACE_STAGE_V52_CSS + WORKSPACE_STAGE_V57_CSS;
 
 export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?: TabId }) {
   const api = useMemo(() => createApiClient(getToken, () => {
@@ -120,8 +117,7 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
   }
 
   return (
-    <>
-      <style dangerouslySetInnerHTML={{ __html: CSS }} />
+    <div className="workspace-root" style={{ background: "var(--bg, #080b09)", minHeight: "100vh" }}>
       <WorkspaceToasts toasts={ui.toasts} />
 
       <SupplierModal
@@ -187,7 +183,7 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
         company={data.company}
         complaints={data.complaints}
         actionOverdue={derived.actionStats.overdue}
-        approvalPending={approvals?.pending ?? 0}
+        approvalPending={approvals.pending}
         setTab={runtime.setTab}
         changeLang={changeLang}
         logout={logout}
@@ -210,6 +206,6 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
         {runtime.tab === "legal" && <LegalTab {...{L:ui.L,apiFn:api,toastFn:toast} as any} />}
         {runtime.tab === "settings" && <SettingsTab L={ui.L} company={data.company} apiFn={api} toastFn={toast} />}
       </div></div>
-    </>
+    </div>
   );
 }

@@ -39,18 +39,6 @@ export type ApprovalHookState = {
   reviewApproval: (year: number, decision: "approved" | "rejected", toast?: (type: "ok" | "err" | "info", msg: string) => void, L?: "de" | "en") => Promise<void>;
 };
 
-async function fetchJsonWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12000) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort("timeout"), timeoutMs);
-  try {
-    const res = await fetch(input, { ...init, signal: init.signal ?? controller.signal, cache: init.cache ?? "no-store" });
-    const data = await res.json().catch(() => ([]));
-    return { res, data };
-  } finally {
-    clearTimeout(timeout);
-  }
-}
-
 export default function useReportApprovals(): ApprovalHookState {
   const token = getToken();
   const currentRole = useMemo(() => getSessionRole(token), [token]);
@@ -78,7 +66,7 @@ export default function useReportApprovals(): ApprovalHookState {
   const requestApproval = useCallback(async (year: number, toast, L: "de" | "en" = "en") => {
     try {
       setLoading(true);
-      const { res, data } = await fetchJsonWithTimeout(`${API}/reports/bafa/${year}/request-approval`, {
+      const res = await fetch(`${API}/reports/bafa/${year}/request-approval`, {
         method: "POST",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -86,6 +74,7 @@ export default function useReportApprovals(): ApprovalHookState {
         },
         body: JSON.stringify({ notes }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
       toast?.("ok", L === "de" ? "Freigabe angefragt" : "Approval requested");
       await loadApprovals();
@@ -99,7 +88,7 @@ export default function useReportApprovals(): ApprovalHookState {
   const reviewApproval = useCallback(async (year: number, decision: "approved" | "rejected", toast, L: "de" | "en" = "en") => {
     try {
       setLoading(true);
-      const { res, data } = await fetchJsonWithTimeout(`${API}/reports/bafa/${year}/approve`, {
+      const res = await fetch(`${API}/reports/bafa/${year}/approve`, {
         method: "POST",
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -107,6 +96,7 @@ export default function useReportApprovals(): ApprovalHookState {
         },
         body: JSON.stringify({ decision, notes }),
       });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || `Error ${res.status}`);
       toast?.("ok", decision === "approved" ? (L === "de" ? "Bericht freigegeben" : "Report approved") : (L === "de" ? "Bericht abgelehnt" : "Report rejected"));
       await loadApprovals();

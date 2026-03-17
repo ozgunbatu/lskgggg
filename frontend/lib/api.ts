@@ -9,25 +9,6 @@
 // Always use /api proxy — Next.js rewrites /api/* to BACKEND_URL server-side
 export const API = "/api";
 
-const DEFAULT_TIMEOUT_MS = 12000;
-
-function readBodySafely(res: Response) {
-  const contentType = res.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    return res.json().catch(() => ({}));
-  }
-  return res.text().catch(() => "");
-}
-
-function toUserFacingError(error: unknown) {
-  const message = error instanceof Error ? error.message : String(error || "Unknown error");
-  if (message === "rate_limited") return message;
-  if (message === "Session") return message;
-  if (message.includes("aborted") || message.includes("timeout")) return "Request timeout";
-  if (message.includes("fetch") || message.includes("network") || message.includes("Network")) return "Network request failed";
-  return message;
-}
-
 // Inflight deduplication for GET requests
 const inflight: Map<string, Promise<any>> = new Map();
 
@@ -41,30 +22,19 @@ export function createApiClient(getToken: () => string, onUnauthorized?: () => v
     if (token) headers.set("Authorization", `Bearer ${token}`);
 
     const isGet = !init.method || init.method.toUpperCase() === "GET";
-    const dedupeKey = isGet ? `${path}:${token ? "auth" : "anon"}` : null;
+    const dedupeKey = isGet ? path : null;
 
     if (dedupeKey && inflight.has(dedupeKey)) {
       return inflight.get(dedupeKey);
     }
 
     const request = (async () => {
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort("timeout"), DEFAULT_TIMEOUT_MS);
-      try {
-        const res = await fetch(`${API}${path}`, { ...init, headers, signal: init.signal ?? controller.signal, cache: init.cache ?? "no-store" });
-        const data = await readBodySafely(res);
-        if (res.status === 401) { onUnauthorized?.(); throw new Error("Session"); }
-        if (res.status === 429) throw new Error("rate_limited");
-        if (!res.ok) {
-          const fallback = typeof data === "string" ? data : (data as any)?.error;
-          throw new Error(fallback || `Error ${res.status}`);
-        }
-        return data;
-      } catch (error) {
-        throw new Error(toUserFacingError(error));
-      } finally {
-        clearTimeout(timeout);
-      }
+      const res = await fetch(`${API}${path}`, { ...init, headers });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) { onUnauthorized?.(); throw new Error("Session"); }
+      if (res.status === 429) throw new Error("rate_limited");
+      if (!res.ok) throw new Error((data as any)?.error || `Error ${res.status}`);
+      return data;
     })();
 
     if (dedupeKey) {

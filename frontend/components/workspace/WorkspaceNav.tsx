@@ -32,7 +32,7 @@ export default function WorkspaceNav({ L, tab, company, complaints, actionOverdu
 
       {/* NAV GROUPS */}
       <div className="nav-scroll grouped">
-        {secondaryGroups.map(group => (
+        {NAV_GROUPS.map(group => (
           <div key={group.key} className="nav-group">
             <span className="nav-group-title">{L === "de" ? group.de : group.en}</span>
             {group.tabs.map(id => {
