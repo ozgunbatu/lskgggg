@@ -845,7 +845,8 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
 
     res.json({ text, section: key });
   } catch (e: any) {
-    res.status(500).json({ error: e.message });
+    console.error("[generate/:key] error:", e?.message, e?.stack?.split('\n')[1]);
+    res.status(500).json({ error: e.message, hint: "Check Railway logs for details" });
   }
 });
 

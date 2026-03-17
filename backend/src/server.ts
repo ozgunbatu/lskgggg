@@ -184,6 +184,15 @@ async function bootstrap() {
     console.warn("[bootstrap] country seed skipped:", e?.message?.slice(0, 80));
   }
 
+  // DB keepalive: ping every 4 minutes to prevent Railway postgres sleep
+  setInterval(async () => {
+    try {
+      await healthcheck();
+    } catch (e) {
+      console.warn("[keepalive] DB ping failed:", (e as any)?.message);
+    }
+  }, 4 * 60 * 1000);
+
   // Start cron (email reminders every 6h)
   try {
     const { runRemindersInternal } = await import("./modules/reminders");
