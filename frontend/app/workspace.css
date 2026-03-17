@@ -659,3 +659,18 @@ hr.div { border: none; border-top: 1px solid var(--b1); margin: 14px 0; }
   .nav-right { border-left: none; padding-left: 0; order: 2; width: 100%; border-top: 1px solid var(--b1); padding-top: 7px; margin-top: 5px; }
   .nav-group { padding: 0 7px; }
 }
+
+/* ── LEGACY ALIASES — tab components use these names ────────────────────── */
+.workspace-root {
+  --g1: var(--g-lo);
+  --g2: var(--g);
+  --amber: var(--amb);
+  --blue: var(--blu);
+  --purple: #7c3aed;
+  --bg-2: var(--c2);
+  --border: var(--b2);
+  --r-sm: var(--r1);
+  --r-md: var(--r2);
+  --r-lg: var(--r4);
+  --g-border: var(--g-20);
+}
