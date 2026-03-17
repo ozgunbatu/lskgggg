@@ -558,7 +558,6 @@ router.get("/bafa/:year", async (req, res) => {
   doc.end();
 });
 
-export default router;
 
 
 // GET /reports/approvals
@@ -669,11 +668,8 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
       const score = calcComplianceScore({ total, high, med, auditCount: supR.rows.filter((s:any)=>s.has_audit).length, cocCount: supR.rows.filter((s:any)=>s.has_code_of_conduct).length, capsTotal: (capR as any).rows.length, capsDone, capsOverdue, saqsSent: (saqR as any).rows.length, saqsDone: saqDone, complaintsOpen: (cmpR as any).rows.filter((c:any)=>c.status==="open").length });
       const grade = getGrade(score);
 
-      const { autoNarrative } = await import("./reportNarrative").catch(() => ({ autoNarrative: null }));
-      // Fallback: use inline autoNarrative from this file
-      const narrative = autoNarrative
-        ? autoNarrative(cname, year, supR.rows, (capR as any).rows, (saqR as any).rows, (cmpR as any).rows, portalUrl, score, grade)
-        : {};
+      // autoNarrative is defined in THIS file - call it directly
+      const narrative = autoNarrative(cname, year, supR.rows, (capR as any).rows, (saqR as any).rows, (cmpR as any).rows, portalUrl, score, grade);
 
       await db.query(
         "UPDATE reports SET summary = jsonb_set(COALESCE(summary,'{}'), '{draft}', $1::jsonb, true), updated_at=now() WHERE company_id=$2 AND year=$3",
@@ -746,14 +742,21 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
       return d.content?.[0]?.text || "";
     })();
 
-    // Save to draft
-    await db.query(`
-      INSERT INTO reports(company_id, year, created_by, summary) VALUES($1,$2,$3,$4)
-      ON CONFLICT(company_id,year) DO UPDATE SET
-        summary = jsonb_set(COALESCE(reports.summary,'{}'), '{draft,${key}}', $5::jsonb, true),
-        updated_at = now()
-    `, [companyId, year, req.auth!.userId, JSON.stringify({}), JSON.stringify(text)]);
+    // Save to draft - first get existing draft, merge, then save whole object
+    const existR = await db.query("SELECT summary FROM reports WHERE company_id=$1 AND year=$2", [companyId, year]);
+    const existingDraft = existR.rows[0]?.summary?.draft || {};
+    const updatedDraft = { ...existingDraft, [key]: text };
+
+    await db.query(
+      `INSERT INTO reports(company_id, year, created_by, summary) VALUES($1,$2,$3,$4)
+       ON CONFLICT(company_id,year) DO UPDATE SET
+         summary = jsonb_set(COALESCE(reports.summary,'{}'), '{draft}', $4::jsonb, true),
+         updated_at = now()`,
+      [companyId, year, req.auth!.userId, JSON.stringify({ draft: updatedDraft })]
+    );
 
     res.json({ text, section: key });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+
+export default router;

@@ -21,7 +21,7 @@ const REQUIRED_IDS = ["organization_structure","responsible_persons","effectiven
 
 export default function ReportsTab(props: any) {
   const { L, draft, setDraft, draftTs, rYear, setRYear, genLd, setGenLd,
-    loadDraft, saveDraft, exportCSV, suppliers, complaints, actions,
+    loadDraft, saveDraft, genSection, exportCSV, suppliers, complaints, actions,
     score, kpis, actionStats, approvalMeta, toast } = props;
 
   const writable = canWrite(approvalMeta?.currentRole || "admin");
@@ -42,26 +42,42 @@ export default function ReportsTab(props: any) {
   // How many required sections are empty
   const missingRequired = BAFA_SECTIONS.filter(s => s.req && !draftObj[s.id]?.trim()).length;
 
-  // Load + auto-generate all sections at once
+  // Load draft (auto-narrative) or generate all via AI
   const handleLoad = async () => {
     setGenerating(true);
-    try { await loadDraft(); }
-    finally { setGenerating(false); }
+    try {
+      // First load existing/auto-narrative draft
+      await loadDraft();
+    } finally {
+      setGenerating(false);
+    }
   };
 
-  // Generate single section via AI (calls loadDraft which auto-generates)
-  const handleGenSection = async (sectionId: string) => {
+  // Generate ALL sections via AI
+  const handleGenerateAll = async () => {
     if (!writable) return;
-    if (setGenLd) setGenLd(sectionId);
     setGenerating(true);
     try {
-      // Call the draft endpoint which auto-generates all sections
+      await genSection("all");
       await loadDraft();
-      // Jump to the generated section
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // Generate single section via AI — calls POST /reports/bafa/:year/generate/:key
+  const handleGenSection = async (sectionId: string) => {
+    if (!writable) return;
+    setGenerating(true);
+    try {
+      // genSection calls /reports/bafa/:year/generate/:key → AI generates the text
+      // and saves it to draft in the backend, then returns {text, section}
+      await genSection(sectionId);
+      // Reload draft to get the saved AI text
+      await loadDraft();
       setActiveSection(sectionId);
     } finally {
       setGenerating(false);
-      if (setGenLd) setGenLd("");
     }
   };
 
@@ -231,8 +247,11 @@ export default function ReportsTab(props: any) {
           })}
 
           {/* Generate all */}
-          <button className="btn btn-ai" style={{ width:"100%", marginTop:4 }} onClick={handleLoad} disabled={generating || !writable}>
-            {generating ? <span className="spin"/> : "✦"} {L==="de" ? "Alle Abschnitte generieren" : "Generate all sections"}
+          <button className="btn btn-ai" style={{ width:"100%", marginTop:4 }} onClick={handleGenerateAll} disabled={generating || !writable}>
+            {generating ? <span className="spin"/> : "✦"} {L==="de" ? "Alle Abschnitte KI-generieren" : "AI: Generate all sections"}
+          </button>
+          <button className="btn btn-g btn-sm" style={{ width:"100%" }} onClick={handleLoad} disabled={generating}>
+            ↓ {L==="de" ? "Entwurf laden (Datenbasis)" : "Load draft (data-based)"}
           </button>
         </div>
 

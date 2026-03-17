@@ -418,7 +418,6 @@ router.get("/health", async (_req, res) => {
     hint: looks_valid ? "Key present and format looks valid" : "Key present but format looks wrong (should start with sk-ant-)"
   });
 });
-export default router;
 
 // ── FRONTEND COMPATIBILITY ALIASES ──────────────────────────────────────────
 
@@ -461,3 +460,5 @@ router.post("/cap-suggestion", requireAuth, async (req, res) => {
     res.json({ suggestion, supplier: { id: sup.id, name: sup.name } });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
+
+export default router;
