@@ -3,101 +3,551 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>LkSG Compass — Lieferketten-Compliance. Messbar, audit-fest.</title>
+<title>LkSG Compass — Lieferketten-Compliance. Messbar, BAFA-fest.</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,600;0,9..144,900;1,9..144,400;1,9..144,700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800;12..96,900&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap">
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 :root{
-  --g0:#070A08;--g1:#0F1410;--g2:#1B3D2B;--g3:#2A5C3F;--g4:#3D7A57;--g5:#6CD49C;--g6:#A8E6C0;--g7:#D4EBD8;--g8:#EDF6EF;--g9:#F5FAF6;
-  --s:#FFFFFF;--s2:#F8F7F4;--s3:#EEECEA;--s4:#E3E0D8;--s5:#D5D0C6;
-  --t1:#080C09;--t2:#2D3330;--t3:#5A6360;--t4:#909890;--t5:#B8C0B8;
-  --e:#C0392B;--ep:#FDECEC;--w:#B45309;--wp:#FEF3C7;--b:#1E3A5F;--bp:#DBEAFE;
-  --r6:6px;--r10:10px;--r14:14px;--r20:20px;--r28:28px;
-  --sh4:0 24px 72px rgba(0,0,0,.14),0 8px 24px rgba(0,0,0,.08);
+  --g:#1B3D2B;--g2:#2d5c3f;--g3:#f0f5f1;--g4:#d1e7d9;--g5:#6CD49C;
+  --bg:#f4f5f4;--card:#ffffff;--line:#e8eae8;--line2:#d4dcd6;
+  --t1:#0b0f0c;--t2:#374151;--t3:#6b7280;--t4:#9ca3af;
+  --red:#dc2626;--amb:#d97706;--blu:#2563eb;--vio:#7c3aed;
+  --sh:0 4px 24px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.04);
+  --sh2:0 20px 60px rgba(0,0,0,.12),0 4px 16px rgba(0,0,0,.08);
+  --r:12px;--r2:16px;--r3:20px;
 }
-body{font-family:'Inter',sans-serif;color:var(--t1);background:var(--s2);overflow-x:hidden;scroll-behavior:smooth}
+body{font-family:'DM Sans',system-ui,sans-serif;color:var(--t1);background:var(--bg);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 a{color:inherit;text-decoration:none}
-.nav-links{display:flex;gap:18px;font-size:13px;color:var(--t3)}
-.nav-links a{padding:8px 10px;border-radius:10px}
-.nav-links a:hover{background:var(--g9);color:var(--g2)}
-.view{display:none}
-.view.active{display:block}
-.flex-view.active{display:flex}
-.nav{position:sticky;top:0;z-index:100;background:rgba(248,247,244,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--s4);padding:0 48px;height:58px;display:flex;align-items:center;justify-content:space-between}
-.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer;font-family:'Fraunces',serif;font-weight:900;color:var(--g2)}
-.nav-mark{width:28px;height:28px;background:var(--g2);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px}
-.hero{background:linear-gradient(160deg,#EDF6EF 0%,var(--s2) 60%);padding:80px 48px;position:relative}
-.hero-inner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
-.hero-h1{font-family:'Fraunces',serif;font-size:52px;font-weight:900;line-height:1.1;margin-bottom:20px}
-.hero-h1 em{color:var(--g2);font-style:italic}
-.cta-primary{padding:14px 28px;background:var(--g2);color:#fff;border-radius:var(--r14);border:none;font-weight:700;cursor:pointer;transition:0.3s}
-.cta-primary:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(27,61,43,0.2)}
-.problem{background:var(--g1);padding:80px 48px;color:#fff}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
-.step{padding:24px;background:var(--s);color:var(--t1);border-radius:var(--r20);border:1.5px solid var(--s4)}
-.step-n{width:28px;height:28px;background:var(--g9);color:var(--g3);display:flex;align-items:center;justify-content:center;border-radius:6px;margin-bottom:12px;font-family:'JetBrains Mono'}
-.pricing{padding:80px 48px}
-.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:1120px;margin:40px auto}
-.plan{background:#fff;padding:30px;border-radius:var(--r20);border:1.5px solid var(--s4);text-align:center}
-.plan.featured{background:var(--g2);color:#fff;border:none}
-.footer{padding:50px 48px;border-top:1px solid var(--s4);color:var(--t4);text-align:center}
+/* NAV */
+.nav{position:sticky;top:0;z-index:100;background:rgba(244,245,244,.92);backdrop-filter:blur(20px);border-bottom:1px solid var(--line);padding:0 40px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.nav-logo{display:flex;align-items:center;gap:10px;cursor:pointer}
+.nav-mark{width:30px;height:30px;background:var(--g);border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-weight:800;font-size:13px;color:#fff}
+.nav-name{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:15px;color:var(--g);letter-spacing:-.3px}
+.nav-links{display:flex;gap:4px;font-size:13px}
+.nav-links a{padding:6px 12px;border-radius:8px;color:var(--t3);transition:.15s}
+.nav-links a:hover{background:var(--g3);color:var(--g)}
+.btn-cta{padding:9px 22px;background:var(--g);color:#fff;border-radius:10px;font-weight:600;font-size:13.5px;border:none;cursor:pointer;transition:.2s;display:inline-block}
+.btn-cta:hover{background:var(--g2);transform:translateY(-1px);box-shadow:0 4px 14px rgba(27,61,43,.3)}
+.btn-outline{padding:9px 22px;background:transparent;color:var(--g);border:1.5px solid var(--g4);border-radius:10px;font-weight:600;font-size:13.5px;cursor:pointer;transition:.2s;display:inline-block}
+.btn-outline:hover{background:var(--g3)}
+/* HERO */
+.hero{background:linear-gradient(160deg,#e8f5ed 0%,var(--bg) 55%);padding:90px 40px 80px;position:relative;overflow:hidden}
+.hero::before{content:'';position:absolute;top:-200px;right:-200px;width:700px;height:700px;background:radial-gradient(circle,rgba(108,212,156,.12) 0%,transparent 70%);pointer-events:none}
+.hero-inner{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:var(--g3);border:1px solid var(--g4);border-radius:20px;padding:5px 12px;font-size:11.5px;font-weight:700;color:var(--g2);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;margin-bottom:20px}
+.hero-badge-dot{width:6px;height:6px;border-radius:50%;background:var(--g5);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:.6}50%{opacity:1}}
+.hero h1{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(36px,4.5vw,56px);font-weight:900;line-height:1.08;letter-spacing:-.04em;margin-bottom:20px;color:var(--t1)}
+.hero h1 em{color:var(--g);font-style:italic}
+.hero-sub{font-size:16px;color:var(--t3);line-height:1.6;margin-bottom:32px;max-width:480px}
+.hero-actions{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.hero-stats{display:flex;gap:28px;margin-top:36px;padding-top:28px;border-top:1px solid var(--line);flex-wrap:wrap}
+.hero-stat-v{font-family:'Bricolage Grotesque',sans-serif;font-size:26px;font-weight:900;color:var(--g);letter-spacing:-.04em}
+.hero-stat-l{font-size:11.5px;color:var(--t3);margin-top:2px}
+/* DASHBOARD MOCKUP */
+.dash-mock{background:#fff;border-radius:var(--r3);box-shadow:var(--sh2);overflow:hidden;border:1px solid var(--line)}
+.dash-top{background:var(--g);padding:10px 14px;display:flex;align-items:center;gap:8px}
+.dash-dot{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.3)}
+.dash-title{font-size:11px;color:rgba(255,255,255,.6);font-family:'DM Mono',monospace;margin-left:4px}
+.dash-body{display:grid;grid-template-columns:160px 1fr;height:280px}
+.dash-side{background:#f4f5f4;border-right:1px solid #e8eae8;padding:12px 8px;display:flex;flex-direction:column;gap:4px}
+.dash-nav-item{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:6px;font-size:11px;color:#6b7280}
+.dash-nav-item.on{background:#f0f5f1;color:#1B3D2B;font-weight:600}
+.dash-nav-dot{width:6px;height:6px;border-radius:50%;background:currentColor;opacity:.4}
+.dash-nav-item.on .dash-nav-dot{opacity:1}
+.dash-main{padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden}
+.dash-score-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.dash-kpi{background:#f4f5f4;border-radius:8px;padding:8px 10px}
+.dash-kpi-v{font-family:'Bricolage Grotesque',sans-serif;font-size:20px;font-weight:800;color:#1B3D2B;letter-spacing:-.04em}
+.dash-kpi-l{font-size:9px;color:#9ca3af;text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace}
+.dash-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;flex:1}
+.dash-card{background:#f4f5f4;border-radius:8px;padding:10px;overflow:hidden}
+.dash-card-h{font-size:9.5px;font-weight:700;color:#6b7280;text-transform:uppercase;letter-spacing:.08em;font-family:'DM Mono',monospace;margin-bottom:8px}
+.sup-row{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:10px;color:#374151}
+.risk-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.prog-bar{height:4px;background:#e8eae8;border-radius:2px;overflow:hidden;margin-top:4px}
+.prog-fill{height:100%;border-radius:2px}
+/* SECTIONS */
+.section{padding:80px 40px}
+.section-inner{max-width:1140px;margin:0 auto}
+.section-tag{display:inline-block;font-size:11px;font-weight:700;color:var(--g2);text-transform:uppercase;letter-spacing:.12em;font-family:'DM Mono',monospace;margin-bottom:12px;background:var(--g3);border:1px solid var(--g4);padding:4px 10px;border-radius:20px}
+.section-h{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,3.5vw,42px);font-weight:900;line-height:1.12;letter-spacing:-.04em;margin-bottom:16px}
+/* PROBLEM */
+.problem-sec{background:var(--g);color:#fff;padding:80px 40px}
+.prob-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:48px}
+.prob-card{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:var(--r2);padding:24px}
+.prob-icon{font-size:28px;margin-bottom:14px}
+.prob-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.prob-desc{font-size:13px;color:rgba(255,255,255,.55);line-height:1.5}
+/* FEATURES */
+.feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;margin-top:48px}
+.feat-card{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);padding:24px;transition:.2s}
+.feat-card:hover{box-shadow:var(--sh);transform:translateY(-2px);border-color:var(--g4)}
+.feat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:16px}
+.feat-icon.green{background:var(--g3)}
+.feat-icon.blue{background:#eff6ff}
+.feat-icon.amber{background:#fffbeb}
+.feat-icon.violet{background:#f5f3ff}
+.feat-icon.red{background:#fef2f2}
+.feat-icon.teal{background:#f0fdfa}
+.feat-title{font-weight:700;font-size:14.5px;margin-bottom:8px;color:var(--t1)}
+.feat-desc{font-size:13px;color:var(--t3);line-height:1.6}
+.feat-para{font-size:10.5px;font-weight:700;color:var(--g2);font-family:'DM Mono',monospace;margin-top:10px;background:var(--g3);border:1px solid var(--g4);padding:2px 8px;border-radius:20px;display:inline-block}
+/* AI SECTION */
+.ai-sec{background:linear-gradient(135deg,#0a1a10 0%,#0f2a1a 100%);padding:80px 40px;color:#fff}
+.ai-inner{max-width:1140px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:64px;align-items:center}
+.ai-chat-mock{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--r3);overflow:hidden}
+.ai-chat-top{background:rgba(255,255,255,.08);padding:12px 16px;display:flex;align-items:center;gap:10px;border-bottom:1px solid rgba(255,255,255,.08)}
+.ai-chat-ico{width:28px;height:28px;background:#1B3D2B;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#6CD49C}
+.ai-chat-msgs{padding:16px;display:flex;flex-direction:column;gap:12px}
+.ai-msg-a,.ai-msg-u{display:flex;gap:10px;align-items:flex-start}
+.ai-msg-u{flex-direction:row-reverse}
+.ai-bubble{padding:10px 14px;border-radius:12px;font-size:12.5px;line-height:1.55;max-width:85%}
+.ai-bubble.a{background:rgba(255,255,255,.1);color:rgba(255,255,255,.9)}
+.ai-bubble.u{background:#1B3D2B;color:#fff}
+.ai-chat-input{padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);display:flex;gap:8px}
+.ai-input-box{flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:8px 12px;font-size:12px;color:rgba(255,255,255,.3);font-family:'DM Sans',sans-serif}
+.ai-send{background:#1B3D2B;border:none;border-radius:8px;width:34px;height:34px;color:#6CD49C;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+/* BAFA */
+.bafa-grid{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:center}
+.bafa-mock{background:var(--card);border:1px solid var(--line);border-radius:var(--r2);overflow:hidden;box-shadow:var(--sh)}
+.bafa-mock-top{background:var(--g3);border-bottom:1px solid var(--g4);padding:12px 16px;display:flex;align-items:center;justify-content:space-between}
+.bafa-mock-title{font-size:12px;font-weight:700;color:var(--g);font-family:'DM Mono',monospace}
+.bafa-progress{margin:16px;background:var(--bg);border-radius:8px;padding:14px}
+.bafa-prog-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:11px}
+.bafa-bar{height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bafa-bar-fill{height:100%;background:var(--g);border-radius:3px;transition:.3s}
+.bafa-sections{margin:0 16px 16px;display:flex;flex-direction:column;gap:5px}
+.bafa-sec-row{display:flex;align-items:center;gap:8px;padding:7px 10px;border-radius:7px;font-size:11.5px;border:1px solid var(--line)}
+.bafa-sec-row.done{background:var(--g3);border-color:var(--g4);color:var(--g)}
+.bafa-sec-dot{width:7px;height:7px;border-radius:50%;background:var(--g4);flex-shrink:0}
+.bafa-sec-row.done .bafa-sec-dot{background:var(--g)}
+.bafa-sec-para{font-size:9px;font-weight:700;color:var(--g2);font-family:'DM Mono',monospace;background:var(--g3);border:1px solid var(--g4);border-radius:20px;padding:1px 6px;flex-shrink:0}
+.bafa-sec-name{flex:1;color:var(--t2)}
+.bafa-sec-row.done .bafa-sec-name{color:var(--g);font-weight:600}
+.bafa-sec-check{color:var(--g);font-size:13px}
+/* WORKFLOW */
+.workflow{background:var(--card);padding:80px 40px}
+.steps-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin-top:48px;position:relative}
+.steps-grid::before{content:'';position:absolute;top:28px;left:10%;right:10%;height:1px;background:var(--line2);z-index:0}
+.step-item{display:flex;flex-direction:column;align-items:center;text-align:center;position:relative;z-index:1}
+.step-num{width:56px;height:56px;border-radius:50%;background:var(--card);border:2px solid var(--g4);display:flex;align-items:center;justify-content:center;font-family:'Bricolage Grotesque',sans-serif;font-size:18px;font-weight:900;color:var(--g);margin-bottom:16px;box-shadow:0 0 0 6px var(--card)}
+.step-title{font-weight:700;font-size:13.5px;color:var(--t1);margin-bottom:6px}
+.step-desc{font-size:12px;color:var(--t3);line-height:1.5;padding:0 8px}
+/* PRICING */
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;max-width:900px;margin:48px auto 0}
+.plan{background:var(--card);border:1.5px solid var(--line);border-radius:var(--r3);padding:32px;text-align:center;transition:.2s;position:relative}
+.plan:hover{transform:translateY(-4px);box-shadow:var(--sh2)}
+.plan.featured{background:var(--g);color:#fff;border-color:var(--g)}
+.plan-badge{position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#6CD49C;color:#0a1a10;font-size:10.5px;font-weight:800;padding:3px 12px;border-radius:20px;font-family:'DM Mono',monospace;letter-spacing:.08em;white-space:nowrap}
+.plan-name{font-family:'Bricolage Grotesque',sans-serif;font-size:15px;font-weight:800;margin-bottom:8px}
+.plan-price{font-family:'Bricolage Grotesque',sans-serif;font-size:40px;font-weight:900;margin:16px 0 4px;letter-spacing:-.04em}
+.plan.featured .plan-price{color:#6CD49C}
+.plan-period{font-size:12px;color:var(--t3);margin-bottom:20px}
+.plan.featured .plan-period{color:rgba(255,255,255,.6)}
+.plan-divider{border:none;border-top:1px solid var(--line);margin:20px 0}
+.plan.featured .plan-divider{border-color:rgba(255,255,255,.15)}
+.plan-feats{list-style:none;text-align:left;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.plan-feats li{display:flex;align-items:flex-start;gap:8px;font-size:13px;color:var(--t2)}
+.plan.featured .plan-feats li{color:rgba(255,255,255,.8)}
+.plan-feats li::before{content:'✓';color:var(--g5);font-weight:700;flex-shrink:0;margin-top:1px}
+.plan.featured .plan-feats li::before{color:#6CD49C}
+.plan-btn{width:100%;padding:11px;border-radius:10px;font-weight:700;font-size:13.5px;cursor:pointer;transition:.2s;display:block}
+.plan-btn.dark{background:var(--g);color:#fff;border:none}
+.plan-btn.dark:hover{background:var(--g2)}
+.plan-btn.light{background:#fff;color:var(--g);border:none}
+.plan-btn.light:hover{background:rgba(255,255,255,.9)}
+.plan-btn.ghost{background:transparent;color:var(--t2);border:1.5px solid var(--line)}
+.plan-btn.ghost:hover{background:var(--bg);border-color:var(--g4)}
+/* TRUST */
+.trust-sec{background:var(--g3);padding:60px 40px;border-top:1px solid var(--g4);border-bottom:1px solid var(--g4)}
+.trust-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;max-width:900px;margin:0 auto}
+.trust-item{text-align:center}
+.trust-val{font-family:'Bricolage Grotesque',sans-serif;font-size:36px;font-weight:900;color:var(--g);letter-spacing:-.04em}
+.trust-lbl{font-size:12px;color:var(--t3);margin-top:4px}
+/* LEGAL */
+.legal-sec{background:var(--card);padding:80px 40px}
+.legal-grid{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:start}
+.legal-mock{background:var(--bg);border:1px solid var(--line);border-radius:var(--r2);padding:16px;display:flex;flex-direction:column;gap:8px}
+.legal-doc-row{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.legal-doc-icon{width:30px;height:30px;border-radius:7px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0}
+.legal-doc-name{font-size:12.5px;font-weight:600;color:var(--t1);flex:1}
+.legal-doc-para{font-size:9px;font-weight:700;color:var(--g2);font-family:'DM Mono',monospace;background:var(--g3);border:1px solid var(--g4);padding:2px 6px;border-radius:20px;flex-shrink:0}
+.legal-doc-ai{font-size:10px;color:var(--g2);background:var(--g3);padding:3px 8px;border-radius:20px;font-weight:600;flex-shrink:0}
+/* CTA */
+.cta-sec{background:linear-gradient(135deg,var(--g) 0%,#0f2a1a 100%);padding:80px 40px;text-align:center;color:#fff}
+.cta-h{font-family:'Bricolage Grotesque',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:900;letter-spacing:-.04em;margin-bottom:16px}
+.cta-sub{font-size:16px;color:rgba(255,255,255,.65);margin-bottom:36px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.6}
+.cta-actions{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+.btn-cta-white{padding:13px 28px;background:#fff;color:var(--g);border-radius:10px;font-weight:700;font-size:14px;border:none;cursor:pointer;transition:.2s;display:inline-block}
+.btn-cta-white:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,0,0,.3)}
+.btn-cta-ghost{padding:13px 28px;background:transparent;color:rgba(255,255,255,.8);border:1.5px solid rgba(255,255,255,.25);border-radius:10px;font-weight:600;font-size:14px;cursor:pointer;transition:.2s;display:inline-block}
+.btn-cta-ghost:hover{background:rgba(255,255,255,.1);color:#fff}
+/* FOOTER */
+.footer{padding:40px;border-top:1px solid var(--line);background:var(--card)}
+.footer-inner{max-width:1140px;margin:0 auto;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:16px}
+.footer-links{display:flex;gap:20px;font-size:13px;color:var(--t4)}
+.footer-links a:hover{color:var(--t2)}
+/* RESPONSIVE */
+@media(max-width:900px){
+  .hero-inner,.bafa-grid,.ai-inner,.legal-grid{grid-template-columns:1fr}
+  .feat-grid{grid-template-columns:repeat(2,1fr)}
+  .prob-grid{grid-template-columns:repeat(2,1fr)}
+  .steps-grid{grid-template-columns:1fr;gap:24px}
+  .steps-grid::before{display:none}
+  .pricing-grid{grid-template-columns:1fr;max-width:420px}
+  .trust-grid{grid-template-columns:repeat(2,1fr)}
+  .nav-links{display:none}
+  .hero,.section,.problem-sec,.workflow,.ai-sec,.legal-sec,.cta-sec,.trust-sec{padding-left:20px;padding-right:20px}
+}
+@media(max-width:600px){
+  .feat-grid,.prob-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 
-<div id="view-landing" class="view active">
-    <nav class="nav">
-        <div class="nav-logo" onclick="window.scrollTo({top:0,behavior:'smooth'})"><div class="nav-mark">L</div> LkSG Compass</div>
-        <div class="nav-links">
-            <a href="#features">Funktionen</a>
-            <a href="#pricing">Preise</a>
-            <a href="/" title="Open App">App</a>
-        </div>
-        <a class="cta-primary" href="/" style="padding:8px 20px;display:inline-block">Login</a>
-    </nav>
+<nav class="nav">
+  <a class="nav-logo" href="#">
+    <div class="nav-mark">L</div>
+    <span class="nav-name">LkSG Compass</span>
+  </a>
+  <div class="nav-links">
+    <a href="#features">Funktionen</a>
+    <a href="#bafa">BAFA-Report</a>
+    <a href="#ai">KI-Assistent</a>
+    <a href="#pricing">Preise</a>
+  </div>
+  <div style="display:flex;gap:10px">
+    <a class="btn-outline" href="/login">Anmelden</a>
+    <a class="btn-cta" href="/register">Kostenlos starten</a>
+  </div>
+</nav>
 
-    <section class="hero">
-        <div class="hero-inner">
-            <div>
-                <h1 class="hero-h1">Lieferketten-Compliance <em>audit-fest.</em></h1>
-                <p style="margin-bottom:30px; color:var(--t3)">53 Unterindikatoren, 40 Länder. BAFA-Jahresbericht auf Knopfdruck. Die erste LkSG-Software für den Mittelstand.</p>
-                <a class="cta-primary" href="/">Kostenlos Starten</a>
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="hero-badge"><span class="hero-badge-dot"></span> §4–§10 LkSG · Vollabdeckung</div>
+      <h1>Lieferketten-<br>Compliance.<br><em>Messbar. BAFA-fest.</em></h1>
+      <p class="hero-sub">Automatische Risikoanalyse für alle Lieferanten, KI-generierter BAFA-Jahresbericht §10 und lückenloses Hinweisgebersystem — für den Mittelstand gebaut.</p>
+      <div class="hero-actions">
+        <a class="btn-cta" href="/register" style="padding:13px 28px;font-size:14px">Jetzt kostenlos starten →</a>
+        <a class="btn-outline" href="/demo" style="padding:13px 28px;font-size:14px">Demo ansehen</a>
+      </div>
+      <div class="hero-stats">
+        <div><div class="hero-stat-v">§4–§10</div><div class="hero-stat-l">Vollabdeckung</div></div>
+        <div><div class="hero-stat-v">1.000+</div><div class="hero-stat-l">Betroffene Unternehmen</div></div>
+        <div><div class="hero-stat-v">2%</div><div class="hero-stat-l">Max. Umsatz Bußgeld</div></div>
+        <div><div class="hero-stat-v">&lt;5min</div><div class="hero-stat-l">BAFA-Report generieren</div></div>
+      </div>
+    </div>
+    <!-- Dashboard Mockup -->
+    <div class="dash-mock">
+      <div class="dash-top">
+        <div class="dash-dot"></div><div class="dash-dot"></div><div class="dash-dot"></div>
+        <span class="dash-title">LkSG Compass · Dashboard</span>
+      </div>
+      <div class="dash-body">
+        <div class="dash-side">
+          <div class="dash-nav-item on"><div class="dash-nav-dot"></div> Dashboard</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> Lieferanten</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> Aktionsplan</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> Meldungen</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> KI-Assistent</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> BAFA-Bericht</div>
+          <div class="dash-nav-item"><div class="dash-nav-dot"></div> Monitoring</div>
+        </div>
+        <div class="dash-main">
+          <div class="dash-score-row">
+            <div class="dash-kpi"><div class="dash-kpi-v">87</div><div class="dash-kpi-l">Score</div></div>
+            <div class="dash-kpi"><div class="dash-kpi-v">147</div><div class="dash-kpi-l">Lieferanten</div></div>
+            <div class="dash-kpi"><div class="dash-kpi-v">12</div><div class="dash-kpi-l">Hochrisiko</div></div>
+            <div class="dash-kpi"><div class="dash-kpi-v">5</div><div class="dash-kpi-l">Offen. CAPs</div></div>
+          </div>
+          <div class="dash-row2">
+            <div class="dash-card">
+              <div class="dash-card-h">Top-Risikolieferanten</div>
+              <div class="sup-row"><div class="risk-dot" style="background:#dc2626"></div>Shenzhen Textiles · CN</div>
+              <div class="sup-row"><div class="risk-dot" style="background:#dc2626"></div>Dhaka Garments · BD</div>
+              <div class="sup-row"><div class="risk-dot" style="background:#d97706"></div>Lagos Metals · NG</div>
+              <div class="sup-row"><div class="risk-dot" style="background:#d97706"></div>Mumbai Chem. · IN</div>
             </div>
-            <div style="background:#fff; padding:20px; border-radius:20px; box-shadow:var(--sh4)">
-                <div style="font-weight:bold; margin-bottom:10px">Risiko-Index</div>
-                <div style="height:10px; background:var(--s4); border-radius:5px; overflow:hidden">
-                    <div style="width:75%; height:100%; background:var(--g5)"></div>
-                </div>
-                <p style="font-size:12px; margin-top:10px; color:var(--t4)">Aktuelle Abdeckung: 82% der Lieferanten geprüft.</p>
+            <div class="dash-card">
+              <div class="dash-card-h">Compliance-Abdeckung</div>
+              <div style="font-size:10px;color:#6b7280;margin-bottom:4px">Audits 72%</div>
+              <div class="prog-bar"><div class="prog-fill" style="width:72%;background:#1B3D2B"></div></div>
+              <div style="font-size:10px;color:#6b7280;margin:6px 0 4px">CoC-Abdeckung 61%</div>
+              <div class="prog-bar"><div class="prog-fill" style="width:61%;background:#2563eb"></div></div>
+              <div style="font-size:10px;color:#6b7280;margin:6px 0 4px">SAQ-Rücklauf 44%</div>
+              <div class="prog-bar"><div class="prog-fill" style="width:44%;background:#d97706"></div></div>
             </div>
+          </div>
         </div>
-    </section>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <section id="features" class="problem">
-        <div style="max-width:1120px; margin:0 auto">
-            <h2 style="font-family:Fraunces; font-size:40px; margin-bottom:40px">Warum LkSG Compass?</h2>
-            <div class="steps">
-                <div class="step"><div class="step-n">01</div><h3>Automatisierte Analyse</h3><p>Risk Engine + Country Dataset + Monitoring.</p></div>
-                <div class="step"><div class="step-n">02</div><h3>BAFA-Ready</h3><p>BAFA Report (Fragenkatalog-Struktur) als PDF Export.</p></div>
-                <div class="step"><div class="step-n">03</div><h3>Beschwerdeverfahren</h3><p>Public Whistleblower Portal pro Company.</p></div>
-            </div>
+<!-- PROBLEM -->
+<section class="problem-sec" id="problem">
+  <div class="section-inner">
+    <div class="section-tag" style="background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.7)">Das Problem</div>
+    <h2 class="section-h" style="color:#fff;margin-bottom:8px">LkSG ohne Compass:<br>Wochen manuelle Arbeit.</h2>
+    <p style="color:rgba(255,255,255,.55);font-size:15px;max-width:580px;line-height:1.6;margin-bottom:0">§3 LkSG gilt ab 2024 für alle Unternehmen mit über 1.000 Mitarbeitern. Verstöße kosten bis zu 2% des Jahresumsatzes + Ausschluss von öffentlichen Ausschreibungen.</p>
+    <div class="prob-grid">
+      <div class="prob-card"><div class="prob-icon">📊</div><div class="prob-title">§5 Risikoanalyse</div><div class="prob-desc">Manuelles Scoring für jeden Lieferanten in Excel — fehleranfällig, nicht reproduzierbar, BAFA-kritisch.</div></div>
+      <div class="prob-card"><div class="prob-icon">📄</div><div class="prob-title">§10 BAFA-Bericht</div><div class="prob-desc">Wochen manuelle Arbeit für den Jahresbericht. Falsche Struktur = Nachforderung der Behörde.</div></div>
+      <div class="prob-card"><div class="prob-icon">⚖️</div><div class="prob-title">§6 Rechtsvorlagen</div><div class="prob-desc">Teure Anwaltsstunden für Lieferantenkodex, SAQ-Fragebogen und Audit-Checklisten.</div></div>
+      <div class="prob-card"><div class="prob-icon">🔔</div><div class="prob-title">§8 Hinweisgebersystem</div><div class="prob-desc">Kein strukturierter Kanal — fehlende Dokumentation bedeutet direkte BAFA-Rüge.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="section" id="features">
+  <div class="section-inner">
+    <div class="section-tag">Funktionen</div>
+    <h2 class="section-h">Alles, was §4–§10 LkSG<br>verlangt — in einer Plattform.</h2>
+    <p style="font-size:16px;color:var(--t3);line-height:1.65;max-width:600px;margin-bottom:0">Von der automatischen Risikoklassifizierung bis zum BAFA-fertigen PDF — keine Excel, kein Anwalt, keine Überraschungen.</p>
+    <div class="feat-grid">
+      <div class="feat-card"><div class="feat-icon green">🎯</div><div class="feat-title">Automatische Risikoanalyse</div><div class="feat-desc">20-Parameter-Scoring: Länderrisiko (CPI, Freedom House), Branche (ILO), Unternehmensprofil, Vorfälle — vollautomatisch berechnet.</div><div class="feat-para">§5 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon blue">🗺️</div><div class="feat-title">Länder-Risiko-Heatmap</div><div class="feat-desc">Interaktive Weltkarte mit 40+ Länder-Scores. Sofortige Visualisierung wo Ihre Lieferkette am stärksten exponiert ist.</div><div class="feat-para">§5 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon amber">✦</div><div class="feat-title">KI-Lieferantenanalyse</div><div class="feat-desc">Auf Knopfdruck eine präzise §5-LkSG-Risikoanalyse pro Lieferant — inklusive Tatbestandsverweise und Sofortmaßnahmen.</div><div class="feat-para">§5–§6 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon violet">📋</div><div class="feat-title">CAP-Management</div><div class="feat-desc">Corrective Action Plans erstellen, zuweisen, eskalieren. Vollständige Nachverfolgung mit Fristen und BAFA-Dokumentation.</div><div class="feat-para">§7 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon red">🔔</div><div class="feat-title">Hinweisgebersystem</div><div class="feat-desc">Anonymes Beschwerde-Portal pro Unternehmen. KI-Triage klassifiziert Schweregrad und §2-LkSG-Tatbestände automatisch.</div><div class="feat-para">§8 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon teal">📧</div><div class="feat-title">SAQ-Fragebogen-Versand</div><div class="feat-desc">Selbstauskunfts-Fragebögen direkt aus der Plattform an Lieferanten senden. Automatische Erinnerungen und Rücklauf-Tracking.</div><div class="feat-para">§4–§6 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon green">📈</div><div class="feat-title">KPI-Dashboard</div><div class="feat-desc">Compliance-Score, Audit-Abdeckung, CoC-Quote, SAQ-Rücklauf — alle §9-Wirksamkeitskennzahlen auf einen Blick.</div><div class="feat-para">§9 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon blue">🗂️</div><div class="feat-title">Nachweis-Archiv</div><div class="feat-desc">Dokumentenupload, Kategorisierung nach LkSG-Paragraph und strukturierter Export als BAFA-Verteidigungsakte.</div><div class="feat-para">§10 LkSG</div></div>
+      <div class="feat-card"><div class="feat-icon amber">👥</div><div class="feat-title">Team &amp; Genehmigungen</div><div class="feat-desc">Rollen (Admin, Editor, Viewer), mehrstufige Report-Freigabe und vollständiges Audit-Log aller Änderungen.</div><div class="feat-para">§4 LkSG</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- AI SECTION -->
+<section class="ai-sec" id="ai">
+  <div class="ai-inner">
+    <div>
+      <div class="section-tag" style="background:rgba(108,212,156,.15);border-color:rgba(108,212,156,.3);color:#6CD49C">KI-Assistent</div>
+      <h2 class="section-h" style="color:#fff">LkSG AI Assistent.<br>Ihre Compliance-<br><em style="color:#6CD49C">Rechtsexpertin.</em></h2>
+      <p style="color:rgba(255,255,255,.6);font-size:15px;line-height:1.65;margin-bottom:28px">Gestützt auf Anthropic Claude — der Assistent kennt Ihr gesamtes Lieferantenportfolio, alle CAPs und Ihre aktuellen Compliance-KPIs. Stellen Sie einfach Fragen.</p>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.7)"><div style="width:20px;height:20px;border-radius:50%;background:#6CD49C;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a1a10;flex-shrink:0">✓</div>Kontext: Ihr echtes Lieferantenportfolio</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.7)"><div style="width:20px;height:20px;border-radius:50%;background:#6CD49C;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a1a10;flex-shrink:0">✓</div>§4–§10 LkSG Vollexpertise mit Paragrafenverweisen</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.7)"><div style="width:20px;height:20px;border-radius:50%;background:#6CD49C;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a1a10;flex-shrink:0">✓</div>KI-CAP-Generierung: BAFA-taugliche Aktionspläne</div>
+        <div style="display:flex;align-items:center;gap:10px;font-size:13.5px;color:rgba(255,255,255,.7)"><div style="width:20px;height:20px;border-radius:50%;background:#6CD49C;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#0a1a10;flex-shrink:0">✓</div>Executive Risk Summary für Vorstand/GF</div>
+      </div>
+    </div>
+    <div class="ai-chat-mock">
+      <div class="ai-chat-top">
+        <div class="ai-chat-ico">✦</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">LkSG AI Assistant</div><div style="font-size:10px;color:rgba(255,255,255,.4);font-family:'DM Mono',monospace">Powered by Claude · §4–§10 LkSG</div></div>
+      </div>
+      <div class="ai-chat-msgs">
+        <div class="ai-msg-u"><div class="ai-bubble u">Welche Lieferanten haben das höchste Risiko?</div></div>
+        <div class="ai-msg-a">
+          <div style="width:24px;height:24px;border-radius:6px;background:#1B3D2B;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#6CD49C;flex-shrink:0;margin-top:2px">✦</div>
+          <div class="ai-bubble a">Laut §5 LkSG priorisiere ich 3 Hochrisiko-Lieferanten:<br><br><strong style="color:#6CD49C">1. Shenzhen Textiles (CN)</strong> — Score 87/100. Zwangsarbeitsrisiko §2 Abs.2 Nr.3. Sofort: Audit + CoC binnen 14 Tagen.<br><br><strong style="color:#6CD49C">2. Dhaka Garments (BD)</strong> — Score 82/100. Kinderarbeit §2 Abs.2 Nr.1. SAQ dringend ausstehend.<br><br>Soll ich für beide einen CAP §7 generieren?</div>
         </div>
-    </section>
-
-    <section id="pricing" class="pricing">
-        <h2 style="text-align:center; font-family:Fraunces; font-size:36px">Einfache Preisgestaltung</h2>
-        <div class="plans">
-            <div class="plan"><h3>Starter</h3><div style="font-size:32px; margin:20px 0">€299</div><p>bis 50 Lieferanten</p></div>
-            <div class="plan featured"><h3>Growth</h3><div style="font-size:32px; margin:20px 0">€999</div><p>bis 500 Lieferanten</p></div>
-            <div class="plan"><h3>Enterprise</h3><div style="font-size:32px; margin:20px 0">Individuell</div><p>Unlimited + Integrationen</p></div>
+        <div class="ai-msg-u"><div class="ai-bubble u">Ja, generiere den CAP für Shenzhen Textiles.</div></div>
+        <div class="ai-msg-a">
+          <div style="width:24px;height:24px;border-radius:6px;background:#1B3D2B;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#6CD49C;flex-shrink:0;margin-top:2px">✦</div>
+          <div class="ai-bubble a">CAP §7 LkSG erstellt — <strong style="color:#6CD49C">Sofortmaßnahmen (0–30 Tage):</strong> Audit-Beauftragung, CoC-Unterzeichnung, Factory-Visit-Anforderung. KPIs definiert. BAFA-tauglich dokumentiert.<br><br><em style="color:rgba(255,255,255,.4);font-size:11px">Kein Rechtsrat — Fachanwalt konsultieren.</em></div>
         </div>
-    </section>
+      </div>
+      <div class="ai-chat-input">
+        <div class="ai-input-box">Fragen Sie zur LkSG-Compliance…</div>
+        <button class="ai-send">→</button>
+      </div>
+    </div>
+  </div>
+</section>
 
-    <div class="footer">© <span id="y"></span> LkSG Compass — Demo Marketing Page</div>
-</div>
+<!-- BAFA REPORT -->
+<section class="section" id="bafa" style="background:var(--bg)">
+  <div class="section-inner">
+    <div class="bafa-grid">
+      <div>
+        <div class="section-tag">§10 LkSG · BAFA-Bericht</div>
+        <h2 class="section-h">BAFA-Jahresbericht.<br>KI-generiert in <em>Sekunden</em>.</h2>
+        <p style="font-size:15px;color:var(--t3);line-height:1.65;margin-bottom:24px">Alle 10 Pflichtabschnitte nach §10 Abs.2 LkSG — automatisch mit Ihren echten Compliance-Daten befüllt. Manuell verfeinerbar, als PDF exportierbar.</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:10px;margin-bottom:28px">
+          <li style="display:flex;gap:10px;font-size:13.5px;color:var(--t2);align-items:flex-start"><span style="color:var(--g);font-weight:700;flex-shrink:0">✓</span>Echte Daten: Lieferanten, CAPs, SAQ, Beschwerden automatisch eingefügt</li>
+          <li style="display:flex;gap:10px;font-size:13.5px;color:var(--t2);align-items:flex-start"><span style="color:var(--g);font-weight:700;flex-shrink:0">✓</span>BAFA-Pflichtstruktur: alle §10 Abs.2-Abschnitte vollständig</li>
+          <li style="display:flex;gap:10px;font-size:13.5px;color:var(--t2);align-items:flex-start"><span style="color:var(--g);font-weight:700;flex-shrink:0">✓</span>Multi-User-Freigabe: Editor schreibt, Reviewer genehmigt</li>
+          <li style="display:flex;gap:10px;font-size:13.5px;color:var(--t2);align-items:flex-start"><span style="color:var(--g);font-weight:700;flex-shrink:0">✓</span>PDF-Export direkt BAFA-einreichbar</li>
+        </ul>
+        <a class="btn-cta" href="/register" style="padding:11px 24px">BAFA-Report testen →</a>
+      </div>
+      <div class="bafa-mock">
+        <div class="bafa-mock-top">
+          <span class="bafa-mock-title">§10 LkSG · BAFA-Bericht 2025</span>
+          <div style="background:var(--g);color:#fff;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;font-family:'DM Mono',monospace">90%</div>
+        </div>
+        <div class="bafa-progress">
+          <div class="bafa-prog-row"><span style="font-weight:700;color:var(--t2)">9/10 Abschnitte</span><span style="color:var(--g);font-weight:700">90%</span></div>
+          <div class="bafa-bar"><div class="bafa-bar-fill" style="width:90%"></div></div>
+        </div>
+        <div class="bafa-sections">
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§10</span><span class="bafa-sec-name">1. Berichtsumfang</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§10</span><span class="bafa-sec-name">2. Unternehmensstruktur</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§4</span><span class="bafa-sec-name">3. Verantwortliche Personen</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§5</span><span class="bafa-sec-name">4. Risikoanalyse Methodik</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§5</span><span class="bafa-sec-name">5. Priorisierte Risiken</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§6</span><span class="bafa-sec-name">6. Präventionsmaßnahmen</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§7</span><span class="bafa-sec-name">7. Abhilfemaßnahmen (CAPs)</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§8</span><span class="bafa-sec-name">8. Beschwerdeverfahren</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row done"><div class="bafa-sec-dot"></div><span class="bafa-sec-para">§8</span><span class="bafa-sec-name">8b. Zugangsberechtigt. Gruppen</span><span class="bafa-sec-check">✓</span></div>
+          <div class="bafa-sec-row" style="border-color:#fde68a;background:#fffbeb"><div class="bafa-sec-dot" style="background:#d97706"></div><span class="bafa-sec-para" style="color:#d97706;border-color:#fde68a;background:#fffbeb">§9</span><span class="bafa-sec-name" style="color:#d97706">9. Wirksamkeitskontrolle</span><span style="font-size:9px;font-weight:700;color:#d97706">PFLICHT</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-<script>document.getElementById('y').innerText = new Date().getFullYear();</script>
+<!-- LEGAL TEMPLATES -->
+<section class="legal-sec" id="legal">
+  <div class="section-inner">
+    <div class="legal-grid">
+      <div>
+        <div class="section-tag">§6 LkSG · Rechtsvorlagen</div>
+        <h2 class="section-h">6 BAFA-fertige<br>Rechtsvorlagen — sofort.</h2>
+        <p style="font-size:15px;color:var(--t3);line-height:1.65;margin-bottom:20px">KI-generierte Vorlagendokumente für alle §6-LkSG-Pflichten. Individuell anpassbar — ohne Anwalt.</p>
+        <ul style="list-style:none;display:flex;flex-direction:column;gap:12px;margin-bottom:28px">
+          <li style="display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--t2)"><div style="width:32px;height:32px;border-radius:8px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📜</div><div><strong>Lieferantenkodex</strong> — §6 Abs.2: Verhaltenskodex mit LkSG-konformen Anforderungen</div></li>
+          <li style="display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--t2)"><div style="width:32px;height:32px;border-radius:8px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📋</div><div><strong>SAQ-Fragebogen</strong> — §5: Selbstauskunft-Template für Risikolieferanten</div></li>
+          <li style="display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--t2)"><div style="width:32px;height:32px;border-radius:8px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">🔍</div><div><strong>Audit-Checkliste</strong> — §6: Vor-Ort-Auditleitfaden nach ILO-Standards</div></li>
+          <li style="display:flex;align-items:flex-start;gap:12px;font-size:14px;color:var(--t2)"><div style="width:32px;height:32px;border-radius:8px;background:var(--g3);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚖️</div><div><strong>Vertragsklauseln</strong> — §6 Abs.4: Menschenrechts-Compliance-Klauseln</div></li>
+        </ul>
+        <a class="btn-outline" href="/register" style="padding:11px 24px">Vorlagen abrufen</a>
+      </div>
+      <div class="legal-mock">
+        <div style="font-size:10px;font-weight:700;color:var(--t4);text-transform:uppercase;letter-spacing:.1em;font-family:'DM Mono',monospace;margin-bottom:10px">Verfügbare Vorlagen</div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">📜</div><span class="legal-doc-name">Lieferantenkodex 2025</span><span class="legal-doc-para">§6</span><span class="legal-doc-ai">✦ KI</span></div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">📋</div><span class="legal-doc-name">SAQ-Fragebogen Standard</span><span class="legal-doc-para">§5</span><span class="legal-doc-ai">✦ KI</span></div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">🔍</div><span class="legal-doc-name">Vor-Ort-Audit-Checkliste</span><span class="legal-doc-para">§6</span><span class="legal-doc-ai">✦ KI</span></div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">⚖️</div><span class="legal-doc-name">Vertragsklauseln LkSG</span><span class="legal-doc-para">§6</span><span class="legal-doc-ai">✦ KI</span></div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">🤝</div><span class="legal-doc-name">Schulungs-Präsentation</span><span class="legal-doc-para">§4</span><span class="legal-doc-ai">✦ KI</span></div>
+        <div class="legal-doc-row"><div class="legal-doc-icon">📌</div><span class="legal-doc-name">Grundsatzerklärung §6</span><span class="legal-doc-para">§6</span><span class="legal-doc-ai">✦ KI</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKFLOW -->
+<section class="workflow" id="workflow">
+  <div class="section-inner">
+    <div class="section-tag">So funktioniert es</div>
+    <h2 class="section-h" style="text-align:center">Von 0 auf BAFA-ready<br>in 5 Schritten.</h2>
+    <div class="steps-grid">
+      <div class="step-item"><div class="step-num">1</div><div class="step-title">Lieferanten anlegen</div><div class="step-desc">Manuell oder CSV-Import. Automatische Risikoklassifizierung startet sofort.</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-title">Risiken analysieren</div><div class="step-desc">20-Parameter-Scoring nach §5. KI-Detailanalyse für Hochrisiko-Lieferanten.</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-title">SAQs &amp; Audits</div><div class="step-desc">SAQ-Fragebögen versenden, Audit-Nachweise hochladen, CoC-Status dokumentieren.</div></div>
+      <div class="step-item"><div class="step-num">4</div><div class="step-title">CAPs &amp; Maßnahmen</div><div class="step-desc">KI-generierte Aktionspläne §7, Fristen setzen, Team zuweisen, Fortschritt tracken.</div></div>
+      <div class="step-item"><div class="step-num">5</div><div class="step-title">BAFA-Report</div><div class="step-desc">KI generiert alle 10 Pflichtabschnitte. Freigabe → PDF-Export → BAFA fertig.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST -->
+<section class="trust-sec">
+  <div class="section-inner" style="text-align:center;margin-bottom:32px"><h3 style="font-family:'Bricolage Grotesque',sans-serif;font-size:22px;font-weight:800;color:var(--g)">LkSG-Compliance, die Zahlen schreibt.</h3></div>
+  <div class="trust-grid">
+    <div class="trust-item"><div class="trust-val">§4–§10</div><div class="trust-lbl">Vollständige LkSG-Abdeckung</div></div>
+    <div class="trust-item"><div class="trust-val">20+</div><div class="trust-lbl">Risiko-Parameter pro Lieferant</div></div>
+    <div class="trust-item"><div class="trust-val">40+</div><div class="trust-lbl">Länder im Risiko-Dataset</div></div>
+    <div class="trust-item"><div class="trust-val">&lt;5min</div><div class="trust-lbl">BAFA-Report generieren</div></div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section" id="pricing">
+  <div class="section-inner" style="text-align:center">
+    <div class="section-tag">Preise</div>
+    <h2 class="section-h">Einfach. Transparent.<br>Skalierbar.</h2>
+    <p style="font-size:15px;color:var(--t3);max-width:480px;margin:0 auto 0">Alle Pläne inkl. BAFA-Bericht §10, KI-Assistent und Hinweisgebersystem.</p>
+    <div class="pricing-grid">
+      <div class="plan">
+        <div class="plan-name">Starter</div>
+        <div class="plan-price">€299</div>
+        <div class="plan-period">/ Monat</div>
+        <hr class="plan-divider">
+        <ul class="plan-feats">
+          <li>Bis zu 50 Lieferanten</li>
+          <li>Risikoanalyse §5</li>
+          <li>BAFA-Report §10</li>
+          <li>Hinweisgebersystem §8</li>
+          <li>KI-Assistent</li>
+          <li>1 Benutzer</li>
+        </ul>
+        <a class="plan-btn ghost" href="/register">Kostenlos starten</a>
+      </div>
+      <div class="plan featured">
+        <div class="plan-badge">BELIEBTESTER PLAN</div>
+        <div class="plan-name">Growth</div>
+        <div class="plan-price">€999</div>
+        <div class="plan-period">/ Monat</div>
+        <hr class="plan-divider">
+        <ul class="plan-feats">
+          <li>Bis zu 500 Lieferanten</li>
+          <li>Alles aus Starter</li>
+          <li>Team-Workflows (5 User)</li>
+          <li>Report-Genehmigungen</li>
+          <li>Nachweis-Archiv §10</li>
+          <li>Monitoring &amp; Alerts</li>
+          <li>SAQ-Fragebogen-Versand</li>
+          <li>Rechtsvorlagen §6</li>
+        </ul>
+        <a class="plan-btn light" href="/register">Jetzt starten →</a>
+      </div>
+      <div class="plan">
+        <div class="plan-name">Enterprise</div>
+        <div class="plan-price">Individuell</div>
+        <div class="plan-period">Angebot auf Anfrage</div>
+        <hr class="plan-divider">
+        <ul class="plan-feats">
+          <li>Unbegrenzte Lieferanten</li>
+          <li>Alles aus Growth</li>
+          <li>Unbegrenzte Benutzer</li>
+          <li>SSO / SAML</li>
+          <li>API-Zugang</li>
+          <li>Dedizierter Support</li>
+          <li>On-Premise Option</li>
+        </ul>
+        <a class="plan-btn ghost" href="mailto:info@lksgcompass.de">Kontakt aufnehmen</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-sec">
+  <div class="cta-h">Bereit für BAFA-sichere<br>Compliance?</div>
+  <div class="cta-sub">Starten Sie kostenlos. Keine Kreditkarte erforderlich. In 15 Minuten einsatzbereit.</div>
+  <div class="cta-actions">
+    <a class="btn-cta-white" href="/register">Jetzt kostenlos starten →</a>
+    <a class="btn-cta-ghost" href="/demo">Demo ansehen</a>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-inner">
+    <div style="display:flex;align-items:center;gap:10px">
+      <div class="nav-mark">L</div>
+      <span class="nav-name">LkSG Compass</span>
+    </div>
+    <div class="footer-links">
+      <a href="/impressum">Impressum</a>
+      <a href="/datenschutz">Datenschutz</a>
+      <a href="/agb">AGB</a>
+      <a href="mailto:info@lksgcompass.de">Kontakt</a>
+    </div>
+    <div style="font-size:12px;color:var(--t4)">© <span id="yr"></span> LkSG Compass</div>
+  </div>
+</footer>
+
+<script>document.getElementById('yr').textContent=new Date().getFullYear();</script>
 </body>
 </html>

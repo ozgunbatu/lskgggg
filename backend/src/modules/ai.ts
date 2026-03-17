@@ -9,7 +9,7 @@ import { calcLiveKPIs } from "./kpi";
 
 const router = Router();
 const ANTHROPIC_API = "https://api.anthropic.com/v1/messages";
-const MODEL = "claude-opus-4-5";
+const MODEL = "claude-sonnet-4-6";
 
 async function callClaude(system: string, userMsg: string, maxTokens = 1000): Promise<string> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -394,4 +394,23 @@ Erstelle:
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
+
+// -- 8. AI health check (non-auth, for Railway diagnostics) ------------------
+router.get("/health", async (_req, res) => {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) {
+    return res.status(503).json({
+      ok: false,
+      error: "ANTHROPIC_API_KEY not set",
+      hint: "Go to Railway → your backend service → Variables → add ANTHROPIC_API_KEY"
+    });
+  }
+  const looks_valid = apiKey.startsWith("sk-ant-") && apiKey.length > 40;
+  res.json({
+    ok: looks_valid,
+    key_prefix: apiKey.slice(0, 14) + "…",
+    model: MODEL,
+    hint: looks_valid ? "Key present and format looks valid" : "Key present but format looks wrong (should start with sk-ant-)"
+  });
+});
 export default router;

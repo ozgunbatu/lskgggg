@@ -99,6 +99,8 @@ export default function useWorkspaceMutations(args: Args) {
   const sqRef  = useRef(args.saqRows);        sqRef.current  = args.saqRows;
   const evRowsRef = useRef(args.evidenceRows); evRowsRef.current = args.evidenceRows;
 
+  const saveSupplier = useCallback(async () => {
+    setLoading(true);
     const body = {
       name: sfRef.current.sName,
       country: sfRef.current.sCountry,
@@ -117,7 +119,7 @@ export default function useWorkspaceMutations(args: Args) {
     setSuppliers((prev) => {
       previous = snapshotValue(prev);
       if (eiRef.current) {
-        return prev.map((s) => s.id === eiRef.current.id ? { ...s, ...body } as Supplier : s);
+        return prev.map((s) => s.id === eiRef.current!.id ? { ...s, ...body } as Supplier : s);
       }
       const optimistic: Supplier = {
         id: tempId("supplier"),
@@ -151,7 +153,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setLoading(false);
     }
-  }, [L, api, reloadInsights, reloadSuppliersDomain, setLoading, setShowSupModal, setSuppliers, setTab toast]);
+  }, [L, api, reloadInsights, reloadSuppliersDomain, setLoading, setShowSupModal, setSuppliers, setTab, toast]);
 
   const delSupplier = useCallback(async (id: string, name: string) => {
     if (!confirm(`"${name}" ${L === "de" ? "loeschen?" : "delete?"}`)) return;
@@ -284,7 +286,7 @@ export default function useWorkspaceMutations(args: Args) {
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, cnRef.current, toast]);
+  }, [L, api, toast]);
 
   const createCap = useCallback(async () => {
     if (!capRef.current.capTitle.trim()) return toast("err", L === "de" ? "Titel erforderlich" : "Title required");
@@ -370,7 +372,7 @@ export default function useWorkspaceMutations(args: Args) {
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, anRef.current, toast]);
+  }, [L, api, toast]);
 
   const deleteAction = useCallback(async (id: string, title: string) => {
     if (!confirm(`"${title}" ${L === "de" ? "loeschen?" : "delete?"}`)) return;
@@ -397,7 +399,7 @@ export default function useWorkspaceMutations(args: Args) {
     } catch {
       setDraft({});
     }
-  }, [api, rpRef.current.rYear, setDraft]);
+  }, [api, setDraft]);
 
   const saveDraft = useCallback(async () => {
     try {
@@ -407,7 +409,7 @@ export default function useWorkspaceMutations(args: Args) {
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, rpRef.current.draft, rpRef.current.rYear, setDraftTs, toast]);
+  }, [L, api, setDraftTs, toast]);
 
   const genSection = useCallback(async (key: string) => {
     setGenLd(key);
@@ -420,7 +422,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setGenLd("");
     }
-  }, [L, api, rpRef.current.rYear, setDraft, setGenLd, toast]);
+  }, [L, api, setDraft, setGenLd, toast]);
 
   const getSupAI = useCallback(async (s: Supplier) => {
     setSupLd((x: any) => ({ ...x, [s.id]: true }));
@@ -457,11 +459,11 @@ export default function useWorkspaceMutations(args: Args) {
       const r = await api("/ai/chat", { method: "POST", body: JSON.stringify({ messages: hist }) });
       setAiMsgs([...hist, { role: "assistant" as const, content: r.reply }]);
     } catch {
-      setAiMsgs([...hist, { role: "assistant" as const, content: L === "de" ? "KI nicht verfugbar. Bitte ANTHROPIC_API_KEY in Railway prufen." : "AI unavailable. Please check ANTHROPIC_API_KEY in Railway." }]);
+      setAiMsgs([...hist, { role: "assistant" as const, content: L === "de" ? "KI nicht verfügbar. Bitte ANTHROPIC_API_KEY in Railway prüfen." : "AI unavailable. Please check ANTHROPIC_API_KEY in Railway." }]);
     } finally {
       setAiLd(false);
     }
-  }, [L, api, rpRef.current.aiInput, rpRef.current.aiLd, rpRef.current.aiMsgs, setAiInput, setAiLd, setAiMsgs]);
+  }, [L, api, setAiInput, setAiLd, setAiMsgs]);
 
   const loadAuditLog = useCallback(async (entityType?: string) => {
     await loadAuditData(entityType);
@@ -487,7 +489,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setSaqSending(false);
     }
-  }, [L, api, saq, setSaqEmail, setSaqSending, setSaqSup, toast, reloadReportsDomain]);
+  }, [L, api, setSaqEmail, setSaqSending, setSaqSup, toast, reloadReportsDomain]);
 
   const deleteSaq = useCallback(async (id: string) => {
     if (!confirm(L === "de" ? "SAQ loeschen?" : "Delete SAQ?")) return;
@@ -501,7 +503,7 @@ export default function useWorkspaceMutations(args: Args) {
       setSaqs(previous);
       toast("err", e.message);
     }
-  }, [L, api, reloadReportsDomain, sqRef.current, setSaqs, toast]);
+  }, [L, api, reloadReportsDomain, setSaqs, toast]);
 
   const loadKpi = useCallback(async () => {
     setKpiLd(true);
@@ -553,7 +555,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setEvUploading(false);
     }
-  }, [L, api, evidence, fileRef, reloadReportsDomain, setEvDesc, setEvFile, setEvTitle, setEvUploading, toast]);
+  }, [L, api, fileRef, reloadReportsDomain, setEvDesc, setEvFile, setEvTitle, setEvUploading, toast]);
 
   const deleteEvidence = useCallback(async (id: string) => {
     if (!confirm(L === "de" ? "Nachweis loeschen?" : "Delete evidence?")) return;
@@ -567,7 +569,7 @@ export default function useWorkspaceMutations(args: Args) {
       setEvidences(previous);
       toast("err", e.message);
     }
-  }, [L, api, evRowsRef.current, reloadReportsDomain, setEvidences, toast]);
+  }, [L, api, reloadReportsDomain, setEvidences, toast]);
 
   return {
     saveSupplier,
