@@ -153,10 +153,10 @@ SAQ-Fragebogen: ${saqList.length} gesendet, ${saqDone} ausgefuellt
 // -- 1. Chat ------------------------------------------------------------------
 router.post("/chat", requireAuth, async (req, res) => {
   try {
-    // Accept both {message: str} (frontend) and {messages: [...]} (API)
+    // Accept {message: string} (frontend) or {messages: [...]} (full history)
     let messages = req.body.messages;
     if (!messages && req.body.message) {
-      messages = [{ role: "user", content: req.body.message }];
+      messages = [{ role: "user", content: String(req.body.message) }];
     }
     if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: "messages required" });
 
@@ -419,46 +419,95 @@ router.get("/health", async (_req, res) => {
   });
 });
 
-// ── FRONTEND COMPATIBILITY ALIASES ──────────────────────────────────────────
 
-// POST /ai/supplier-brief  (frontend calls this)
+// ── DIAGNOSTIC ───────────────────────────────────────────────────────────────
+// GET /ai/test — no auth needed, confirms module loaded correctly
+router.get("/test", (_req, res) => {
+  res.json({
+    ok: true,
+    routes_registered: ["/chat", "/supplier-brief", "/cap-suggestion", "/health", "/test"],
+    model: MODEL,
+    has_api_key: !!process.env.ANTHROPIC_API_KEY,
+    ts: new Date().toISOString(),
+  });
+});
+
+// ── FRONTEND ALIASES ─────────────────────────────────────────────────────────
+
+// POST /ai/supplier-brief
 router.post("/supplier-brief", requireAuth, async (req, res) => {
   try {
     const { supplierId } = req.body;
     if (!supplierId) return res.status(400).json({ error: "supplierId required" });
-    const s = await db.query("SELECT * FROM suppliers WHERE id=$1 AND company_id=$2", [supplierId, req.auth!.companyId]);
-    if (!s.rows[0]) return res.status(404).json({ error: "Not found" });
+    const s = await db.query(
+      "SELECT * FROM suppliers WHERE id=$1 AND company_id=$2",
+      [supplierId, req.auth!.companyId]
+    );
+    if (!s.rows[0]) return res.status(404).json({ error: "Supplier not found" });
     const sup = s.rows[0];
-    const brief = await callClaude(SYSTEM_LKSG,
-      `Erstelle eine kompakte Risikoanalyse (§5 LkSG) fuer diesen Lieferanten:\n\n` +
-      `Unternehmen: ${sup.name}\nLand: ${sup.country} | Branche: ${sup.industry}\n` +
-      `Risikostufe: ${sup.risk_level?.toUpperCase()} | Score: ${sup.risk_score}/100\n` +
-      `Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}\n` +
-      `Beschaeftigte: ${sup.workers || "unbekannt"} | Jahresumsatz: ${sup.annual_spend_eur ? `€${sup.annual_spend_eur.toLocaleString()}` : "unbekannt"}\n\n` +
-      `Format: 3 Abschnitte — (1) Risikolage §2 LkSG-Tatbestaende, (2) Handlungsempfehlungen, (3) BAFA-Relevanz. Max 250 Woerter.`,
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.json({ brief: "KI nicht konfiguriert. Bitte ANTHROPIC_API_KEY in Railway setzen." });
+
+    const brief = await callClaude(
+      SYSTEM_LKSG,
+      `Erstelle eine kompakte Risikoanalyse (§5 LkSG) fuer diesen Lieferanten:
+
+Name: ${sup.name}
+Land: ${sup.country} | Branche: ${sup.industry}
+Risikostufe: ${sup.risk_level?.toUpperCase()} | Score: ${sup.risk_score}/100
+Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}
+Beschaeftigte: ${sup.workers || "unbekannt"}
+
+Format: 3 Abschnitte:
+1. Risikolage (§2 LkSG-Tatbestaende)
+2. Handlungsempfehlungen
+3. BAFA-Relevanz
+Max 250 Woerter, praxisorientiert.`,
       700
     );
-    res.json({ brief, supplier: { id: sup.id, name: sup.name } });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
+    res.json({ brief, text: brief, supplier: { id: sup.id, name: sup.name } });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
-// POST /ai/cap-suggestion  (frontend calls this)
+// POST /ai/cap-suggestion
 router.post("/cap-suggestion", requireAuth, async (req, res) => {
   try {
     const { supplierId } = req.body;
     if (!supplierId) return res.status(400).json({ error: "supplierId required" });
-    const s = await db.query("SELECT * FROM suppliers WHERE id=$1 AND company_id=$2", [supplierId, req.auth!.companyId]);
-    if (!s.rows[0]) return res.status(404).json({ error: "Not found" });
+    const s = await db.query(
+      "SELECT * FROM suppliers WHERE id=$1 AND company_id=$2",
+      [supplierId, req.auth!.companyId]
+    );
+    if (!s.rows[0]) return res.status(404).json({ error: "Supplier not found" });
     const sup = s.rows[0];
-    const suggestion = await callClaude(SYSTEM_LKSG,
-      `Erstelle einen Corrective Action Plan (CAP) gemaess §6 LkSG:\n\n` +
-      `${sup.name} | ${sup.country} | ${sup.industry} | Score: ${sup.risk_score}/100\n` +
-      `Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}\n\n` +
-      `CAP-Struktur:\n1. Festgestellte Risiken (§2 LkSG)\n2. Sofortmassnahmen (0-30 Tage)\n3. Kurzfristig (31-90 Tage)\n4. Langfristig (91-365 Tage)\n5. Erfolgskriterien\n\nBAFA-tauglich, umsetzbar, max 300 Woerter.`,
+
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) return res.json({ suggestion: "KI nicht konfiguriert. Bitte ANTHROPIC_API_KEY in Railway setzen." });
+
+    const suggestion = await callClaude(
+      SYSTEM_LKSG,
+      `Erstelle einen Corrective Action Plan (CAP) gemaess §6 LkSG:
+
+${sup.name} | ${sup.country} | ${sup.industry} | Score: ${sup.risk_score}/100
+Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}
+
+Struktur:
+1. Festgestellte Risiken (§2 LkSG)
+2. Sofortmassnahmen (0-30 Tage, mit Verantwortlichem)
+3. Kurzfristig (31-90 Tage)
+4. Langfristig (91-365 Tage)
+5. Erfolgskriterien (§9 LkSG)
+
+BAFA-tauglich, max 300 Woerter.`,
       800
     );
-    res.json({ suggestion, supplier: { id: sup.id, name: sup.name } });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
+    res.json({ suggestion, text: suggestion, supplier: { id: sup.id, name: sup.name } });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 export default router;

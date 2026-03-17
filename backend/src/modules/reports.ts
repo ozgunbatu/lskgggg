@@ -636,19 +636,23 @@ router.post("/bafa/:year/approve", requireAuth, requireApprovalAccess, async (re
   res.json({ ok: true, reportId: report.id, status: nextStatus });
 });
 
-// POST /reports/bafa/:year/generate/:key  (frontend compatibility)
-// Generates a single BAFA section via AI and saves it to the draft
+
+// ── BAFA SECTION GENERATOR ──────────────────────────────────────────────────
+// POST /reports/bafa/:year/generate/:key
+// Generates a single BAFA section via AI and saves it, or "all" for full report
 router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async (req, res) => {
   try {
-    const year = parseInt(req.params.year, 10);
-    const key = req.params.key;
+    const year   = parseInt(req.params.year, 10);
+    const key    = req.params.key;
     const companyId = req.auth!.companyId;
 
-    // If key is "all", regenerate the full auto-narrative and save
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+
+    // ── "all": regenerate full auto-narrative ────────────────────────────
     if (key === "all") {
       const company = await db.query("SELECT id,name,slug FROM companies WHERE id=$1", [companyId]);
       const cname = company.rows[0]?.name ?? "--";
-      const slug = company.rows[0]?.slug ?? "";
+      const slug  = company.rows[0]?.slug ?? "";
       const portalUrl = `${process.env.FRONTEND_URL || "https://www.lksgcompass.de"}/complaints/${slug}`;
 
       const [supR, capR, saqR, cmpR] = await Promise.all([
@@ -659,104 +663,190 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
       ]);
 
       const { calcComplianceScore, getGrade } = await import("./kpi");
-      const total = supR.rows.length;
-      const high = supR.rows.filter((s:any)=>s.risk_level==="high").length;
-      const med = supR.rows.filter((s:any)=>s.risk_level==="medium").length;
-      const capsDone = (capR as any).rows.filter((c:any)=>c.status==="completed").length;
-      const capsOverdue = (capR as any).rows.filter((c:any)=>c.due_date && new Date(c.due_date)<new Date() && c.status!=="completed").length;
-      const saqDone = (saqR as any).rows.filter((s:any)=>s.status==="completed").length;
-      const score = calcComplianceScore({ total, high, med, auditCount: supR.rows.filter((s:any)=>s.has_audit).length, cocCount: supR.rows.filter((s:any)=>s.has_code_of_conduct).length, capsTotal: (capR as any).rows.length, capsDone, capsOverdue, saqsSent: (saqR as any).rows.length, saqsDone: saqDone, complaintsOpen: (cmpR as any).rows.filter((c:any)=>c.status==="open").length });
+      const total      = supR.rows.length;
+      const high       = supR.rows.filter((s: any) => s.risk_level === "high").length;
+      const med        = supR.rows.filter((s: any) => s.risk_level === "medium").length;
+      const capsDone   = (capR as any).rows.filter((c: any) => c.status === "completed").length;
+      const capsOverdue= (capR as any).rows.filter((c: any) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "completed").length;
+      const saqDone    = (saqR as any).rows.filter((s: any) => s.status === "completed").length;
+      const score = calcComplianceScore({
+        total, high, med,
+        auditCount: supR.rows.filter((s: any) => s.has_audit).length,
+        cocCount:   supR.rows.filter((s: any) => s.has_code_of_conduct).length,
+        capsTotal:  (capR as any).rows.length, capsDone, capsOverdue,
+        saqsSent:   (saqR as any).rows.length, saqsDone: saqDone,
+        complaintsOpen: (cmpR as any).rows.filter((c: any) => c.status === "open").length,
+      });
       const grade = getGrade(score);
 
-      // autoNarrative is defined in THIS file - call it directly
-      const narrative = autoNarrative(cname, year, supR.rows, (capR as any).rows, (saqR as any).rows, (cmpR as any).rows, portalUrl, score, grade);
+      // Call the inline autoNarrative function defined in THIS file
+      const narrative = autoNarrative(
+        cname, year, supR.rows,
+        (capR as any).rows, (saqR as any).rows, (cmpR as any).rows,
+        portalUrl, score, grade
+      );
 
+      // Upsert
       await db.query(
-        "UPDATE reports SET summary = jsonb_set(COALESCE(summary,'{}'), '{draft}', $1::jsonb, true), updated_at=now() WHERE company_id=$2 AND year=$3",
-        [JSON.stringify(narrative), companyId, year]
+        `INSERT INTO reports(company_id,year,created_by,summary) VALUES($1,$2,$3,$4)
+         ON CONFLICT(company_id,year) DO UPDATE SET
+           summary = jsonb_set(COALESCE(reports.summary,'{}'),'{draft}',$4::jsonb,true),
+           updated_at = now()`,
+        [companyId, year, req.auth!.userId, JSON.stringify({ draft: narrative })]
       );
 
       return res.json({ ok: true, draft: narrative, year });
     }
 
-    // Single section: delegate to /ai/report-section logic inline
-    const { calcComplianceScore, getGrade } = await import("./kpi");
+    // ── Single section ───────────────────────────────────────────────────
     const company = await db.query("SELECT name FROM companies WHERE id=$1", [companyId]);
     const cname = company.rows[0]?.name ?? "--";
 
     const [supR, capR, saqR, cmpR] = await Promise.all([
       db.query("SELECT name,country,industry,risk_level,risk_score,has_audit,has_code_of_conduct FROM suppliers WHERE company_id=$1", [companyId]),
-      db.query("SELECT status,due_date FROM action_plans WHERE company_id=$1", [companyId]).catch(()=>({rows:[]})),
-      db.query("SELECT status FROM supplier_saq WHERE company_id=$1", [companyId]).catch(()=>({rows:[]})),
-      db.query("SELECT status FROM complaints WHERE company_id=$1", [companyId]).catch(()=>({rows:[]})),
+      db.query("SELECT status,due_date FROM action_plans WHERE company_id=$1",   [companyId]).catch(() => ({ rows: [] })),
+      db.query("SELECT status FROM supplier_saq WHERE company_id=$1",            [companyId]).catch(() => ({ rows: [] })),
+      db.query("SELECT status FROM complaints WHERE company_id=$1",              [companyId]).catch(() => ({ rows: [] })),
     ]);
 
-    const n = supR.rows.length;
-    const high = supR.rows.filter((s:any)=>s.risk_level==="high").length;
-    const med = supR.rows.filter((s:any)=>s.risk_level==="medium").length;
-    const auditN = supR.rows.filter((s:any)=>s.has_audit).length;
-    const cocN = supR.rows.filter((s:any)=>s.has_code_of_conduct).length;
-    const auditCov = n > 0 ? Math.round(auditN/n*100) : 0;
-    const cocCov = n > 0 ? Math.round(cocN/n*100) : 0;
-    const capsDone = (capR as any).rows.filter((c:any)=>c.status==="completed").length;
-    const cTotal = (capR as any).rows.length;
-    const capsOverdue = (capR as any).rows.filter((c:any)=>c.due_date && new Date(c.due_date)<new Date() && c.status!=="completed").length;
-    const saqDone = (saqR as any).rows.filter((s:any)=>s.status==="completed").length;
-    const saqTotal = (saqR as any).rows.length;
-    const cmpOpen = (cmpR as any).rows.filter((c:any)=>c.status==="open").length;
-    const score = calcComplianceScore({ total:n, high, med, auditCount:auditN, cocCount:cocN, capsTotal:cTotal, capsDone, capsOverdue, saqsSent:saqTotal, saqsDone:saqDone, complaintsOpen:cmpOpen });
+    const n          = supR.rows.length;
+    const high       = supR.rows.filter((s: any) => s.risk_level === "high").length;
+    const med        = supR.rows.filter((s: any) => s.risk_level === "medium").length;
+    const auditN     = supR.rows.filter((s: any) => s.has_audit).length;
+    const cocN       = supR.rows.filter((s: any) => s.has_code_of_conduct).length;
+    const auditCov   = n > 0 ? Math.round(auditN / n * 100) : 0;
+    const cocCov     = n > 0 ? Math.round(cocN   / n * 100) : 0;
+    const capsDone   = (capR as any).rows.filter((c: any) => c.status === "completed").length;
+    const cTotal     = (capR as any).rows.length;
+    const capsOverdue= (capR as any).rows.filter((c: any) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "completed").length;
+    const saqDone    = (saqR as any).rows.filter((s: any) => s.status === "completed").length;
+    const saqTotal   = (saqR as any).rows.length;
+    const cmpOpen    = (cmpR as any).rows.filter((c: any) => c.status === "open").length;
+    const cmpTotal   = (cmpR as any).rows.length;
+
+    const { calcComplianceScore, getGrade } = await import("./kpi");
+    const score = calcComplianceScore({
+      total: n, high, med, auditCount: auditN, cocCount: cocN,
+      capsTotal: cTotal, capsDone, capsOverdue,
+      saqsSent: saqTotal, saqsDone: saqDone, complaintsOpen: cmpOpen,
+    });
     const grade = getGrade(score);
 
-    const sectionPrompts: Record<string,string> = {
-      reporting_scope: `Schreibe BAFA-Berichtsabschnitt "Berichtsumfang" (§10 LkSG) fuer ${cname}, Jahr ${year}. ${n} Lieferanten. 120-150 Woerter. Professionell, BAFA-konform.`,
-      organization_structure: `BAFA-Pflichtabschnitt "Unternehmensstruktur und Verantwortung" (§10 Abs.1, §4 Abs.3 LkSG) fuer ${cname}. Score: ${score}/100. Bitte Platzhalter [Anzahl Mitarbeiter] verwenden. 150-200 Woerter.`,
-      responsible_persons: `BAFA-Pflichtabschnitt "Verantwortliche Personen" (§4 Abs.3 LkSG) fuer ${cname}. Platzhalter [Name MRB], [Abteilung]. 130-160 Woerter.`,
-      risk_methodology: `BAFA-Pflichtabschnitt "Risikoanalyse Methodik" (§5 LkSG) fuer ${cname}, ${year}. ${n} Lieferanten analysiert. 20-Faktor-Modell (Laenderrisiko 35%, Branche 25%, Profil 25%, Vorfaelle 15%). 180-220 Woerter.`,
-      prioritized_risks: `BAFA-Pflichtabschnitt "Priorisierte Risiken" (§5 Abs.2 LkSG) fuer ${cname}, ${year}. DATEN: ${high} Hochrisiko, ${med} Mittelrisiko, Audit-Abdeckung ${auditCov}%. Konkrete §2 LkSG-Tatbestaende. 200-250 Woerter.`,
-      prevention_measures: `BAFA-Pflichtabschnitt "Praventionsmassnahmen" (§4 LkSG) fuer ${cname}, ${year}. CoC: ${cocCov}%, SAQ: ${saqDone}/${saqTotal}, Audit: ${auditCov}%. Massnahmen: CoC, SAQ, Audits, Schulungen. 200-250 Woerter.`,
-      remediation_measures: `BAFA-Pflichtabschnitt "Abhilfemassnahmen" (§7 LkSG) fuer ${cname}, ${year}. ${cTotal} CAPs, ${capsDone} abgeschlossen (${cTotal>0?Math.round(capsDone/cTotal*100):0}%), ${capsOverdue} ueberfaellig. 180-220 Woerter.`,
-      complaints_procedure: `BAFA-Pflichtabschnitt "Beschwerdeverfahren" (§8 LkSG) fuer ${cname}, ${year}. ${(cmpR as any).rows.length} Beschwerden. Digitale Plattform, Anonymitaet, §8 Abs.5-konform. 200-240 Woerter.`,
-      complaints_access_groups: `BAFA-Abschnitt "Zugangsberechtigte Gruppen" (§8 LkSG) fuer ${cname}. Alle Gruppen: Beschaeftigte, Lieferanten, NGOs, Anonyme. 100-130 Woerter.`,
-      effectiveness_review: `BAFA-Pflichtabschnitt "Wirksamkeitskontrolle" (§9 LkSG) fuer ${cname}, ${year}. KPIs: Score ${score}/100 (Note ${grade}), CAP-Abschluss ${cTotal>0?Math.round(capsDone/cTotal*100):0}%, Audit ${auditCov}%, SAQ-Ruecklauf ${saqTotal>0?Math.round(saqDone/saqTotal*100):0}%. 180-220 Woerter.`,
+    // Section prompts — BAFA-konform, real data injected
+    const capRate = cTotal > 0 ? Math.round(capsDone / cTotal * 100) : 0;
+    const saqRate = saqTotal > 0 ? Math.round(saqDone / saqTotal * 100) : 0;
+
+    const PROMPTS: Record<string, string> = {
+      reporting_scope:
+        `Schreibe BAFA-Berichtsabschnitt "Berichtsumfang" (§10 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `${n} direkte Lieferanten erfasst. 120-150 Woerter, sachlich, BAFA-konform.`,
+
+      organization_structure:
+        `BAFA-Pflichtabschnitt "Unternehmensstruktur und Verantwortung" (§10 Abs.1, §4 Abs.3 LkSG) ` +
+        `fuer ${cname}, Jahr ${year}. Compliance Score: ${score}/100 (Note ${grade}). ` +
+        `Platzhalter [Mitarbeiterzahl] verwenden. 150-200 Woerter.`,
+
+      responsible_persons:
+        `BAFA-Pflichtabschnitt "Verantwortliche Personen" (§4 Abs.3 LkSG) fuer ${cname}. ` +
+        `Platzhalter [Name MR-Beauftragter], [Abteilung] verwenden. 130-160 Woerter.`,
+
+      risk_methodology:
+        `BAFA-Pflichtabschnitt "Risikoanalyse Methodik" (§5 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `${n} Lieferanten analysiert. 20-Parameter-Modell: Laenderrisiko 35%, Branche 25%, Profil 25%, Vorfaelle 15%. ` +
+        `Jaehrlich + anlassbezogen. 180-220 Woerter.`,
+
+      prioritized_risks:
+        `BAFA-Pflichtabschnitt "Priorisierte Risiken" (§5 Abs.2 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `DATEN: ${high} Hochrisiko, ${med} Mittelrisiko, Audit-Abdeckung ${auditCov}%. ` +
+        `Konkrete §2 LkSG-Tatbestaende benennen. 200-250 Woerter.`,
+
+      prevention_measures:
+        `BAFA-Pflichtabschnitt "Praventionsmassnahmen" (§4 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `DATEN: CoC ${cocCov}%, SAQ ${saqDone}/${saqTotal}, Audit ${auditCov}%. ` +
+        `Massnahmen: Code of Conduct, SAQ-Prozess, Audits, Schulungen, Vertragsklauseln. 200-250 Woerter.`,
+
+      remediation_measures:
+        `BAFA-Pflichtabschnitt "Abhilfemassnahmen" (§7 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `DATEN: ${cTotal} CAPs, ${capsDone} abgeschlossen (${capRate}%), ${capsOverdue} ueberfaellig. ` +
+        `CAP-Erstellungs- und Nachverfolgungsprozess beschreiben. 180-220 Woerter.`,
+
+      complaints_procedure:
+        `BAFA-Pflichtabschnitt "Beschwerdeverfahren" (§8 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `DATEN: ${cmpTotal} Beschwerden eingegangen. ` +
+        `Digitale Plattform, Anonymitaet, §8 Abs.5-konform, 90-Tage-Frist. 200-240 Woerter.`,
+
+      complaints_access_groups:
+        `BAFA-Abschnitt "Zugangsberechtigte Gruppen" (§8 LkSG) fuer ${cname}. ` +
+        `Alle Gruppen: Beschaeftigte, Lieferanten-MA, NGOs, Anonyme. 100-130 Woerter.`,
+
+      effectiveness_review:
+        `BAFA-Pflichtabschnitt "Wirksamkeitskontrolle" (§9 LkSG) fuer ${cname}, Jahr ${year}. ` +
+        `KPIs: Score ${score}/100 (Note ${grade}), CAP-Abschlussrate ${capRate}%, ` +
+        `Audit-Abdeckung ${auditCov}%, SAQ-Ruecklauf ${saqRate}%. ` +
+        `Jaehrliche Review, Verbesserungsmassnahmen. 180-220 Woerter.`,
     };
 
-    const prompt = sectionPrompts[key];
-    if (!prompt) return res.status(400).json({ error: `Unknown section: ${key}` });
+    const prompt = PROMPTS[key];
+    if (!prompt) return res.status(400).json({ error: `Unknown section key: ${key}` });
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    // No API key → return placeholder text
     if (!apiKey) {
-      // Return auto-narrative fallback
-      const r = await db.query("SELECT summary FROM reports WHERE company_id=$1 AND year=$2", [companyId, year]);
-      const existing = r.rows[0]?.summary?.draft || {};
-      const text = existing[key] || `[KI nicht konfiguriert. Bitte ANTHROPIC_API_KEY in Railway setzen und Abschnitt manuell eingeben.]`;
-      return res.json({ text, section: key });
+      const placeholder = `[KI-Generierung nicht verfuegbar: ANTHROPIC_API_KEY fehlt in Railway. Bitte Variable setzen und Service neu deployen. Abschnitt kann manuell ausgefuellt werden.]`;
+      // Still save placeholder so user sees something
+      const existR = await db.query("SELECT summary FROM reports WHERE company_id=$1 AND year=$2", [companyId, year]);
+      const existing: Record<string,string> = existR.rows[0]?.summary?.draft || {};
+      const updated = { ...existing, [key]: placeholder };
+      await db.query(
+        `INSERT INTO reports(company_id,year,created_by,summary) VALUES($1,$2,$3,$4)
+         ON CONFLICT(company_id,year) DO UPDATE SET
+           summary = jsonb_set(COALESCE(reports.summary,'{}'),'{draft}',$4::jsonb,true),
+           updated_at = now()`,
+        [companyId, year, req.auth!.userId, JSON.stringify({ draft: updated })]
+      );
+      return res.json({ text: placeholder, section: key });
     }
 
-    const text = await (async () => {
-      const resp = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-        body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 800, system: `Du bist ein LkSG-Compliance-Experte. Schreibe praezise, BAFA-konforme Texte auf Deutsch.`, messages: [{ role: "user", content: prompt }] }),
-      });
-      const d = await resp.json() as any;
-      return d.content?.[0]?.text || "";
-    })();
+    // Call Claude
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 900,
+        system: "Du bist ein LkSG-Compliance-Experte. Schreibe praezise, professionelle BAFA-konforme Texte auf Deutsch.",
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
 
-    // Save to draft - first get existing draft, merge, then save whole object
-    const existR = await db.query("SELECT summary FROM reports WHERE company_id=$1 AND year=$2", [companyId, year]);
-    const existingDraft = existR.rows[0]?.summary?.draft || {};
-    const updatedDraft = { ...existingDraft, [key]: text };
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({})) as any;
+      throw new Error(`Claude API error: ${errData?.error?.message || resp.status}`);
+    }
+
+    const data = await resp.json() as any;
+    const text = data.content?.[0]?.text || "";
+
+    // Save generated text to draft
+    const existR2 = await db.query("SELECT summary FROM reports WHERE company_id=$1 AND year=$2", [companyId, year]);
+    const existing2: Record<string,string> = existR2.rows[0]?.summary?.draft || {};
+    const updated2 = { ...existing2, [key]: text };
 
     await db.query(
-      `INSERT INTO reports(company_id, year, created_by, summary) VALUES($1,$2,$3,$4)
+      `INSERT INTO reports(company_id,year,created_by,summary) VALUES($1,$2,$3,$4)
        ON CONFLICT(company_id,year) DO UPDATE SET
-         summary = jsonb_set(COALESCE(reports.summary,'{}'), '{draft}', $4::jsonb, true),
+         summary = jsonb_set(COALESCE(reports.summary,'{}'),'{draft}',$4::jsonb,true),
          updated_at = now()`,
-      [companyId, year, req.auth!.userId, JSON.stringify({ draft: updatedDraft })]
+      [companyId, year, req.auth!.userId, JSON.stringify({ draft: updated2 })]
     );
 
     res.json({ text, section: key });
-  } catch (e: any) { res.status(500).json({ error: e.message }); }
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
 });
 
 export default router;

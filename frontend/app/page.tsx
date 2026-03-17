@@ -1,1099 +1,509 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
-type Lang = "de" | "en";
-function getLang(): Lang { if (typeof window === "undefined") return "de"; return (localStorage.getItem("lang") as Lang) || "de"; }
-function setLang(l: Lang) { if (typeof window !== "undefined") localStorage.setItem("lang", l); }
+import { useEffect, useRef, useState, useCallback } from "react";
 
-// --- Inline SVG Icons -------------------------------------------------------
-const Icon = {
-  Check: () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M2 7l3.5 3.5L12 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  X: () => (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-      <path d="M3 3l8 8M11 3l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-    </svg>
-  ),
-  Arrow: () => (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Shield: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2L3 5v5c0 4 3 7 7 8 4-1 7-4 7-8V5l-7-3z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Globe: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <circle cx="10" cy="10" r="8" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M2 10h16M10 2c-2 2-3 5-3 8s1 6 3 8M10 2c2 2 3 5 3 8s-1 6-3 8" stroke="currentColor" strokeWidth="1.5"/>
-    </svg>
-  ),
-  FileText: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M11 2H5a1 1 0 00-1 1v14a1 1 0 001 1h10a1 1 0 001-1V7l-5-5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-      <path d="M11 2v5h5M7 11h6M7 14h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  Bell: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M10 2a6 6 0 00-6 6v3l-1.5 2.5h15L16 11V8a6 6 0 00-6-6z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-      <path d="M8.5 16a1.5 1.5 0 003 0" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  Lock: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <rect x="4" y="9" width="12" height="9" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-      <path d="M7 9V7a3 3 0 016 0v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
-  Zap: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M11 2L4 11h6l-1 7 7-9h-6l1-7z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-    </svg>
-  ),
-  Map: () => (
-    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-      <path d="M1 5l6-3 6 3 6-3v13l-6 3-6-3-6 3V5z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-      <path d="M7 2v13M13 5v13" stroke="currentColor" strokeWidth="1.5"/>
-    </svg>
-  ),
-  Menu: () => (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-      <path d="M3 6h16M3 11h16M3 16h16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-    </svg>
-  ),
+const SCENES = [
+  { id: "intro", duration: 5000, subtitle: "Stellen Sie sich vor: Ein BAFA-Brief liegt auf Ihrem Schreibtisch.", bg: "#060d05", accent: "#22c55e" },
+  { id: "problem", duration: 6000, subtitle: "§3 LkSG verpflichtet über 1.000 Unternehmen zur Sorgfaltspflicht. Verstöße: bis zu 2% des Jahresumsatzes.", bg: "#0a0a0a", accent: "#f87171" },
+  { id: "dashboard", duration: 7000, subtitle: "LkSGCompass — Sidebar-Navigation, Compliance-Score immer sichtbar, klickbare KPI-Karten.", bg: "#060d05", accent: "#22c55e" },
+  { id: "score", duration: 6000, subtitle: "Der Compliance-Score bewertet Ihre Lieferkette in Echtzeit — §9 LkSG. Heute: 84 von 100.", bg: "#060d05", accent: "#22c55e" },
+  { id: "suppliers", duration: 7000, subtitle: "§5 Risikoregister: Lieferanten automatisch klassifiziert, KI-Analyse per Klick, CSV-Import.", bg: "#071209", accent: "#4ade80" },
+  { id: "risk", duration: 7000, subtitle: "§5 Risikoanalyse: 20-Parameter-Modell. KI-CAP für Hochrisiko-Lieferanten — automatisch.", bg: "#071209", accent: "#fb923c" },
+  { id: "complaints", duration: 6000, subtitle: "§8 Hinweisgebersystem: Öffentliches Portal, anonyme Meldungen, KI-Triage, lückenloser Trail.", bg: "#0a0508", accent: "#a78bfa" },
+  { id: "legal", duration: 7000, subtitle: "Rechtsassistent: KI-generierte Vorlagen für CoC, SAQ, Auditchecklisten und Vertragsklauseln.", bg: "#050a10", accent: "#60a5fa" },
+  { id: "report", duration: 7000, subtitle: "BAFA-Bericht §10: 10 Pflichtabschnitte, KI-generiert, direkt editierbar — Freigabe-Workflow inklusive.", bg: "#060d05", accent: "#22c55e" },
+  { id: "defense", duration: 6000, subtitle: "Nachweise-Tresor §10: Auditberichte, CoC, SAQ — 7 Jahre revisionssicher gespeichert.", bg: "#060d05", accent: "#22c55e" },
+  { id: "cta", duration: 8000, subtitle: "LkSGCompass. Compliance, die funktioniert. Jetzt 14 Tage kostenlos testen.", bg: "#060d05", accent: "#22c55e" },
+];
+
+function SceneIntro({ p }: { p: number }) {
+  return (
+    <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:32 }}>
+      <div style={{ opacity:Math.min(1,p*3),transform:`translateY(${(1-Math.min(1,p*2))*30}px)`,textAlign:"center" }}>
+        <div style={{ fontSize:12,letterSpacing:"0.25em",color:"#c4f135",textTransform:"uppercase",marginBottom:20 }}>LkSGCompass</div>
+        <div style={{ fontSize:"clamp(36px,7vw,80px)",fontWeight:800,color:"#fff",lineHeight:1.1,fontFamily:"'Bricolage Grotesque',sans-serif" }}>
+          LkSG-Compliance.<br /><span style={{ color:"#c4f135" }}>Automatisiert.</span>
+        </div>
+        <div style={{ fontSize:18,color:"#6b7c6e",marginTop:24 }}>Von §4 bis §10 — vollständig abgedeckt.</div>
+      </div>
+      <div style={{ display:"flex",gap:48,marginTop:24,opacity:Math.min(1,Math.max(0,p*4-1)) }}>
+        {[["1.000+","Unternehmen betroffen"],["2%","Umsatz Bußgeld"],["§4–§10","Vollabdeckung"]].map(([n,l])=>(
+          <div key={n} style={{ textAlign:"center" }}>
+            <div style={{ fontSize:36,fontWeight:800,color:"#c4f135",fontFamily:"'Bricolage Grotesque',sans-serif" }}>{n}</div>
+            <div style={{ fontSize:12,color:"#6b7c6e",marginTop:4 }}>{l}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneProblem({ p }: { p: number }) {
+  const items=[
+    {icon:"⚠️",title:"§5 Risikoanalyse",desc:"Kein strukturierter Prozess"},
+    {icon:"📋",title:"BAFA-Bericht §10",desc:"Wochen manueller Arbeit"},
+    {icon:"⚖️",title:"Rechtsvorlagen §6",desc:"Teurer Anwalt nötig"},
+    {icon:"🔔",title:"Hinweisgeber §8",desc:"Fehlende Dokumentation"},
+  ];
+  return (
+    <div style={{ display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",height:"100%",gap:40 }}>
+      <div style={{ fontSize:"clamp(24px,4vw,48px)",fontWeight:800,color:"#fff",textAlign:"center",fontFamily:"'Bricolage Grotesque',sans-serif" }}>
+        Das Problem ohne <span style={{ color:"#ff4444" }}>LkSGCompass</span>
+      </div>
+      <div style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:16,maxWidth:600 }}>
+        {items.map((item,i)=>(
+          <div key={i} style={{ background:"rgba(255,68,68,0.08)",border:"1px solid rgba(255,68,68,0.2)",borderRadius:16,padding:"20px 24px",opacity:Math.min(1,Math.max(0,p*4-i*0.5)),transform:`translateY(${Math.max(0,(1-p*3+i*0.2)*20)}px)` }}>
+            <div style={{ fontSize:28,marginBottom:8 }}>{item.icon}</div>
+            <div style={{ fontSize:15,fontWeight:700,color:"#fff",marginBottom:4 }}>{item.title}</div>
+            <div style={{ fontSize:13,color:"#ff6666" }}>{item.desc}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneDashboard({ p }: { p: number }) {
+  const metrics=[
+    {label:"Compliance-Score",value:"84/100",color:"#22c55e"},
+    {label:"Lieferanten",value:"47",color:"#4ade80"},
+    {label:"Offene Maßnahmen",value:"3",color:"#f59e0b"},
+    {label:"BAFA-Status",value:"Ready",color:"#38bdf8"},
+  ];
+  return (
+    <div style={{ height:"100%",display:"flex",flexDirection:"column",justifyContent:"center",padding:"0 40px",gap:24 }}>
+      <div style={{ fontSize:12,letterSpacing:"0.2em",color:"#c4f135",textTransform:"uppercase" }}>Dashboard</div>
+      <div style={{ fontSize:"clamp(22px,3.5vw,40px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif" }}>Alle Pflichten auf einen Blick</div>
+      <div style={{ display:"grid",gridTemplateColumns:"repeat(2,1fr)",gap:12,maxWidth:520 }}>
+        {metrics.map((m,i)=>(
+          <div key={i} style={{ background:"rgba(255,255,255,0.04)",border:"1px solid rgba(255,255,255,0.08)",borderRadius:16,padding:"20px 24px",opacity:Math.min(1,Math.max(0,p*5-i*0.6)) }}>
+            <div style={{ fontSize:28,fontWeight:800,color:m.color,fontFamily:"'Bricolage Grotesque',sans-serif" }}>{m.value}</div>
+            <div style={{ fontSize:12,color:"#6b7c6e",marginTop:4 }}>{m.label}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ display:"flex",gap:8,flexWrap:"wrap",opacity:Math.min(1,Math.max(0,p*3-1)) }}>
+        {["§4 Grundsatzerklärung ✓","§5 Risikoanalyse ✓","§6 Präventionsmaßnahmen ✓","§8 Beschwerdeverfahren ✓","§10 Bericht ✓"].map(t=>(
+          <div key={t} style={{ fontSize:11,padding:"4px 10px",background:"rgba(196,241,53,0.1)",color:"#c4f135",borderRadius:20,border:"1px solid rgba(196,241,53,0.2)" }}>{t}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneScore({ p }: { p: number }) {
+  const score=Math.round(p*84);
+  const r=70, circ=2*Math.PI*r;
+  return (
+    <div style={{ height:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:80,padding:"0 60px",flexWrap:"wrap" }}>
+      <div style={{ position:"relative",width:180,height:180 }}>
+        <svg width="180" height="180" style={{ transform:"rotate(-90deg)" }}>
+          <circle cx="90" cy="90" r={r} fill="none" stroke="rgba(196,241,53,0.1)" strokeWidth="8"/>
+          <circle cx="90" cy="90" r={r} fill="none" stroke="#c4f135" strokeWidth="8" strokeDasharray={`${(score/100)*circ} ${circ}`} strokeLinecap="round"/>
+        </svg>
+        <div style={{ position:"absolute",inset:0,display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center" }}>
+          <div style={{ fontSize:48,fontWeight:800,color:"#c4f135",fontFamily:"'Bricolage Grotesque',sans-serif" }}>{score}</div>
+          <div style={{ fontSize:12,color:"#6b7c6e" }}>von 100</div>
+        </div>
+      </div>
+      <div style={{ flex:1,minWidth:240 }}>
+        <div style={{ fontSize:12,color:"#c4f135",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:12 }}>Compliance-Score</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",marginBottom:20,fontFamily:"'Bricolage Grotesque',sans-serif" }}>Echtzeit-Bewertung<br/>Ihrer Lieferkette</div>
+        {[{label:"Risikoanalyse",pct:92,color:"#c4f135"},{label:"Präventionsmaßnahmen",pct:85,color:"#4ade80"},{label:"Lieferantenbewertung",pct:78,color:"#f59e0b"}].map((item,i)=>(
+          <div key={i} style={{ marginBottom:12,opacity:Math.min(1,Math.max(0,p*4-i*0.5)) }}>
+            <div style={{ display:"flex",justifyContent:"space-between",fontSize:12,color:"#8a9a8d",marginBottom:4 }}>
+              <span>{item.label}</span><span style={{ color:item.color }}>{item.pct}%</span>
+            </div>
+            <div style={{ height:4,background:"rgba(255,255,255,0.06)",borderRadius:2 }}>
+              <div style={{ height:"100%",width:`${item.pct*p}%`,background:item.color,borderRadius:2 }}/>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneSuppliers({ p }: { p: number }) {
+  const suppliers=[
+    {name:"Guangzhou Textil GmbH",country:"CN",risk:"Hoch",score:45},
+    {name:"Müller Automotive KG",country:"DE",risk:"Niedrig",score:92},
+    {name:"Dhaka Garments Ltd",country:"BD",risk:"Kritisch",score:28},
+    {name:"Lyon Logistics SA",country:"FR",risk:"Niedrig",score:88},
+    {name:"Mumbai Parts Pvt",country:"IN",risk:"Mittel",score:67},
+  ];
+  const rc=(r: string)=>r==="Kritisch"?"#ff4444":r==="Hoch"?"#f59e0b":r==="Mittel"?"#38bdf8":"#4ade80";
+  return (
+    <div style={{ height:"100%",display:"flex",flexDirection:"column",justifyContent:"center",padding:"0 40px",gap:20 }}>
+      <div>
+        <div style={{ fontSize:12,color:"#4ade80",letterSpacing:"0.2em",textTransform:"uppercase" }}>Lieferantenmanagement §5</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginTop:6 }}>147 Lieferanten überwacht</div>
+      </div>
+      <div style={{ display:"flex",flexDirection:"column",gap:8,maxWidth:560 }}>
+        {suppliers.map((s,i)=>(
+          <div key={i} style={{ display:"flex",alignItems:"center",gap:12,background:"rgba(255,255,255,0.03)",border:"1px solid rgba(255,255,255,0.06)",borderRadius:12,padding:"12px 16px",opacity:Math.min(1,Math.max(0,p*6-i*0.7)),transform:`translateX(${Math.max(0,(1-p*4+i*0.2)*-20)}px)` }}>
+            <div style={{ width:32,height:32,borderRadius:8,background:"rgba(255,255,255,0.06)",display:"flex",alignItems:"center",justifyContent:"center",fontSize:11,color:"#8a9a8d",fontWeight:700 }}>{s.country}</div>
+            <div style={{ flex:1,fontSize:13,color:"#e8f0e9",fontWeight:600 }}>{s.name}</div>
+            <div style={{ fontSize:11,padding:"3px 8px",borderRadius:20,background:`${rc(s.risk)}15`,color:rc(s.risk),border:`1px solid ${rc(s.risk)}30` }}>{s.risk}</div>
+            <div style={{ fontSize:13,fontWeight:700,color:s.score>80?"#4ade80":s.score>60?"#f59e0b":"#ff4444",width:32,textAlign:"right" }}>{s.score}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneRisk({ p }: { p: number }) {
+  const areas=[
+    {name:"Arbeitsrechte",risk:72,countries:["Bangladesch","Myanmar"]},
+    {name:"Umwelt",risk:45,countries:["China","Indien"]},
+    {name:"Kinderarbeit",risk:28,countries:["Pakistan"]},
+    {name:"Zwangsarbeit",risk:15,countries:[]},
+  ];
+  return (
+    <div style={{ height:"100%",display:"flex",alignItems:"center",gap:60,padding:"0 60px",flexWrap:"wrap" }}>
+      <div style={{ flex:1,minWidth:240 }}>
+        <div style={{ fontSize:12,color:"#f59e0b",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:12 }}>§5 Risikoanalyse</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginBottom:8 }}>KI erkennt Risiken<br/>automatisch</div>
+        <div style={{ fontSize:14,color:"#6b7c6e",lineHeight:1.6,marginBottom:24 }}>Über 80 Risikoländer — kontinuierlich aktualisiert.</div>
+        <div style={{ fontSize:11,padding:"6px 14px",background:"rgba(245,158,11,0.1)",color:"#f59e0b",borderRadius:20,border:"1px solid rgba(245,158,11,0.2)",display:"inline-block" }}>⚡ KI-Analyse läuft...</div>
+      </div>
+      <div style={{ flex:1,minWidth:260,display:"flex",flexDirection:"column",gap:14 }}>
+        {areas.map((a,i)=>(
+          <div key={i} style={{ opacity:Math.min(1,Math.max(0,p*5-i*0.6)) }}>
+            <div style={{ display:"flex",justifyContent:"space-between",fontSize:13,marginBottom:6 }}>
+              <span style={{ color:"#e8f0e9" }}>{a.name}</span>
+              <span style={{ color:a.risk>60?"#ff4444":a.risk>40?"#f59e0b":"#4ade80" }}>{a.risk}%</span>
+            </div>
+            <div style={{ height:6,background:"rgba(255,255,255,0.06)",borderRadius:3 }}>
+              <div style={{ height:"100%",width:`${a.risk*Math.min(1,p*2)}%`,background:a.risk>60?"#ff4444":a.risk>40?"#f59e0b":"#4ade80",borderRadius:3 }}/>
+            </div>
+            {a.countries.length>0&&<div style={{ marginTop:4,display:"flex",gap:6 }}>{a.countries.map(c=><span key={c} style={{ fontSize:10,color:"#6b7c6e" }}>📍{c}</span>)}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneComplaints({ p }: { p: number }) {
+  return (
+    <div style={{ height:"100%",display:"flex",alignItems:"center",gap:60,padding:"0 60px",flexWrap:"wrap" }}>
+      <div style={{ flex:1,minWidth:240 }}>
+        <div style={{ fontSize:12,color:"#a78bfa",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:12 }}>§8 Hinweisgebersystem</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginBottom:12 }}>Anonyme Meldungen.<br/>Lückenlos dokumentiert.</div>
+        <div style={{ display:"flex",flexDirection:"column",gap:8,marginTop:20 }}>
+          {[{icon:"🔒",text:"Vollständige Anonymität"},{icon:"⚡",text:"Automatische Eskalation"},{icon:"📋",text:"BAFA-konforme Dokumentation"},{icon:"🌍",text:"Mehrsprachig verfügbar"}].map((item,i)=>(
+            <div key={i} style={{ display:"flex",gap:10,alignItems:"center",opacity:Math.min(1,Math.max(0,p*5-i*0.5)) }}>
+              <span style={{ fontSize:18 }}>{item.icon}</span>
+              <span style={{ fontSize:13,color:"#a0b0a3" }}>{item.text}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ flex:1,minWidth:260,opacity:Math.min(1,p*2) }}>
+        <div style={{ background:"rgba(167,139,250,0.08)",border:"1px solid rgba(167,139,250,0.2)",borderRadius:20,padding:24 }}>
+          <div style={{ fontSize:11,color:"#a78bfa",marginBottom:16,letterSpacing:"0.1em" }}>NEUE MELDUNG — VERTRAULICH</div>
+          <div style={{ display:"flex",gap:10,alignItems:"flex-start",marginBottom:16 }}>
+            <div style={{ width:32,height:32,borderRadius:"50%",background:"rgba(167,139,250,0.2)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>👤</div>
+            <div style={{ background:"rgba(255,255,255,0.04)",borderRadius:12,padding:"10px 14px",flex:1 }}>
+              <div style={{ fontSize:12,color:"#c0ccc2",lineHeight:1.6 }}>"Lieferant in Dhaka zahlt unter Mindestlohn und beschäftigt Minderjährige."</div>
+            </div>
+          </div>
+          <div style={{ display:"flex",gap:8 }}>
+            {[{label:"Kritisch",color:"#ff4444"},{label:"§7 Abhilfemaßnahme",color:"#f59e0b"}].map(t=>(
+              <span key={t.label} style={{ fontSize:10,padding:"3px 8px",borderRadius:20,background:`${t.color}15`,color:t.color,border:`1px solid ${t.color}30` }}>{t.label}</span>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SceneLegal({ p }: { p: number }) {
+  const templates=[
+    {icon:"📝",title:"Lieferantenkodex",para:"§6 Abs.2"},
+    {icon:"⚖️",title:"Vertragsklausel",para:"§6 Abs.3"},
+    {icon:"📊",title:"SAQ",para:"§5 Abs.2"},
+    {icon:"🔍",title:"Auditprotokoll",para:"§6 Abs.3"},
+    {icon:"🛡️",title:"Whistleblower",para:"HinSchG §16"},
+    {icon:"📋",title:"Risikomethodik",para:"§5"},
+  ];
+  return (
+    <div style={{ height:"100%",display:"flex",flexDirection:"column",justifyContent:"center",padding:"0 40px",gap:20 }}>
+      <div>
+        <div style={{ fontSize:12,color:"#38bdf8",letterSpacing:"0.2em",textTransform:"uppercase" }}>Rechtsassistent — KI-powered</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginTop:6 }}>6 rechtssichere Vorlagen.<br/>In Sekunden generiert.</div>
+      </div>
+      <div style={{ display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:10,maxWidth:580 }}>
+        {templates.map((t,i)=>(
+          <div key={i} style={{ background:"rgba(56,189,248,0.06)",border:"1px solid rgba(56,189,248,0.15)",borderRadius:14,padding:"14px 16px",opacity:Math.min(1,Math.max(0,p*7-i*0.5)),transform:`scale(${Math.min(1,Math.max(0.9,p*4-i*0.2))})` }}>
+            <div style={{ fontSize:22,marginBottom:6 }}>{t.icon}</div>
+            <div style={{ fontSize:12,fontWeight:600,color:"#e8f0e9" }}>{t.title}</div>
+            <div style={{ fontSize:10,color:"#38bdf8",marginTop:3 }}>{t.para}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneReport({ p }: { p: number }) {
+  const steps=["§4 Grundsatzerklärung analysiert","§5 Risikoanalyse zusammengefasst","§6 Maßnahmen dokumentiert","§8 Beschwerden ausgewertet","§10 Berichtsentwurf erstellt","BAFA-Format validiert ✓"];
+  const done=Math.floor(p*steps.length*1.2);
+  return (
+    <div style={{ height:"100%",display:"flex",alignItems:"center",gap:60,padding:"0 60px",flexWrap:"wrap" }}>
+      <div style={{ flex:1,minWidth:240 }}>
+        <div style={{ fontSize:12,color:"#c4f135",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:12 }}>BAFA-Bericht §10</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginBottom:12 }}>KI schreibt Ihren<br/>Rechenschaftsbericht</div>
+        <div style={{ fontSize:14,color:"#6b7c6e",lineHeight:1.6,marginBottom:24 }}>Was früher Wochen dauerte — in Minuten fertig. Vollständig BAFA-konform.</div>
+        <div style={{ display:"inline-flex",alignItems:"center",gap:8,background:"rgba(196,241,53,0.1)",border:"1px solid rgba(196,241,53,0.2)",borderRadius:20,padding:"8px 16px" }}>
+          <div style={{ width:8,height:8,borderRadius:"50%",background:"#c4f135",animation:"pulse 1s infinite" }}/>
+          <span style={{ fontSize:12,color:"#c4f135" }}>KI generiert...</span>
+        </div>
+      </div>
+      <div style={{ flex:1,minWidth:240,display:"flex",flexDirection:"column",gap:10 }}>
+        {steps.map((s,i)=>(
+          <div key={i} style={{ display:"flex",gap:10,alignItems:"center",opacity:i<done?1:0.2,transition:"opacity 0.3s" }}>
+            <div style={{ width:20,height:20,borderRadius:"50%",background:i<done?"rgba(196,241,53,0.2)":"rgba(255,255,255,0.05)",border:`1px solid ${i<done?"#c4f135":"rgba(255,255,255,0.1)"}`,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0 }}>
+              {i<done&&<span style={{ fontSize:10,color:"#c4f135" }}>✓</span>}
+            </div>
+            <span style={{ fontSize:12,color:i<done?"#a0b0a3":"#3d4d3f" }}>{s}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SceneDefense({ p }: { p: number }) {
+  const lines=['{ "§5_risikoanalyse": "abgeschlossen",','  "§6_praevention": "200 Maßnahmen",','  "§7_abhilfe": "3 Fälle gelöst",','  "§8_beschwerde": "12 Meldungen",','  "§9_meldung": "aktuell",','  "§10_bericht": "BAFA-ready" }'];
+  return (
+    <div style={{ height:"100%",display:"flex",alignItems:"center",gap:60,padding:"0 60px",flexWrap:"wrap" }}>
+      <div style={{ flex:1,minWidth:240 }}>
+        <div style={{ fontSize:12,color:"#c4f135",letterSpacing:"0.2em",textTransform:"uppercase",marginBottom:12 }}>Verteidigungsakte §10</div>
+        <div style={{ fontSize:"clamp(20px,3vw,36px)",fontWeight:800,color:"#fff",fontFamily:"'Bricolage Grotesque',sans-serif",marginBottom:12 }}>BAFA-Prüfung?<br/>Ein Klick genügt.</div>
+        <div style={{ fontSize:14,color:"#6b7c6e",lineHeight:1.6,marginBottom:24 }}>§5–§10 Nachweise als strukturierter Export. 200 Audit-Trail-Einträge. Sofort verfügbar.</div>
+        <div style={{ display:"inline-flex",alignItems:"center",gap:8,background:"rgba(196,241,53,0.15)",border:"1px solid rgba(196,241,53,0.3)",borderRadius:12,padding:"12px 20px",opacity:Math.min(1,p*3) }}>
+          <span style={{ fontSize:16 }}>📥</span>
+          <span style={{ fontSize:13,fontWeight:700,color:"#c4f135" }}>Verteidigungsakte herunterladen</span>
+        </div>
+      </div>
+      <div style={{ flex:1,minWidth:240,opacity:Math.min(1,p*2) }}>
+        <div style={{ background:"rgba(196,241,53,0.04)",border:"1px solid rgba(196,241,53,0.15)",borderRadius:16,padding:20,fontFamily:"monospace",fontSize:11 }}>
+          <div style={{ color:"#6b7c6e",marginBottom:10 }}>verteidigungsakte_2024.json</div>
+          {lines.map((line,i)=>(
+            <div key={i} style={{ color:i===0?"#c4f135":"#4ade80",lineHeight:1.8,opacity:Math.min(1,Math.max(0,p*8-i*0.5)) }}>{line}</div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SceneCTA({ p }: { p: number }) {
+  return (
+    <div style={{ height:"100%",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:32,padding:"0 40px",textAlign:"center" }}>
+      <div style={{ opacity:Math.min(1,p*2),transform:`translateY(${(1-Math.min(1,p*2))*20}px)` }}>
+        <div style={{ fontSize:12,letterSpacing:"0.25em",color:"#c4f135",textTransform:"uppercase",marginBottom:20 }}>LkSGCompass</div>
+        <div style={{ fontSize:"clamp(28px,5vw,60px)",fontWeight:800,color:"#fff",lineHeight:1.15,fontFamily:"'Bricolage Grotesque',sans-serif" }}>
+          Compliance,<br/>die <span style={{ color:"#c4f135" }}>funktioniert.</span>
+        </div>
+        <div style={{ fontSize:18,color:"#6b7c6e",marginTop:20,marginBottom:36 }}>14 Tage kostenlos. Keine Kreditkarte. Sofort einsatzbereit.</div>
+        <div style={{ display:"flex",gap:16,justifyContent:"center",flexWrap:"wrap" }}>
+          <a href="/register" style={{ display:"inline-flex",alignItems:"center",gap:8,background:"#c4f135",color:"#0a1a08",padding:"16px 32px",borderRadius:14,fontSize:16,fontWeight:800,textDecoration:"none",fontFamily:"'Bricolage Grotesque',sans-serif" }}>
+            Kostenlos starten →
+          </a>
+          <a href="/pricing" style={{ display:"inline-flex",alignItems:"center",gap:8,background:"rgba(255,255,255,0.06)",color:"#e8f0e9",padding:"16px 32px",borderRadius:14,fontSize:16,fontWeight:600,textDecoration:"none",border:"1px solid rgba(255,255,255,0.1)" }}>
+            Pakete vergleichen
+          </a>
+        </div>
+      </div>
+      <div style={{ display:"flex",gap:32,marginTop:16,opacity:Math.min(1,Math.max(0,p*3-1)) }}>
+        {["DSGVO-konform","EU-Hosting (Frankfurt)","AVV auf Anfrage"].map(t=>(
+          <div key={t} style={{ fontSize:12,color:"#4d5e50",display:"flex",alignItems:"center",gap:6 }}>
+            <span style={{ color:"#c4f135" }}>✓</span> {t}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+const COMPS: Record<string,(props:{p:number})=>React.JSX.Element> = {
+  intro:SceneIntro, problem:SceneProblem, dashboard:SceneDashboard,
+  score:SceneScore, suppliers:SceneSuppliers, risk:SceneRisk,
+  complaints:SceneComplaints, legal:SceneLegal, report:SceneReport,
+  defense:SceneDefense, cta:SceneCTA,
 };
 
-// --- Dashboard Mockup --------------------------------------------------------
-function DashboardMockup() {
-  return (
-    <div style={{ background:"#fff", border:"1px solid #e8eae8", borderRadius:16, overflow:"hidden", boxShadow:"0 24px 64px rgba(0,0,0,0.1)", userSelect:"none" }}>
-      {/* Browser chrome */}
-      <div style={{ background:"#f4f5f4", borderBottom:"1px solid #e8eae8", padding:"9px 16px", display:"flex", alignItems:"center", gap:6 }}>
-        <div style={{ width:9, height:9, borderRadius:"50%", background:"#fecaca" }}/>
-        <div style={{ width:9, height:9, borderRadius:"50%", background:"#fef08a" }}/>
-        <div style={{ width:9, height:9, borderRadius:"50%", background:"#bbf7d0" }}/>
-        <div style={{ flex:1, marginLeft:10, background:"#e8eae8", borderRadius:5, height:18, display:"flex", alignItems:"center", padding:"0 10px" }}>
-          <span style={{ fontSize:9.5, color:"#9ca3af", fontFamily:"monospace" }}>app.lksgcompass.de/app/dashboard</span>
-        </div>
-      </div>
-      {/* App shell with sidebar */}
-      <div style={{ display:"grid", gridTemplateColumns:"168px 1fr", height:320 }}>
-        {/* Sidebar */}
-        <div style={{ background:"#fff", borderRight:"1px solid #e8eae8", padding:"12px 8px", display:"flex", flexDirection:"column" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:7, padding:"0 8px", marginBottom:12 }}>
-            <div style={{ width:22, height:22, borderRadius:6, background:"#1B3D2B", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:800, color:"#fff", flexShrink:0 }}>LC</div>
-            <span style={{ fontSize:12, fontWeight:700, color:"#1B3D2B" }}>LkSGCompass</span>
-          </div>
-          {/* Score block */}
-          <div style={{ margin:"0 4px 10px", background:"#f0f5f1", border:"1px solid #d1e7d9", borderRadius:8, padding:"8px 10px" }}>
-            <div style={{ fontSize:8, fontWeight:700, color:"#2d5c3f", textTransform:"uppercase", letterSpacing:1, marginBottom:2 }}>SCORE §9</div>
-            <div style={{ fontSize:22, fontWeight:800, color:"#1B3D2B", lineHeight:1 }}>84</div>
-            <div style={{ fontSize:9, color:"#5a8c6a" }}>Note B · Gut</div>
-          </div>
-          {[
-            ["Dashboard","●"],
-            ["Lieferanten","47"],
-            ["Aktionspläne","3"],
-            ["Beschwerden","2"],
-          ].map(([t,b],i)=>(
-            <div key={t} style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", borderRadius:6, background:i===0?"#f0f5f1":"transparent", marginBottom:2 }}>
-              <span style={{ fontSize:11, color:i===0?"#1B3D2B":"#9ca3af", fontWeight:i===0?600:400, flex:1 }}>{t}</span>
-              {b!=="●"&&<span style={{ fontSize:9, color:i<2?"#9ca3af":i===2?"#d97706":"#dc2626", fontWeight:700, background:i===2?"#fffbeb":i===3?"#fef2f2":"transparent", padding:"1px 5px", borderRadius:10 }}>{b}</span>}
-            </div>
-          ))}
-        </div>
-        {/* Main */}
-        <div style={{ background:"#f4f5f4", padding:12, overflow:"hidden" }}>
-          <div style={{ fontSize:11, fontWeight:700, color:"#9ca3af", textTransform:"uppercase", letterSpacing:1, marginBottom:2, fontFamily:"monospace" }}>DASHBOARD</div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
-            {[
-              {l:"Compliance Score",v:"84",c:"#1B3D2B",sub:"Note B"},
-              {l:"Lieferanten",v:"47",c:"#0b0f0c",sub:"12 Länder"},
-              {l:"Offene CAPs",v:"3",c:"#d97706",sub:"1 überfällig"},
-              {l:"Meldungen",v:"2",c:"#dc2626",sub:"offen"},
-            ].map(k=>(
-              <div key={k.l} style={{ background:"#fff", borderRadius:8, padding:"9px 10px", border:"1px solid #e8eae8", cursor:"pointer" }}>
-                <div style={{ fontSize:8, color:"#9ca3af", fontWeight:700, textTransform:"uppercase", letterSpacing:.8, marginBottom:4, fontFamily:"monospace" }}>{k.l}</div>
-                <div style={{ fontSize:19, fontWeight:800, color:k.c, lineHeight:1, marginBottom:2 }}>{k.v}</div>
-                <div style={{ fontSize:9.5, color:"#9ca3af" }}>{k.sub}</div>
-              </div>
-            ))}
-          </div>
-          <div style={{ background:"#fff", borderRadius:8, border:"1px solid #e8eae8", overflow:"hidden" }}>
-            <div style={{ background:"#f4f5f4", padding:"6px 10px", display:"grid", gridTemplateColumns:"2fr 1fr 80px", gap:6 }}>
-              {["Top Risikolieferanten","Land","Score"].map(h=>(
-                <span key={h} style={{ fontSize:8.5, fontWeight:700, color:"#9ca3af", textTransform:"uppercase", letterSpacing:.8, fontFamily:"monospace" }}>{h}</span>
-              ))}
-            </div>
-            {[
-              {n:"Textile Group",c:"BD",s:87,rc:"#fef2f2",tc:"#991b1b"},
-              {n:"TechParts Co.",c:"CN",s:82,rc:"#fef2f2",tc:"#991b1b"},
-              {n:"AutoSteelworks",c:"MX",s:61,rc:"#fffbeb",tc:"#92400e"},
-            ].map((r,i)=>(
-              <div key={i} style={{ padding:"8px 10px", display:"grid", gridTemplateColumns:"2fr 1fr 80px", gap:6, borderTop:"1px solid #f4f5f4", alignItems:"center" }}>
-                <span style={{ fontSize:11, fontWeight:600, color:"#0b0f0c" }}>{r.n}</span>
-                <span style={{ fontSize:10, color:"#6b7280", fontFamily:"monospace" }}>{r.c}</span>
-                <div style={{ display:"flex", alignItems:"center", gap:5 }}>
-                  <div style={{ flex:1, height:3, borderRadius:2, background:"#f4f5f4" }}>
-                    <div style={{ width:`${r.s}%`, height:"100%", borderRadius:2, background:r.tc }}/>
-                  </div>
-                  <span style={{ fontSize:10, fontWeight:700, color:r.tc }}>{r.s}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+export default function DemoPage() {
+  const [idx, setIdx] = useState(0);
+  const [sp, setSp] = useState(0);
+  const [tp, setTp] = useState(0);
+  const [playing, setPlaying] = useState(true);
+  const [music, setMusic] = useState(false);
+  const [showUI, setShowUI] = useState(false);
+  const [ended, setEnded] = useState(false);
+  const rafRef = useRef<number>();
+  const startRef = useRef(0);
+  const pausedRef = useRef(0);
+  const total = SCENES.reduce((s,sc) => s+sc.duration, 0);
+  const audioRef = useRef<{ctx:AudioContext,gain:GainNode,playing:boolean}|null>(null);
+  const noteTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-// --- Report Mockup -----------------------------------------------------------
-function ReportMockup() {
-  const sections = [
-    {para:"§10",label:"Berichtsumfang",done:true},
-    {para:"§10",label:"Unternehmensstruktur",done:true},
-    {para:"§4", label:"Verantwortliche Personen",done:true},
-    {para:"§5", label:"Risikoanalyse Methodik",done:true},
-    {para:"§5", label:"Priorisierte Risiken",done:true},
-    {para:"§6", label:"Präventionsmaßnahmen",done:true},
-    {para:"§7", label:"Abhilfemaßnahmen",done:true},
-    {para:"§8", label:"Beschwerdeverfahren",done:true},
-    {para:"§8", label:"Zugangsgruppen",done:false},
-    {para:"§9", label:"Wirksamkeitskontrolle",done:false},
-  ];
-  const done = sections.filter(s=>s.done).length;
-  return (
-    <div style={{ background:"#fff", border:"1px solid #e8eae8", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,0.06)" }}>
-      <div style={{ padding:"14px 16px", borderBottom:"1px solid #e8eae8" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
-          <div>
-            <div style={{ fontSize:13, fontWeight:800, color:"#0b0f0c" }}>BAFA Rechenschaftsbericht 2025</div>
-            <div style={{ fontSize:11, color:"#9ca3af", marginTop:2 }}>10 Pflichtabschnitte · KI-generiert · §10 LkSG</div>
-          </div>
-          <div style={{ fontSize:14, fontWeight:800, color:"#1B3D2B" }}>{done}/10</div>
-        </div>
-        <div style={{ height:4, background:"#e8eae8", borderRadius:2, overflow:"hidden" }}>
-          <div style={{ width:`${done/10*100}%`, height:"100%", background:"#1B3D2B", borderRadius:2 }}/>
-        </div>
-      </div>
-      <div style={{ padding:"0 16px" }}>
-        {sections.map((s,i)=>(
-          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 0", borderBottom:i<sections.length-1?"1px solid #f4f5f4":"none" }}>
-            <span style={{ fontSize:8.5, fontWeight:700, color:s.done?"#2d5c3f":"#9ca3af", background:s.done?"#f0f5f1":"#f9fafb", border:`1px solid ${s.done?"#d1e7d9":"#e8eae8"}`, borderRadius:20, padding:"1px 6px", fontFamily:"monospace", flexShrink:0 }}>{s.para}</span>
-            <span style={{ fontSize:11.5, color:s.done?"#0b0f0c":"#9ca3af", flex:1, fontWeight:s.done?500:400 }}>{s.label}</span>
-            {s.done
-              ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#f0f5f1" stroke="#d1e7d9"/><path d="M4 7l2 2 4-4" stroke="#1B3D2B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              : <div style={{ width:13, height:13, borderRadius:"50%", border:"1px solid #e8eae8", background:"#f4f5f4" }}/>
-            }
-          </div>
-        ))}
-      </div>
-      <div style={{ padding:12, borderTop:"1px solid #e8eae8", display:"flex", gap:6 }}>
-        <div style={{ flex:1, background:"#1B3D2B", borderRadius:8, padding:"8px 0", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
-          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          <span style={{ fontSize:11, fontWeight:700, color:"#fff" }}>Export</span>
-        </div>
-        <div style={{ background:"#f0f5f1", border:"1px solid #d1e7d9", borderRadius:8, padding:"8px 12px", display:"flex", alignItems:"center", gap:6 }}>
-          <span style={{ fontSize:11, fontWeight:600, color:"#1B3D2B" }}>✦ KI generieren</span>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// --- Monitoring Mockup -------------------------------------------------------
-function MonitoringMockup() {
-  return (
-    <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 20, boxShadow: "0 8px 32px rgba(0,0,0,0.06)" }}>
-      <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 14 }}>Live Monitoring</div>
-      {[
-        { type: "Sanktionen", name: "Supplier A GmbH", status: "Klar", sc: "#eefbf2", tc: "#125b2c", bc: "#bde5c7" },
-        { type: "ESG Signal", name: "Textile Group", status: "Prufen", sc: "#fff7e8", tc: "#7a3e00", bc: "#ffe3b5" },
-        { type: "Nachrichten", name: "TechParts Co.", status: "Neu", sc: "#eff6ff", tc: "#1e40af", bc: "#bfdbfe" },
-        { type: "Sanktionen", name: "EcoBuild AG", status: "Klar", sc: "#eefbf2", tc: "#125b2c", bc: "#bde5c7" },
-      ].map((r, i) => (
-        <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "9px 0", borderBottom: "1px solid #f6f7f6" }}>
-          <div style={{ width: 6, height: 6, borderRadius: "50%", background: r.tc, flexShrink: 0 }} />
-          <span style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", width: 72, flexShrink: 0 }}>{r.type}</span>
-          <span style={{ fontSize: 12, color: "#374151", flex: 1 }}>{r.name}</span>
-          <span style={{ fontSize: 10, fontWeight: 700, padding: "2px 8px", borderRadius: 100, background: r.sc, color: r.tc, border: `1px solid ${r.bc}` }}>{r.status}</span>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// --- Main Page ---------------------------------------------------------------
-export default function LandingPage() {
-  const [scrolled, setScrolled] = useState(false);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [visible, setVisible] = useState<Set<string>>(new Set());
-  const [lang, setLangState] = useState<Lang>("de");
-  useEffect(()=>{setLangState(getLang());},[]);
-  const observer = useRef<IntersectionObserver | null>(null);
-
-  useEffect(() => {
-    const fn = () => setScrolled(window.scrollY > 50);
-    window.addEventListener("scroll", fn, { passive: true });
-    return () => window.removeEventListener("scroll", fn);
+  const playNote = useCallback((ctx: AudioContext, gain: GainNode, freq: number) => {
+    const osc = ctx.createOscillator();
+    const env = ctx.createGain();
+    osc.type = "sine"; osc.frequency.value = freq;
+    env.gain.setValueAtTime(0, ctx.currentTime);
+    env.gain.linearRampToValueAtTime(0.35, ctx.currentTime+0.01);
+    env.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.22);
+    osc.connect(env); env.connect(gain);
+    osc.start(ctx.currentTime); osc.stop(ctx.currentTime+0.25);
   }, []);
 
+  const startMusicLoop = useCallback(() => {
+    if (!audioRef.current) return;
+    const {ctx, gain, playing: isPlaying} = audioRef.current;
+    if (!isPlaying) return;
+    const bach = [261,329,392,523,659,523,392,329,261,329,392,523,659,523,392,329,
+                  246,329,392,493,659,493,392,329,246,311,392,493,622,493,392,311];
+    let n = 0;
+    const loop = () => {
+      if (!audioRef.current?.playing) return;
+      playNote(ctx, gain, bach[n % bach.length]);
+      n++;
+      noteTimerRef.current = setTimeout(loop, 185);
+    };
+    loop();
+  }, [playNote]);
+
+  const toggleMusic = useCallback((e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!audioRef.current) {
+      try {
+        const ctx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const gain = ctx.createGain(); gain.gain.value = 0.05; gain.connect(ctx.destination);
+        audioRef.current = {ctx, gain, playing: true};
+        setMusic(true);
+        startMusicLoop();
+      } catch {}
+    } else {
+      audioRef.current.playing = !audioRef.current.playing;
+      setMusic(audioRef.current.playing);
+      if (audioRef.current.playing) startMusicLoop();
+      else if (noteTimerRef.current) clearTimeout(noteTimerRef.current);
+    }
+  }, [startMusicLoop]);
+
   useEffect(() => {
-    observer.current = new IntersectionObserver(
-      (entries) => entries.forEach(e => {
-        if (e.isIntersecting && e.target.id) {
-          setVisible(prev => new Set([...prev, e.target.id]));
-        }
-      }),
-      { threshold: 0.08 }
-    );
-    document.querySelectorAll("[data-a]").forEach(el => observer.current?.observe(el));
-    return () => observer.current?.disconnect();
-  }, []);
+    if (!playing || ended) return;
+    const tick = (now: number) => {
+      if (!startRef.current) startRef.current = now - pausedRef.current;
+      const el = now - startRef.current;
+      const cl = Math.min(el, total);
+      setTp(cl / total);
+      let acc=0, si=0;
+      for (let i=0;i<SCENES.length;i++) {
+        if (el < acc+SCENES[i].duration) { si=i; setSp((el-acc)/SCENES[i].duration); break; }
+        acc+=SCENES[i].duration; si=i;
+      }
+      setIdx(Math.min(si, SCENES.length-1));
+      if (el >= total) { setEnded(true); setPlaying(false); return; }
+      rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => { if(rafRef.current) cancelAnimationFrame(rafRef.current); };
+  }, [playing, ended, total]);
 
-  const a = (id: string, delay = 0): React.HTMLAttributes<HTMLDivElement> => ({
-    id,
-    "data-a": "1" as any,
-    style: {
-      opacity: visible.has(id) ? 1 : 0,
-      transform: visible.has(id) ? "translateY(0)" : "translateY(28px)",
-      transition: `opacity 0.7s cubic-bezier(.16,1,.3,1) ${delay}s, transform 0.7s cubic-bezier(.16,1,.3,1) ${delay}s`,
-    },
-  });
+  const toggle = () => {
+    if (ended) {
+      startRef.current=0; pausedRef.current=0;
+      setEnded(false); setIdx(0); setSp(0); setTp(0); setPlaying(true); return;
+    }
+    if (playing) { if(rafRef.current) cancelAnimationFrame(rafRef.current); pausedRef.current=tp*total; startRef.current=0; }
+    setPlaying(p=>!p);
+  };
 
-  const sectors = [
-    { icon: "?", label: "Textil & Bekleidung" },
-    { icon: "?", label: "Bergbau & Rohstoffe" },
-    { icon: "?", label: "Landwirtschaft" },
-    { icon: "?", label: "Elektronik" },
-    { icon: "?", label: "Logistik" },
-    { icon: "?", label: "Automotive" },
-    { icon: "?", label: "Bauwirtschaft" },
-    { icon: "??", label: "Industriedienstleister" },
-  ];
+  const scene = SCENES[idx];
+  const Comp = COMPS[scene.id];
 
   return (
-    <>
+    <div style={{ width:"100vw",height:"100vh",background:scene.bg,position:"fixed",inset:0,overflow:"hidden",transition:"background 1.5s ease",fontFamily:"'DM Sans','Bricolage Grotesque',system-ui,sans-serif",cursor:showUI?"default":"none" }}
+      onMouseMove={()=>{ setShowUI(true); setTimeout(()=>setShowUI(false),3000); }}
+      onClick={toggle}>
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,500;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
-
-        *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-        :root{
-          --bg:#f6f7f6; --bg2:#eef0ee; --card:#fff;
-          --line:#e6e6e6; --line2:#d4dcd6;
-          --text:#0b0f0c; --muted:#6b7280; --muted2:#9ca3af;
-          --g:#1B3D2B; --g2:#2d5c3f; --g3:#f0f5f1; --g4:#d1e7d9;
-          --danger:#C0392B; --warn:#B45309;
-          --serif:'Bricolage Grotesque',system-ui,sans-serif;
-          --body:'DM Sans',system-ui,sans-serif;
-          --mono:'DM Mono',monospace;
-        }
-        html{scroll-behavior:smooth}
-        body{background:var(--bg);color:var(--text);font-family:var(--body);-webkit-font-smoothing:antialiased;overflow-x:hidden;line-height:1.6}
-        a{text-decoration:none;color:inherit}
-        button{cursor:pointer;border:none;background:none;font-family:inherit}
-
-        /* NAV */
-        .lp-nav{
-          position:fixed;top:0;left:0;right:0;z-index:200;
-          transition:all 0.3s ease;
-        }
-        .lp-nav.on{
-          background:rgba(246,247,246,0.96);
-          backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
-          border-bottom:1px solid var(--line);
-        }
-        .lp-nav-i{
-          max-width:1180px;margin:0 auto;
-          display:flex;align-items:center;justify-content:space-between;
-          padding:20px 32px;
-        }
-        .lp-logo{font-family:var(--serif);font-weight:800;font-size:20px;color:var(--g);letter-spacing:-0.5px}
-        .lp-logo em{font-style:normal;color:var(--text)}
-        .lp-links{display:flex;align-items:center;gap:6px}
-        .lp-links a{font-size:14px;font-weight:500;color:var(--muted);padding:6px 12px;border-radius:8px;transition:color 0.2s,background 0.2s}
-        .lp-links a:hover{color:var(--text);background:var(--bg2)}
-        .lp-lang-btns{display:flex;gap:3px;margin-left:10px}
-        .lp-lb{background:none;border:1.5px solid #e8eae8;font-family:'DM Sans',system-ui;font-size:11px;font-weight:700;color:#9ca3af;padding:3px 9px;border-radius:6px;cursor:pointer;transition:all 0.15s}
-        .lp-lb-on{border-color:#1B3D2B;color:#1B3D2B;background:#f0f5f1}
-        .nav-cta{
-          background:var(--g);color:#fff !important;
-          padding:9px 20px !important;border-radius:10px;font-weight:700 !important;
-          transition:background 0.2s,transform 0.15s,box-shadow 0.2s !important;
-          box-shadow:0 2px 12px rgba(27,61,43,0.25);
-          margin-left:6px;
-        }
-        .nav-cta:hover{background:var(--g2) !important;transform:translateY(-1px) !important;box-shadow:0 4px 20px rgba(27,61,43,0.3) !important}
-        .lp-hamburger{display:none;padding:8px;color:var(--text)}
-        .lp-mobile-menu{
-          display:none;position:fixed;inset:0;z-index:300;
-          background:rgba(246,247,246,0.98);backdrop-filter:blur(20px);
-          flex-direction:column;align-items:center;justify-content:center;gap:24px;
-        }
-        .lp-mobile-menu.open{display:flex}
-        .lp-mobile-menu a{font-family:var(--serif);font-size:24px;font-weight:700;color:var(--text)}
-        .lp-mobile-close{position:absolute;top:24px;right:24px;font-size:28px;color:var(--muted);background:none;border:none;cursor:pointer}
-
-        /* HERO */
-        .lp-hero{
-          padding:130px 32px 80px;
-          position:relative;overflow:hidden;
-          min-height:100vh;display:flex;align-items:center;
-        }
-        .hero-mesh{
-          position:absolute;inset:0;z-index:0;pointer-events:none;
-          background:
-            radial-gradient(ellipse 900px 600px at 60% -10%, rgba(27,61,43,0.08) 0%, transparent 60%),
-            radial-gradient(ellipse 500px 400px at 90% 60%, rgba(27,61,43,0.04) 0%, transparent 50%),
-            radial-gradient(ellipse 600px 400px at -10% 80%, rgba(27,61,43,0.04) 0%, transparent 50%);
-        }
-        .hero-dots{
-          position:absolute;inset:0;z-index:0;pointer-events:none;
-          background-image:radial-gradient(circle, rgba(27,61,43,0.08) 1px, transparent 1px);
-          background-size:32px 32px;
-          mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent);
-          -webkit-mask-image:radial-gradient(ellipse 80% 60% at 50% 0%, black, transparent);
-        }
-        .hero-inner{
-          max-width:1180px;margin:0 auto;
-          display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
-          position:relative;z-index:1;width:100%;
-        }
-        .hero-left{}
-        .hero-badge{
-          display:inline-flex;align-items:center;gap:8px;
-          background:var(--g3);border:1px solid var(--g4);
-          border-radius:100px;padding:6px 14px;margin-bottom:24px;
-          font-family:var(--mono);font-size:11px;font-weight:500;color:var(--g);letter-spacing:0.5px;
-        }
-        .badge-pulse{
-          width:7px;height:7px;border-radius:50%;background:var(--g);
-          box-shadow:0 0 0 0 rgba(27,61,43,0.4);
-          animation:pulse 2.5s ease infinite;
-        }
-        @keyframes pulse{
-          0%{box-shadow:0 0 0 0 rgba(27,61,43,0.4)}
-          70%{box-shadow:0 0 0 8px rgba(27,61,43,0)}
-          100%{box-shadow:0 0 0 0 rgba(27,61,43,0)}
-        }
-        .hero-h1{
-          font-family:var(--serif);
-          font-size:clamp(40px,4.5vw,62px);
-          font-weight:800;line-height:1.1;
-          letter-spacing:-1.5px;color:var(--text);
-          margin-bottom:20px;
-        }
-        .hero-h1 em{font-style:normal;color:var(--g)}
-        .hero-sub{font-size:17px;color:var(--muted);line-height:1.72;margin-bottom:36px;max-width:460px;font-weight:400}
-        .hero-ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:36px}
-        .btn-primary{
-          display:inline-flex;align-items:center;gap:8px;
-          background:var(--g);color:#fff;
-          padding:14px 26px;border-radius:12px;font-weight:700;font-size:15px;
-          transition:background 0.2s,transform 0.15s,box-shadow 0.2s;
-          box-shadow:0 4px 24px rgba(27,61,43,0.28);
-        }
-        .btn-primary:hover{background:var(--g2);transform:translateY(-2px);box-shadow:0 8px 32px rgba(27,61,43,0.35)}
-        .btn-ghost{
-          display:inline-flex;align-items:center;gap:8px;
-          border:1.5px solid var(--line2);color:var(--text);background:var(--card);
-          padding:13px 22px;border-radius:12px;font-weight:600;font-size:15px;
-          transition:border-color 0.2s,transform 0.15s,box-shadow 0.2s;
-        }
-        .btn-ghost:hover{border-color:var(--muted);transform:translateY(-2px);box-shadow:0 4px 16px rgba(0,0,0,0.06)}
-        .hero-proof{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
-        .hero-proof-item{font-size:13px;color:var(--muted);display:flex;align-items:center;gap:6px}
-        .hero-proof-item svg{color:var(--g);flex-shrink:0}
-
-        .hero-right{position:relative}
-        .mockup-float{
-          animation:float 6s ease-in-out infinite;
-        }
-        @keyframes float{
-          0%,100%{transform:translateY(0)}
-          50%{transform:translateY(-12px)}
-        }
-        .mockup-badge{
-          position:absolute;bottom:-20px;left:-20px;
-          background:var(--card);border:1px solid var(--line);border-radius:12px;
-          padding:12px 16px;box-shadow:0 8px 24px rgba(0,0,0,0.1);
-          display:flex;align-items:center;gap:10px;min-width:200px;
-        }
-        .mockup-badge-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 8px rgba(34,197,94,0.5)}
-        .mockup-badge-text{font-size:12px;font-weight:600;color:var(--text)}
-        .mockup-badge-sub{font-size:11px;color:var(--muted)}
-
-        /* STATS BAR */
-        .lp-stats{
-          background:var(--card);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
-          padding:28px 32px;
-        }
-        .lp-stats-i{
-          max-width:1180px;margin:0 auto;
-          display:grid;grid-template-columns:repeat(4,1fr);gap:24px;
-        }
-        .lp-stat{text-align:center;padding:4px 0}
-        .lp-stat-n{font-family:var(--serif);font-size:34px;font-weight:800;color:var(--g);line-height:1}
-        .lp-stat-l{font-size:13px;color:var(--muted);margin-top:6px;font-weight:500}
-
-        /* SECTIONS */
-        .lp-sec{padding:96px 32px}
-        .lp-sec.bg{background:var(--card)}
-        .lp-sec-i{max-width:1180px;margin:0 auto}
-        .lp-chip-label{
-          display:inline-flex;align-items:center;gap:6px;
-          font-family:var(--mono);font-size:11px;font-weight:500;
-          color:var(--g);letter-spacing:1.5px;text-transform:uppercase;
-          background:var(--g3);border:1px solid var(--g4);
-          border-radius:100px;padding:4px 12px;margin-bottom:16px;
-        }
-        .lp-h2{
-          font-family:var(--serif);
-          font-size:clamp(30px,3.5vw,48px);
-          font-weight:800;line-height:1.15;letter-spacing:-1px;
-          color:var(--text);margin-bottom:16px;
-        }
-        .lp-h2 em{font-style:normal;color:var(--g)}
-        .lp-sub{font-size:16px;color:var(--muted);max-width:520px;line-height:1.75;font-weight:400}
-
-        /* SECTORS */
-        .sectors-grid{
-          display:grid;grid-template-columns:repeat(4,1fr);
-          gap:12px;margin-top:48px;
-        }
-        .sector-card{
-          background:var(--card);border:1px solid var(--line);border-radius:14px;
-          padding:20px 18px;display:flex;align-items:center;gap:12px;
-          transition:border-color 0.2s,box-shadow 0.2s,transform 0.2s;
-        }
-        .sector-card:hover{border-color:var(--g4);box-shadow:0 4px 16px rgba(27,61,43,0.08);transform:translateY(-2px)}
-        .sector-icon{font-size:22px;flex-shrink:0}
-        .sector-label{font-size:14px;font-weight:600;color:var(--text)}
-
-        /* FEATURES */
-        .features-layout{display:flex;flex-direction:column;gap:80px;margin-top:64px}
-        .feature-row{
-          display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:center;
-        }
-        .feature-row.rev{direction:rtl}
-        .feature-row.rev > *{direction:ltr}
-        .feature-tag{
-          font-family:var(--mono);font-size:10px;font-weight:600;
-          color:var(--g);background:var(--g3);border:1px solid var(--g4);
-          border-radius:100px;padding:3px 10px;letter-spacing:1px;text-transform:uppercase;
-          display:inline-block;margin-bottom:14px;
-        }
-        .feature-title{font-family:var(--serif);font-size:clamp(24px,2.5vw,34px);font-weight:800;letter-spacing:-0.8px;line-height:1.2;margin-bottom:14px}
-        .feature-desc{font-size:15px;color:var(--muted);line-height:1.75;margin-bottom:20px}
-        .feature-points{display:flex;flex-direction:column;gap:10px}
-        .fp{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:var(--muted)}
-        .fp-icon{width:20px;height:20px;border-radius:6px;background:var(--g3);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--g);margin-top:1px}
-
-        /* STEPS */
-        .steps-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:32px;margin-top:48px;position:relative}
-        .steps-line{
-          position:absolute;top:26px;left:12%;right:12%;
-          height:1px;background:linear-gradient(90deg,transparent,var(--g4),transparent);
-          z-index:0;
-        }
-        .step-card{text-align:center;position:relative;z-index:1}
-        .step-num{
-          width:52px;height:52px;border-radius:50%;
-          background:var(--g);color:#fff;
-          display:flex;align-items:center;justify-content:center;
-          font-family:var(--serif);font-size:18px;font-weight:800;
-          margin:0 auto 18px;
-          box-shadow:0 4px 16px rgba(27,61,43,0.25);
-        }
-        .step-title{font-size:15px;font-weight:700;margin-bottom:8px}
-        .step-desc{font-size:13px;color:var(--muted);line-height:1.6}
-
-        /* PRICING */
-        .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-top:48px}
-        .plan{
-          background:var(--card);border:1.5px solid var(--line);
-          border-radius:18px;padding:36px 28px;
-          transition:transform 0.25s,box-shadow 0.25s;
-          position:relative;
-        }
-        .plan:hover{transform:translateY(-4px);box-shadow:0 16px 48px rgba(0,0,0,0.09)}
-        .plan.featured{border-color:var(--g);border-width:2px}
-        .plan-badge{
-          position:absolute;top:-13px;left:50%;transform:translateX(-50%);
-          background:var(--g);color:#fff;font-family:var(--mono);
-          font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
-          padding:4px 18px;border-radius:100px;white-space:nowrap;
-        }
-        .plan-tier{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:2px;margin-bottom:16px}
-        .plan-price{font-family:var(--serif);font-size:50px;font-weight:800;color:var(--text);line-height:1;margin-bottom:4px;letter-spacing:-2px}
-        .plan-price sup{font-size:20px;vertical-align:super;letter-spacing:0}
-        .plan-price-text{font-size:28px;letter-spacing:-0.5px}
-        .plan-period{font-size:13px;color:var(--muted);margin-bottom:28px}
-        .plan hr{border:none;border-top:1px solid var(--line);margin-bottom:24px}
-        .plan-feats{list-style:none;display:flex;flex-direction:column;gap:11px;margin-bottom:32px}
-        .plan-feat{display:flex;align-items:flex-start;gap:9px;font-size:14px;color:var(--muted);line-height:1.5}
-        .feat-yes{color:var(--g);flex-shrink:0;margin-top:2px}
-        .feat-no{color:var(--muted2);flex-shrink:0;margin-top:2px}
-        .plan-feat.off{color:var(--muted2)}
-        .plan-btn{
-          display:block;width:100%;text-align:center;padding:13px;border-radius:10px;
-          font-weight:700;font-size:14px;font-family:var(--body);transition:all 0.2s;
-        }
-        .plan-btn.solid{background:var(--g);color:#fff;border:none}
-        .plan-btn.solid:hover{background:var(--g2)}
-        .plan-btn.outline{background:transparent;color:var(--text);border:1.5px solid var(--line)}
-        .plan-btn.outline:hover{border-color:var(--muted);background:var(--bg2)}
-
-        /* LEGAL STRIP */
-        .legal-strip{background:var(--g3);border-top:1px solid var(--g4);border-bottom:1px solid var(--g4);padding:56px 32px}
-        .legal-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:28px;margin-top:36px}
-        .legal-item{}
-        .legal-ico{width:36px;height:36px;border-radius:10px;background:var(--card);border:1px solid var(--g4);display:flex;align-items:center;justify-content:center;margin-bottom:12px;color:var(--g)}
-        .legal-item h3{font-size:14px;font-weight:700;color:var(--g);margin-bottom:6px}
-        .legal-item p{font-size:13px;color:var(--muted);line-height:1.6}
-
-        /* CTA */
-        .lp-cta{background:var(--g);padding:96px 32px;text-align:center;position:relative;overflow:hidden}
-        .cta-mesh{position:absolute;inset:0;background:radial-gradient(ellipse 60% 80% at 50% 0%, rgba(255,255,255,0.06) 0%, transparent 60%)}
-        .cta-inner{max-width:620px;margin:0 auto;position:relative;z-index:1}
-        .cta-label{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,0.4);letter-spacing:2px;text-transform:uppercase;margin-bottom:16px}
-        .cta-h2{font-family:var(--serif);font-size:clamp(34px,4vw,54px);font-weight:800;color:#fff;line-height:1.15;letter-spacing:-1px;margin-bottom:18px}
-        .cta-h2 em{font-style:normal;color:rgba(255,255,255,0.5)}
-        .cta-sub{font-size:16px;color:rgba(255,255,255,0.6);margin-bottom:36px;font-weight:400}
-        .cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-        .btn-white{background:#fff;color:var(--g);padding:14px 28px;border-radius:12px;font-weight:700;font-size:15px;transition:background 0.2s,transform 0.15s;box-shadow:0 4px 20px rgba(0,0,0,0.15)}
-        .btn-white:hover{background:#f0f5f1;transform:translateY(-2px)}
-        .btn-white-ghost{border:1.5px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.85);padding:13px 24px;border-radius:12px;font-weight:600;font-size:15px;transition:border-color 0.2s}
-        .btn-white-ghost:hover{border-color:rgba(255,255,255,0.5)}
-        .cta-note{font-size:12px;color:rgba(255,255,255,0.35);margin-top:20px;font-family:var(--mono)}
-
-        /* FOOTER */
-        .lp-footer{background:#0b0f0c;padding:56px 32px 32px}
-        .footer-i{max-width:1180px;margin:0 auto}
-        .footer-top{display:flex;justify-content:space-between;gap:40px;margin-bottom:48px;flex-wrap:wrap}
-        .footer-brand{}
-        .footer-logo{font-family:var(--serif);font-weight:800;font-size:18px;color:#fff;margin-bottom:10px;letter-spacing:-0.5px}
-        .footer-logo em{font-style:normal;color:rgba(255,255,255,0.3)}
-        .footer-desc{font-size:13px;color:rgba(255,255,255,0.35);line-height:1.65;max-width:240px;margin-top:8px}
-        .footer-cols{display:flex;gap:56px;flex-wrap:wrap}
-        .footer-col h4{font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:rgba(255,255,255,0.25);margin-bottom:16px}
-        .footer-col a{display:block;font-size:14px;color:rgba(255,255,255,0.45);margin-bottom:10px;transition:color 0.2s}
-        .footer-col a:hover{color:#fff}
-        .footer-bottom{display:flex;justify-content:space-between;align-items:center;padding-top:28px;border-top:1px solid rgba(255,255,255,0.07);flex-wrap:wrap;gap:16px}
-        .footer-copy{font-size:12px;color:rgba(255,255,255,0.25);font-family:var(--mono)}
-        .footer-legal{display:flex;gap:16px}
-        .footer-legal a{font-size:12px;color:rgba(255,255,255,0.3);transition:color 0.2s}
-        .footer-legal a:hover{color:rgba(255,255,255,0.7)}
-        .footer-badges{display:flex;gap:8px;flex-wrap:wrap}
-        .footer-badge{font-family:var(--mono);font-size:10px;font-weight:600;border:1px solid rgba(255,255,255,0.1);color:rgba(255,255,255,0.25);padding:3px 10px;border-radius:100px}
-
-        /* RESPONSIVE */
-        @media(max-width:1024px){
-          .hero-inner{grid-template-columns:1fr;gap:48px}
-          .hero-right{max-width:560px}
-          .feature-row,.feature-row.rev{grid-template-columns:1fr;direction:ltr;gap:40px}
-          .sectors-grid{grid-template-columns:repeat(2,1fr)}
-          .steps-grid{grid-template-columns:repeat(2,1fr)}
-          .steps-line{display:none}
-          .pricing-grid{grid-template-columns:1fr}
-          .legal-grid{grid-template-columns:repeat(2,1fr)}
-          .lp-stats-i{grid-template-columns:repeat(2,1fr)}
-        }
-        @media(max-width:768px){
-          .lp-nav-i{padding:16px 20px}
-          .lp-links>a:not(.nav-cta){display:none}
-          .lp-hamburger{display:flex}
-          .lp-hero{padding:110px 20px 64px;min-height:auto}
-          .lp-sec{padding:64px 20px}
-          .legal-strip{padding:48px 20px}
-          .lp-cta{padding:72px 20px}
-          .lp-footer{padding:48px 20px 28px}
-          .lp-stats{padding:20px}
-          .footer-top{flex-direction:column}
-          .footer-cols{gap:32px}
-          .footer-bottom{flex-direction:column;align-items:flex-start}
-          .hero-h1{letter-spacing:-0.5px}
-        }
-        @media(max-width:600px){
-          .sectors-grid{grid-template-columns:1fr 1fr}
-          .steps-grid{grid-template-columns:1fr}
-          .legal-grid{grid-template-columns:1fr}
-          .lp-stats-i{grid-template-columns:1fr 1fr}
-          .hero-ctas{flex-direction:column}
-          .btn-primary,.btn-ghost{justify-content:center}
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&family=DM+Sans:wght@400;600&display=swap');
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+        @keyframes fin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+        *{box-sizing:border-box;margin:0;padding:0}
       `}</style>
 
-      {/* MOBILE MENU */}
-      <div className={`lp-mobile-menu${menuOpen ? " open" : ""}`}>
-        <button className="lp-mobile-close" onClick={() => setMenuOpen(false)}>?</button>
-        {[["#sektoren","Sektoren"],["#funktionen","Funktionen"],["#preise","Preise"],["#datenschutz","Datenschutz"]].map(([h,l]) => (
-          <a key={h} href={h} onClick={() => setMenuOpen(false)}>{l}</a>
+      {/* SCENE */}
+      <div style={{ width:"100%",height:"100%",display:"flex",alignItems:"center",justifyContent:"center" }}>
+        <div style={{ width:"100%",maxWidth:900,height:"100%",animation:"fin 0.6s ease" }} key={idx}>
+          <Comp p={Math.max(0,Math.min(1,sp))} />
+        </div>
+      </div>
+
+      {/* SUBTITLE */}
+      <div style={{ position:"absolute",bottom:80,left:0,right:0,display:"flex",justifyContent:"center",padding:"0 60px",pointerEvents:"none" }}>
+        <div style={{ background:"rgba(0,0,0,0.78)",backdropFilter:"blur(12px)",borderRadius:12,padding:"12px 24px",maxWidth:680,textAlign:"center",border:"1px solid rgba(255,255,255,0.08)" }} key={idx+"-s"}>
+          <p style={{ fontSize:15,color:"#e8f0e9",lineHeight:1.65,fontWeight:400,animation:"fin 0.4s ease" }}>{scene.subtitle}</p>
+        </div>
+      </div>
+
+      {/* PROGRESS */}
+      <div style={{ position:"absolute",bottom:0,left:0,right:0,height:3,background:"rgba(255,255,255,0.08)" }}>
+        <div style={{ height:"100%",background:scene.accent,width:`${tp*100}%`,transition:"width 0.1s linear" }}/>
+      </div>
+
+      {/* DOTS */}
+      <div style={{ position:"absolute",bottom:10,left:0,right:0,display:"flex",justifyContent:"center",gap:8,opacity:showUI?1:0.25,transition:"opacity 0.5s",pointerEvents:"all" }}>
+        {SCENES.map((_,i)=>(
+          <div key={i} style={{ width:i===idx?20:6,height:6,borderRadius:3,background:i===idx?scene.accent:i<idx?"rgba(255,255,255,0.4)":"rgba(255,255,255,0.15)",transition:"all 0.3s",cursor:"pointer" }}
+            onClick={e=>{ e.stopPropagation(); const off=SCENES.slice(0,i).reduce((s,sc)=>s+sc.duration,0); startRef.current=0; pausedRef.current=off+100; setIdx(i); setSp(0); setEnded(false); setPlaying(true); }}
+          />
         ))}
-        <a href="/login" onClick={() => setMenuOpen(false)} style={{ fontSize: 16, color: "var(--muted)" }}>Einloggen</a>
-        <a href="/demo" onClick={() => setMenuOpen(false)} style={{ background: "var(--g)", color: "#fff", padding: "14px 32px", borderRadius: 12, fontSize: 16, fontWeight: 700 }}>Interaktive Demo</a>
       </div>
 
-      {/* NAV */}
-      <nav className={`lp-nav${scrolled ? " on" : ""}`}>
-        <div className="lp-nav-i">
-          <a href="/" className="lp-logo">LkSG<em>Compass</em></a>
-          <div className="lp-links">
-            <a href="#sektoren">Sektoren</a>
-            <a href="#funktionen">Funktionen</a>
-            <a href="#preise">Preise</a>
-            <a href="#datenschutz">Datenschutz</a>
-            <a href="/pricing">Pricing</a>
-            <a href="/login">{lang==="de"?"Einloggen":"Log in"}</a>
-            <a href="/demo" className="nav-cta">{lang==="de"?"Live-Demo ansehen":"View live demo"}</a>
-            <div className="lp-lang-btns">
-              <button className={`lp-lb${lang==="de"?" lp-lb-on":""}`} onClick={()=>{setLang("de");setLangState("de");}}>DE</button>
-              <button className={`lp-lb${lang==="en"?" lp-lb-on":""}`} onClick={()=>{setLang("en");setLangState("en");}}>EN</button>
-            </div>
-          </div>
-          <button className="lp-hamburger" onClick={() => setMenuOpen(true)} aria-label="Menu offnen">
-            <Icon.Menu />
+      {/* TOP BAR */}
+      <div style={{ position:"absolute",top:0,left:0,right:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 28px",background:"linear-gradient(to bottom,rgba(0,0,0,0.5),transparent)",opacity:showUI?1:0,transition:"opacity 0.5s" }}>
+        <a href="/" style={{ fontSize:14,fontWeight:700,color:"#c4f135",textDecoration:"none",letterSpacing:"0.1em" }}>LkSGCompass</a>
+        <div style={{ display:"flex",gap:12,alignItems:"center" }}>
+          <button onClick={toggleMusic} style={{ background:music?"rgba(196,241,53,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${music?"rgba(196,241,53,0.3)":"rgba(255,255,255,0.15)"}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",color:music?"#c4f135":"#8a9a8d",display:"flex",alignItems:"center",gap:6,fontSize:12 }}>
+            ♪ {music?"Musik an":"Musik aus"}
           </button>
-        </div>
-      </nav>
-
-      {/* HERO */}
-      <section className="lp-hero">
-        <div className="hero-mesh" />
-        <div className="hero-dots" />
-        <div className="hero-inner">
-          <div className="hero-left">
-            <div className="hero-badge">
-              <span className="badge-pulse" />
-              LkSG · §4–§10 · KI-Rechtsassistent · BAFA-ready
-            </div>
-            <h1 className="hero-h1" style={{ opacity: 1 }}>
-              {lang==="de"?<>Supply-Chain-<br/>Compliance fur<br/><em>8 Schlussel&shy;branchen.</em></>:<>Supply Chain<br/>Compliance for<br/><em>German law.</em></>}
-            </h1>
-            <p className="hero-sub">
-              {lang==="de"?"LkSGCompass automatisiert §5-Risikoanalyse, BAFA-Berichterstattung, Rechtsvorlagen und Verteidigungsakte — für Unternehmen mit internationalen Lieferketten in Textil, Logistik, Automotive und mehr.":"LkSGCompass automates §5 risk analysis, BAFA reporting, legal templates and defense documentation — for companies with international supply chains in textile, logistics, automotive and more."}
-            </p>
-            <div className="hero-ctas">
-              <a href="/register" className="btn-primary">
-                {lang==="de"?"Kostenlos starten — 14 Tage":"Start free — 14 days"} <Icon.Arrow />
-              </a>
-              <a href="/demo" className="btn-ghost">
-                {lang==="de"?"Live-Demo ansehen":"View live demo"}
-              </a>
-            </div>
-            <div className="hero-proof">
-              {["Keine Kreditkarte nötig","DSGVO-konform","EU-Hosting"].map(t => (
-                <div key={t} className="hero-proof-item">
-                  <Icon.Check /> {t}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="hero-right">
-            <div className="mockup-float">
-              <DashboardMockup />
-            </div>
-            <div className="mockup-badge">
-              <div className="mockup-badge-dot" />
-              <div>
-                <div className="mockup-badge-text">Compliance Score</div>
-                <div className="mockup-badge-sub">84/100  -  aktualisiert jetzt</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* STATS */}
-      <div className="lp-stats">
-        <div className="lp-stats-i">
-          {[
-            { n: "200+", l: "Lander im Risiko-Datensatz" },
-            { n: "8", l: "Schlusselbranchen abgedeckt" },
-            { n: "§10", l: "LkSG BAFA-konform" },
-            { n: "<5 min", l: "bis zum ersten Bericht" },
-          ].map((s, i) => (
-            <div key={i} className="lp-stat" {...a(`stat-${i}`, i * 0.08)}>
-              <div className="lp-stat-n">{s.n}</div>
-              <div className="lp-stat-l">{s.l}</div>
-            </div>
-          ))}
+          <a href="/register" onClick={e=>e.stopPropagation()} style={{ background:"#c4f135",color:"#0a1a08",padding:"8px 18px",borderRadius:20,fontSize:13,fontWeight:700,textDecoration:"none" }}>
+            Jetzt starten →
+          </a>
         </div>
       </div>
 
-      {/* SECTORS */}
-      <section className="lp-sec" id="sektoren">
-        <div className="lp-sec-i">
-          <div {...a("sec-hd")}>
-            <div className="lp-chip-label">Branchenabdeckung</div>
-            <h2 className="lp-h2">Entwickelt fur Unternehmen<br />mit <em>internationalen Lieferketten.</em></h2>
-            <p className="lp-sub">Ob Textil aus Sudasien, Elektronik aus Fernost oder Rohstoffe aus Afrika -- LkSGCompass bewertet Risiken in allen 8 vom LkSG erfassten Schlusselbranchen.</p>
-          </div>
-          <div className="sectors-grid">
-            {sectors.map((s, i) => (
-              <div key={i} className="sector-card" {...a(`sec-${i}`, 0.1 + i * 0.05)}>
-                <div className="sector-icon">{s.icon}</div>
-                <div className="sector-label">{s.label}</div>
-              </div>
-            ))}
+      {/* PAUSE ICON */}
+      {showUI&&!ended&&(
+        <div style={{ position:"absolute",inset:0,display:"flex",alignItems:"center",justifyContent:"center",pointerEvents:"none" }}>
+          <div style={{ width:72,height:72,borderRadius:"50%",background:"rgba(0,0,0,0.6)",backdropFilter:"blur(8px)",border:"1px solid rgba(255,255,255,0.15)",display:"flex",alignItems:"center",justifyContent:"center",animation:"fin 0.2s ease" }}>
+            {playing
+              ? <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
+              : <svg width="24" height="24" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>}
           </div>
         </div>
-      </section>
+      )}
 
-      {/* FEATURES */}
-      <section className="lp-sec bg" id="funktionen">
-        <div className="lp-sec-i">
-          <div {...a("feat-hd")}>
-            <div className="lp-chip-label">Funktionen</div>
-            <h2 className="lp-h2">Von §4 bis §10 —<br /><em>vollständig abgedeckt.</em></h2>
+      {/* ENDED */}
+      {ended&&(
+        <div style={{ position:"absolute",inset:0,background:"rgba(0,0,0,0.75)",backdropFilter:"blur(10px)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",gap:24,animation:"fin 0.5s ease" }} onClick={e=>e.stopPropagation()}>
+          <div style={{ fontSize:12,color:"#c4f135",letterSpacing:"0.2em" }}>DEMO BEENDET</div>
+          <div style={{ fontSize:"clamp(24px,4vw,48px)",fontWeight:800,color:"#fff",textAlign:"center",fontFamily:"'Bricolage Grotesque',sans-serif" }}>Bereit anzufangen?</div>
+          <div style={{ display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center" }}>
+            <a href="/register" style={{ background:"#c4f135",color:"#0a1a08",padding:"14px 28px",borderRadius:14,fontSize:15,fontWeight:800,textDecoration:"none" }}>14 Tage kostenlos starten →</a>
+            <button onClick={toggle} style={{ background:"rgba(255,255,255,0.08)",color:"#e8f0e9",padding:"14px 28px",borderRadius:14,fontSize:15,border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer" }}>↺ Nochmal ansehen</button>
           </div>
-
-          <div className="features-layout">
-            {/* Feature 1 */}
-            <div className="feature-row" {...a("f1")}>
-              <div>
-                <div className="feature-tag">Auto Compliance</div>
-                <h3 className="feature-title">CSV rein -- BAFA-Bericht raus.</h3>
-                <p className="feature-desc">Laden Sie Ihre Lieferantenliste hoch. LkSGCompass analysiert automatisch Landerrisiken, Branchenspezifika und gewichtet alle §10-relevanten Dimensionen. In unter 5 Minuten.</p>
-                <div className="feature-points">
-                  {["200+ Lander nach Menschenrechten, Korruption, Arbeitsstandards","8 Branchenklassifizierungen mit eigenen Risikogewichten","Jahrliche Aktualisierung der Landerdaten"].map((p, i) => (
-                    <div key={i} className="fp">
-                      <div className="fp-icon"><Icon.Check /></div>
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <DashboardMockup />
-            </div>
-
-            {/* Feature 2 */}
-            <div className="feature-row rev" {...a("f2")}>
-              <div>
-                <div className="feature-tag">BAFA Report Generator</div>
-                <h3 className="feature-title">Alle 10 Pflichtabschnitte. KI-generiert.</h3>
-                <p className="feature-desc">Der integrierte Report-Generator erstellt den vollstandigen Jahresbericht nach §10 Abs. 2 LkSG -- strukturiert nach dem offiziellen BAFA-Fragebogen, editierbar, per Klick als PDF.</p>
-                <div className="feature-points">
-                  {["Alle 10 BAFA-Pflichtabschnitte (§4–§10 LkSG)","Bearbeitbarer Entwurfsmodus vor PDF-Export","Automatische Lieferantenubersicht als Anhang"].map((p, i) => (
-                    <div key={i} className="fp">
-                      <div className="fp-icon"><Icon.FileText /></div>
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <ReportMockup />
-            </div>
-
-            {/* Feature 3 */}
-            <div className="feature-row" {...a("f3")}>
-              <div>
-                <div className="feature-tag">Sanctions & Monitoring</div>
-                <h3 className="feature-title">Echtzeit-Screening. Automatisch.</h3>
-                <p className="feature-desc">Screening aller Lieferanten gegen EU- und OFAC-Sanktionslisten, ESG-Signale und Nachrichtenmonitoring -- kontinuierlich und ohne manuellen Aufwand.</p>
-                <div className="feature-points">
-                  {["EU- und OFAC-Sanktionslisten-Abgleich","ESG-Signal-Erkennung fur alle Lieferanten","News-Monitoring via GDELT (kein API-Key notig)"].map((p, i) => (
-                    <div key={i} className="fp">
-                      <div className="fp-icon"><Icon.Bell /></div>
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              <MonitoringMockup />
-            </div>
-
-            {/* Feature 4 -- Whistleblowing */}
-            <div className="feature-row rev" {...a("f4")}>
-              <div>
-                <div className="feature-tag">Hinweisgebersystem</div>
-                <h3 className="feature-title">Offentliches Meldeportal. Anonym. DSGVO-konform.</h3>
-                <p className="feature-desc">Jedes Unternehmen erhalt ein eigenes, offentlich zugangliches Hinweisgeberportal -- gemass EU-Whistleblower-Richtlinie 2019/1937 und §§ 10, 12 HinSchG. Kein technischer Aufwand, sofort einsatzbereit.</p>
-                <div className="feature-points">
-                  {["Anonyme Einreichung ohne Login","Eigene Portal-URL pro Unternehmen (z.B. /complaints/ihr-unternehmen)","Vollstandige Fallverwaltung im Dashboard"].map((p, i) => (
-                    <div key={i} className="fp">
-                      <div className="fp-icon"><Icon.Lock /></div>
-                      {p}
-                    </div>
-                  ))}
-                </div>
-              </div>
-              {/* Whistleblowing Mockup */}
-              <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,0.06)" }}>
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", letterSpacing: 1, textTransform: "uppercase", marginBottom: 6 }}>Offentliches Meldeportal</div>
-                  <div style={{ fontSize: 15, fontWeight: 800, color: "#0b0f0c" }}>Hinweisgebersystem</div>
-                  <div style={{ fontSize: 13, color: "#6b7280", marginTop: 4 }}>Anonym  -  Verschlusselt  -  DSGVO-konform</div>
-                </div>
-                {[
-                  { label: "Lieferant", type: "select", val: "Textile Group GmbH" },
-                  { label: "Kategorie", type: "select", val: "Menschenrechte" },
-                ].map(f => (
-                  <div key={f.label} style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{f.label}</div>
-                    <div style={{ background: "#f6f7f6", border: "1px solid #e6e6e6", borderRadius: 8, padding: "9px 12px", fontSize: 13, color: "#374151" }}>{f.val}</div>
-                  </div>
-                ))}
-                <div style={{ marginBottom: 16 }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: "#9ca3af", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>Beschreibung</div>
-                  <div style={{ background: "#f6f7f6", border: "1px solid #e6e6e6", borderRadius: 8, padding: "9px 12px", fontSize: 13, color: "#9ca3af", minHeight: 72 }}>Sachverhalt beschreiben...</div>
-                </div>
-                <div style={{ background: "#1B3D2B", borderRadius: 8, padding: "11px 14px", textAlign: "center", fontSize: 13, fontWeight: 700, color: "#fff" }}>Meldung anonym absenden</div>
-                <div style={{ fontSize: 11, color: "#9ca3af", textAlign: "center", marginTop: 10 }}>Kontaktangaben sind optional</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 5 — Legal Assistant */}
-          <div className="feature-row" {...a("f5")}>
-            <div>
-              <div className="feature-tag" style={{ background: "rgba(124,58,237,.08)", border: "1px solid rgba(124,58,237,.2)", color: "#7C3AED" }}>Rechtsassistent — NEU</div>
-              <h3 className="feature-title">6 rechtssichere Vorlagen.<br />KI-Rechtsberatung. Vertragscheck.</h3>
-              <p className="feature-desc">Der neue Rechtsassistent generiert vollständige LkSG-Dokumente auf Knopfdruck — Verhaltenskodex, Vertragsklauseln, SAQ, Auditprotokoll. Dazu: spezifische Rechtsfragen mit §-Verweisen und KI-gestützter Vertragsprüfung.</p>
-              <div className="feature-points">
-                {["6 sofort verwendbare Dokumentenvorlagen (CoC, Vertrag, SAQ, Audit, HinSchG, §5-Methodik)","LkSG-Rechtsfragen mit Paragraphenverweisen und Handlungsempfehlungen","Vertragstext hochladen — KI prüft LkSG-Lücken und schlägt Korrekturen vor"].map((p, i) => (
-                  <div key={i} className="fp">
-                    <div className="fp-icon" style={{ background: "rgba(124,58,237,.08)", color: "#7C3AED" }}><Icon.Check /></div>
-                    {p}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,.06)" }}>
-              <div style={{ display: "flex", gap: 7, marginBottom: 16, flexWrap: "wrap" }}>
-                {["📄 Vorlagen", "❓ Rechtsfrage", "🔍 Vertragscheck", "🛡 Verteidigungsakte"].map(t => (
-                  <div key={t} style={{ padding: "4px 9px", borderRadius: 6, background: t.includes("Vorlagen") ? "#1B3D2B" : "#F3F4F6", color: t.includes("Vorlagen") ? "#fff" : "#6b7280", fontSize: 11, fontWeight: 700 }}>{t}</div>
-                ))}
-              </div>
-              {[{t:"Verhaltenskodex Lieferanten",r:"§6 Abs.2",tag:"Pflicht"},{t:"Vertragsklausel LkSG",r:"§6 Abs.3",tag:"Vertrag"},{t:"Lieferanten-SAQ",r:"§5 Abs.2",tag:"Fragebogen"},{t:"Hinweisgeberschutz",r:"§8, HinSchG",tag:"Pflicht"}].map(({t,r,tag}) => (
-                <div key={t} style={{ border: "1px solid #e6e6e6", borderRadius: 9, padding: "9px 12px", marginBottom: 8, display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ fontSize: 12.5, fontWeight: 700, color: "#0b0f0c" }}>{t}</div>
-                  <div style={{ display: "flex", gap: 5 }}>
-                    <span style={{ background: "#f0f5f1", border: "1px solid #d1e7d9", color: "#1B3D2B", fontSize: 9.5, fontWeight: 700, padding: "1px 6px", borderRadius: 4 }}>{r}</span>
-                    <span style={{ background: "#F3F4F6", color: "#6b7280", fontSize: 9.5, fontWeight: 600, padding: "1px 6px", borderRadius: 4 }}>{tag}</span>
-                  </div>
-                </div>
-              ))}
-              <div style={{ background: "#1B3D2B", borderRadius: 9, padding: "10px 14px", color: "#fff", fontSize: 12.5, fontWeight: 700, textAlign: "center", cursor: "pointer" }}>Dokument generieren →</div>
-            </div>
-          </div>
-
-          {/* Feature 6 — BAFA Defense File */}
-          <div className="feature-row rev" {...a("f6")}>
-            <div>
-              <div className="feature-tag" style={{ background: "rgba(37,99,235,.07)", border: "1px solid rgba(37,99,235,.2)", color: "#2563EB" }}>BAFA-Verteidigungsakte — NEU</div>
-              <h3 className="feature-title">Ein Klick.<br />Alle §5–§10-Nachweise.</h3>
-              <p className="feature-desc">Wenn die BAFA ein Kontrollverfahren einleitet, brauchen Sie innerhalb kurzer Zeit eine vollständige Dokumentation. Die Verteidigungsakte exportiert alle Compliance-Nachweise strukturiert in einem Dokument — was Anwälte früher tagelang zusammengestellt haben.</p>
-              <div className="feature-points">
-                {["§5–§10 Compliance-Nachweise in einem strukturierten JSON-Export","Vollständiger Audit-Trail mit Zeitstempeln (200+ Einträge)","Automatisch nach BAFA-Prüfstruktur gegliedert — direkt dem Anwalt übergeben"].map((p, i) => (
-                  <div key={i} className="fp">
-                    <div className="fp-icon" style={{ background: "rgba(37,99,235,.07)", color: "#2563EB" }}><Icon.Shield /></div>
-                    {p}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 24, boxShadow: "0 8px 32px rgba(0,0,0,.06)" }}>
-              <div style={{ fontSize: 14, fontWeight: 800, color: "#0b0f0c", marginBottom: 4 }}>🛡 BAFA-Verteidigungsakte</div>
-              <div style={{ fontSize: 12.5, color: "#6b7280", lineHeight: 1.6, marginBottom: 16 }}>Generiert für Berichtsjahr 2024 — bereit für BAFA-Kontrollverfahren.</div>
-              {["§5 Risikoanalyse","§6 Präventionsmaßnahmen","§7 Abhilfemaßnahmen","§8 Beschwerdeverfahren","§9 Wirksamkeitskontrolle","§10 Dokumentation & Audit-Trail"].map((s, i) => (
-                <div key={s} style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 0", borderBottom: i < 5 ? "1px solid #F3F4F6" : "none", fontSize: 12.5 }}>
-                  <span style={{ fontWeight: 600, color: "#0b0f0c" }}>{s}</span>
-                  <span style={{ background: "#F0FDF4", border: "1px solid #BBF7D0", color: "#16A34A", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 4 }}>✓ Enthalten</span>
-                </div>
-              ))}
-              <div style={{ marginTop: 16, background: "#2563EB", borderRadius: 9, padding: "10px 14px", color: "#fff", fontSize: 12.5, fontWeight: 700, textAlign: "center", cursor: "pointer" }}>⬇ Akte herunterladen</div>
-            </div>
-          </div>
-
+          <a href="/pricing" style={{ fontSize:13,color:"#6b7c6e",textDecoration:"underline" }}>Preise vergleichen</a>
         </div>
-      </section>
-
-      {/* HOW IT WORKS */}
-      <section className="lp-sec">
-        <div className="lp-sec-i">
-          <div {...a("how-hd")} style={{ textAlign: "center", maxWidth: 560, margin: "0 auto" }}>
-            <div className="lp-chip-label">So funktioniert es</div>
-            <h2 className="lp-h2">In vier Schritten zur<br /><em>vollstandigen Compliance.</em></h2>
-            <p className="lp-sub" style={{ margin: "0 auto" }}>Kein IT-Projekt. Keine Monate der Einfuhrung. Am ersten Tag einsatzbereit.</p>
-          </div>
-          <div className="steps-grid">
-            <div className="steps-line" />
-            {[
-              { n: "1", icon: <Icon.Zap />, title: "Lieferanten importieren", desc: "Excel oder CSV hochladen. Automatische Spaltenerkennung, auch für bestehende Listen." },
-              { n: "2", icon: <Icon.Globe />, title: "Risiken automatisch analysieren", desc: "190 Länderprofile, Branchengewichtung, §5 LkSG-Scoring in Sekunden." },
-              { n: "3", icon: <Icon.FileText />, title: "KI-BAFA-Bericht erstellen", desc: "Claude liest Ihre Echtdaten und schreibt den strukturierten Jahresbericht." },
-              { n: "4", icon: <Icon.Shield />, title: "Rechtsvorlagen & Verteidigungsakte", desc: "CoC, SAQ, Vertragsklauseln generieren — und BAFA-Prüfungsakte auf Knopfdruck." },
-            ].map((s, i) => (
-              <div key={i} className="step-card" {...a(`step-${i}`, i * 0.12)}>
-                <div className="step-num">{s.n}</div>
-                <h3 className="step-title">{s.title}</h3>
-                <p className="step-desc">{s.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* PRICING */}
-      <section className="lp-sec bg" id="preise">
-        <div className="lp-sec-i">
-          <div {...a("price-hd")} style={{ textAlign: "center" }}>
-            <div className="lp-chip-label">Preise</div>
-            <h2 className="lp-h2">Einfache Preise.<br /><em>Voller Funktionsumfang.</em></h2>
-            <p className="lp-sub" style={{ margin: "0 auto" }}>Von der kostenlosen Testversion bis zur Enterprise-Lösung. Jederzeit kündbar, keine Einrichtungsgebühr, keine versteckten Kosten.</p>
-          </div>
-          <div className="pricing-grid">
-            {[
-              {
-                tier: "Starter", price: "149", period: "/ Monat · 14 Tage kostenlos",
-                badge: null,
-                feats: ["Bis zu 25 Lieferanten", "Automatische Risikoanalyse §5", "BAFA-PDF-Bericht", "Hinweisgeberportal §8", "Excel-Import", "Audit-Trail", "3 Nutzer", "E-Mail-Support"],
-                off: ["KI-BAFA-Berichtsgenerator", "6 Rechtsvorlagen & Vertragscheck", "BAFA-Verteidigungsakte", "Rechtsfrage-Assistent"],
-                cta: "Starter testen — 14 Tage gratis", solid: false, featured: false, href: "/register",
-              },
-              {
-                tier: "Pro", price: "499", period: "/ Monat · 14 Tage kostenlos",
-                badge: "Vollständiger LkSG-Stack",
-                feats: ["Unbegrenzte Lieferanten", "Automatische Risikoanalyse §5", "🤖 KI-BAFA-Berichtsgenerator", "6 Rechtsvorlagen (CoC, SAQ, ...)", "🔍 Vertragscheck & Rechtsfrage-Assistent", "🛡 BAFA-Verteidigungsakte §10", "Excel-Bulk-Import", "Hinweisgeberportal §8 + HinSchG", "10 Nutzer & Team-Rollen", "Vollständiger Audit-Trail", "Priority-Support"],
-                off: [],
-                cta: "Pro testen — 14 Tage gratis", solid: true, featured: true, href: "/register",
-              },
-              {
-                tier: "Enterprise", price: null, period: "Individuelles Angebot",
-                badge: null,
-                feats: ["Alles in Pro", "Unbegrenzte Nutzer", "SSO / SAML", "API-Zugang", "SAP / ERP Integration", "CSDDD-Readiness-Check", "Dedizierter Account Manager", "SLA & AVV nach Art. 28 DSGVO"],
-                off: [],
-                cta: "Kontakt aufnehmen", solid: false, featured: false, href: "mailto:hello@lksgcompass.de",
-              },
-            ].map((plan, i) => (
-              <div key={i} className={`plan${plan.featured ? " featured" : ""}`} {...a(`plan-${i}`, i * 0.1)}>
-                {(plan as any).badge && <div className="plan-badge">{(plan as any).badge}</div>}
-                <div className="plan-tier">{plan.tier}</div>
-                <div className="plan-price">
-                  {plan.price ? <><sup>?</sup>{plan.price}</> : <span className="plan-price-text">Individuell</span>}
-                </div>
-                <div className="plan-period">{plan.period}</div>
-                <hr />
-                <ul className="plan-feats">
-                  {plan.feats.map((f, j) => (
-                    <li key={j} className="plan-feat">
-                      <span className="feat-yes"><Icon.Check /></span> {f}
-                    </li>
-                  ))}
-                  {plan.off.map((f, j) => (
-                    <li key={j} className="plan-feat off">
-                      <span className="feat-no"><Icon.X /></span> {f}
-                    </li>
-                  ))}
-                </ul>
-                <a href={plan.href} className={`plan-btn ${plan.solid ? "solid" : "outline"}`}>{plan.cta}</a>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* LEGAL / DATENSCHUTZ */}
-      <section className="legal-strip" id="datenschutz">
-        <div className="lp-sec-i">
-          <div {...a("legal-hd")}>
-            <div className="lp-chip-label">Datenschutz & Sicherheit</div>
-            <h2 className="lp-h2" style={{ fontSize: "clamp(26px,3vw,40px)" }}>Gebaut mit <em>DSGVO</em> von Anfang an.</h2>
-          </div>
-          <div className="legal-grid">
-            {[
-              { icon: <Icon.Globe />, title: "EU-Hosting", text: "Alle Daten ausschliesslich auf Servern in der Europaischen Union. Kein Transfer in Drittlander." },
-              { icon: <Icon.Shield />, title: "DSGVO Art. 28", text: "Auftragsverarbeitungsvertrag (AVV) auf Anfrage. Vollstandige Datenschutzerklarung verfugbar." },
-              { icon: <Icon.Lock />, title: "TLS + bcrypt", text: "Alle Verbindungen verschlusselt. Passworter mit bcrypt gehasht. JWT mit kurzer Laufzeit." },
-              { icon: <Icon.FileText />, title: "Recht auf Loschung", text: "Vollstandige Datenloschung auf Anfrage nach Art. 17 DSGVO -- nachweisbar und unwiderruflich." },
-            ].map((item, i) => (
-              <div key={i} className="legal-item" {...a(`legal-${i}`, i * 0.08)}>
-                <div className="legal-ico">{item.icon}</div>
-                <h3>{item.title}</h3>
-                <p>{item.text}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="lp-cta">
-        <div className="cta-mesh" />
-        <div className="cta-inner" {...a("cta-main")}>
-          <div className="cta-label">Jetzt loslegen</div>
-          <h2 className="cta-h2">LkSG-Compliance.<br /><em>Ab heute.</em></h2>
-          <p className="cta-sub">Kein Kreditkarte. In 5 Minuten einsatzbereit. Jederzeit kundbar.</p>
-          <div className="cta-btns">
-            <a href="/register" className="btn-white">Kostenlos starten → 14 Tage gratis</a>
-            <a href="/demo" className="btn-white-ghost">Live-Demo ansehen</a>
-          </div>
-          <p className="cta-note">• DSGVO-konform · • EU-Hosting · • Keine Vertragsbindung · • AVV auf Anfrage</p>
-        </div>
-      </section>
-
-      {/* FOOTER */}
-      <footer className="lp-footer">
-        <div className="footer-i">
-          <div className="footer-top">
-            <div className="footer-brand">
-              <div className="footer-logo">LkSG<em>Compass</em></div>
-              <p className="footer-desc">Supply Chain Due Diligence Plattform -- LkSG, CSDDD, BAFA. DSGVO-konform, EU-Hosting.</p>
-            </div>
-            <div className="footer-cols">
-              <div className="footer-col">
-                <h4>Produkt</h4>
-                <a href="#sektoren">Sektoren</a>
-                <a href="#funktionen">Funktionen</a>
-                <a href="#preise">Preise</a>
-                <a href="/demo">Demo starten</a>
-                <a href="/login">{lang==="de"?"Einloggen":"Log in"}</a>
-              </div>
-              <div className="footer-col">
-                <h4>Compliance</h4>
-                <a href="#">LkSG Uberblick</a>
-                <a href="#">BAFA-Anforderungen</a>
-                <a href="#">CSDDD 2026</a>
-                <a href="#">Hinweisgebergesetz</a>
-              </div>
-              <div className="footer-col">
-                <h4>Rechtliches</h4>
-                <a href="/impressum">Impressum</a>
-                <a href="/datenschutz">Datenschutzerklarung</a>
-                <a href="/agb">AGB</a>
-                <a href="mailto:datenschutz@lksgcompass.de">Datenschutzbeauftragter</a>
-              </div>
-              <div className="footer-col">
-                <h4>Kontakt</h4>
-                <a href="mailto:hello@lksgcompass.de">hello@lksgcompass.de</a>
-                <a href="/pricing">Pricing</a>
-                <a href="mailto:partner@lksgcompass.de">Partnerprogramm</a>
-              </div>
-            </div>
-          </div>
-          <div className="footer-bottom">
-            <div className="footer-copy">? {new Date().getFullYear()} LkSGCompass. Alle Rechte vorbehalten.</div>
-            <div className="footer-legal">
-              <a href="/impressum">Impressum</a>
-              <a href="/datenschutz">Datenschutz</a>
-              <a href="/agb">AGB</a>
-            </div>
-            <div className="footer-badges">
-              <span className="footer-badge">DSGVO</span>
-              <span className="footer-badge">EU-Hosting</span>
-              <span className="footer-badge">TLS/HTTPS</span>
-              <span className="footer-badge">bcrypt</span>
-            </div>
-          </div>
-        </div>
-      </footer>
-    </>
+      )}
+    </div>
   );
 }
