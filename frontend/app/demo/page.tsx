@@ -472,7 +472,7 @@ export default function DemoPage() {
       <div style={{ position:"absolute",top:0,left:0,right:0,display:"flex",alignItems:"center",justifyContent:"space-between",padding:"20px 28px",background:"linear-gradient(to bottom,rgba(0,0,0,0.5),transparent)",opacity:showUI?1:0,transition:"opacity 0.5s" }}>
         <a href="/" style={{ fontSize:14,fontWeight:700,color:"#c4f135",textDecoration:"none",letterSpacing:"0.1em" }}>LkSGCompass</a>
         <div style={{ display:"flex",gap:12,alignItems:"center" }}>
-          <button onClick={toggleMusic} style={{ background:music?"rgba(196,241,53,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${music?"rgba(196,241,53,0.3)":"rgba(255,255,255,0.15)"}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",color:music?"#c4f135":"#8a9a8d",display:"flex",alignItems:"center",gap:6,fontSize:12 }}>
+          <button type="button" onClick={toggleMusic} style={{ background:music?"rgba(196,241,53,0.15)":"rgba(255,255,255,0.08)",border:`1px solid ${music?"rgba(196,241,53,0.3)":"rgba(255,255,255,0.15)"}`,borderRadius:20,padding:"6px 14px",cursor:"pointer",color:music?"#c4f135":"#8a9a8d",display:"flex",alignItems:"center",gap:6,fontSize:12 }}>
             ♪ {music?"Musik an":"Musik aus"}
           </button>
           <a href="/register" onClick={e=>e.stopPropagation()} style={{ background:"#c4f135",color:"#0a1a08",padding:"8px 18px",borderRadius:20,fontSize:13,fontWeight:700,textDecoration:"none" }}>
@@ -499,7 +499,7 @@ export default function DemoPage() {
           <div style={{ fontSize:"clamp(24px,4vw,48px)",fontWeight:800,color:"#fff",textAlign:"center",fontFamily:"'Bricolage Grotesque',sans-serif" }}>Bereit anzufangen?</div>
           <div style={{ display:"flex",gap:14,flexWrap:"wrap",justifyContent:"center" }}>
             <a href="/register" style={{ background:"#c4f135",color:"#0a1a08",padding:"14px 28px",borderRadius:14,fontSize:15,fontWeight:800,textDecoration:"none" }}>14 Tage kostenlos starten →</a>
-            <button onClick={toggle} style={{ background:"rgba(255,255,255,0.08)",color:"#e8f0e9",padding:"14px 28px",borderRadius:14,fontSize:15,border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer" }}>↺ Nochmal ansehen</button>
+            <button type="button" onClick={toggle} style={{ background:"rgba(255,255,255,0.08)",color:"#e8f0e9",padding:"14px 28px",borderRadius:14,fontSize:15,border:"1px solid rgba(255,255,255,0.12)",cursor:"pointer" }}>↺ Nochmal ansehen</button>
           </div>
           <a href="/pricing" style={{ fontSize:13,color:"#6b7c6e",textDecoration:"underline" }}>Preise vergleichen</a>
         </div>

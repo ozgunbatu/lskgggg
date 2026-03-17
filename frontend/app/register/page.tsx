@@ -237,13 +237,13 @@ export default function RegisterPage() {
                     <div className="rstrl" style={{ color: sc }}>{slabel}</div>
                   </>}
                 </div>
-                <button className="rbtn" onClick={submit} disabled={loading}>{loading ? <span className="sp" /> : invite ? "Einladung annehmen →" : "Konto erstellen →"}</button>
+                <button type="button" className="rbtn" onClick={submit} disabled={loading}>{loading ? <span className="sp" /> : invite ? "Einladung annehmen →" : "Konto erstellen →"}</button>
                 <hr className="rdiv" />
                 <div className="rfl">Bereits ein Konto? <a href="/login">Einloggen</a></div>
               </>
             ) : (
               <>
-                <button className="rbk" onClick={() => { setStep("form"); setError(""); setInfo(""); setOtp(["","","","","",""]); }}>← Zurück</button>
+                <button type="button" className="rbk" onClick={() => { setStep("form"); setError(""); setInfo(""); setOtp(["","","","","",""]); }}>← Zurück</button>
                 <div className="rh">E-Mail bestätigen</div>
                 <div className="rs">Wir haben einen 6-stelligen Code an <strong>{email}</strong> gesendet.</div>
                 {error && <div className="rerr"><span>!</span><span>{error}</span></div>}
@@ -254,10 +254,10 @@ export default function RegisterPage() {
                       onChange={e => onOtpChange(i, e.target.value)} onKeyDown={e => onOtpKey(i, e)} />
                   ))}
                 </div>
-                <button className="rbtn" onClick={() => verifyOtp()} disabled={loading || otp.join("").length !== 6}>{loading ? <span className="sp" /> : "Code bestätigen"}</button>
+                <button type="button" className="rbtn" onClick={() => verifyOtp()} disabled={loading || otp.join("").length !== 6}>{loading ? <span className="sp" /> : "Code bestätigen"}</button>
                 <div style={{ textAlign: "center", marginTop: 16, fontSize: 14, color: "#6b7280" }}>
                   Kein Code?{" "}
-                  <button className="rresend" onClick={resend} disabled={loading || cooldown > 0}>
+                  <button type="button" className="rresend" onClick={resend} disabled={loading || cooldown > 0}>
                     {cooldown > 0 ? `Erneut senden in ${cooldown}s` : "Code erneut senden"}
                   </button>
                 </div>

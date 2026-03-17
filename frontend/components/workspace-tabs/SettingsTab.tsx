@@ -133,7 +133,7 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
     <>
       <div style={{ display: "flex", gap: 6, marginBottom: 20, padding: "4px", background: "#F3F4F6", borderRadius: 10, width: "fit-content" }}>
         {(["company", "team", "billing", "legal"] as TabKey[]).map(t => (
-          <button key={t} style={tabStyle(t)} onClick={() => setTab(t)}>
+          <button type="button" key={t} style={tabStyle(t)} onClick={() => setTab(t)}>
             {{ company: L === "de" ? "Unternehmen" : "Company", team: "Team", billing: "Billing", legal: "Legal" }[t]}
           </button>
         ))}
@@ -176,7 +176,7 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
               ) : (
                 <div style={{ fontSize: 13, color: "#6B7280" }}>{L === "de" ? "Noch nicht eingereicht." : "Not yet submitted."}</div>
               )}
-              <button className="btn btn-sm" style={{ marginTop: 8 }} onClick={markBAFASubmitted}>
+              <button type="button" className="btn btn-sm" style={{ marginTop: 8 }} onClick={markBAFASubmitted}>
                 {L === "de" ? "Einreichung dokumentieren" : "Document submission"}
               </button>
             </div>
@@ -201,7 +201,7 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
           )}
 
           <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <button className="btn btn-p" onClick={save} disabled={saving}>{saving ? <span className="spin" /> : "✓"} {L === "de" ? "Speichern" : "Save"}</button>
+            <button type="button" className="btn btn-p" onClick={save} disabled={saving}>{saving ? <span className="spin" /> : "✓"} {L === "de" ? "Speichern" : "Save"}</button>
           </div>
         </div>
       )}
@@ -222,13 +222,13 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
                   <option value="viewer">Viewer</option>
                 </select>
               </div>
-              <button className="btn btn-p" onClick={invite} disabled={inviting}>{inviting ? <span className="spin" /> : L === "de" ? "Einladen" : "Invite"}</button>
+              <button type="button" className="btn btn-p" onClick={invite} disabled={inviting}>{inviting ? <span className="spin" /> : L === "de" ? "Einladen" : "Invite"}</button>
             </div>
             {inviteLink && (
               <div style={{ marginTop: 12, padding: "10px 14px", background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 8, fontSize: 12.5 }}>
                 <strong>Einladungslink:</strong>{" "}
                 <a href={inviteLink} style={{ color: "#1B3D2B", wordBreak: "break-all" }}>{inviteLink}</a>
-                <button style={{ marginLeft: 8, fontSize: 12, background: "none", border: "none", cursor: "pointer", color: "#1B3D2B", fontWeight: 700 }} onClick={() => { navigator.clipboard.writeText(inviteLink); toastFn("ok", "Kopiert!"); }}>Kopieren</button>
+                <button type="button" style={{ marginLeft: 8, fontSize: 12, background: "none", border: "none", cursor: "pointer", color: "#1B3D2B", fontWeight: 700 }} onClick={() => { navigator.clipboard.writeText(inviteLink); toastFn("ok", "Kopiert!"); }}>Kopieren</button>
               </div>
             )}
           </div>
@@ -263,7 +263,7 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
                       <td><span className="chip cm">{m.role}</span></td>
                       <td><span className={`chip ${m.status === "active" ? "cl" : "cm"}`}>{m.status === "invited" ? "Eingeladen" : "Aktiv"}</span></td>
                       <td>
-                        <button className="btn btn-sm" style={{ color: "#DC2626", border: "1px solid #FECACA", background: "#FFF5F5" }} onClick={() => removeMember(m.id)}>
+                        <button type="button" className="btn btn-sm" style={{ color: "#DC2626", border: "1px solid #FECACA", background: "#FFF5F5" }} onClick={() => removeMember(m.id)}>
                           {L === "de" ? "Entfernen" : "Remove"}
                         </button>
                       </td>
@@ -317,12 +317,12 @@ export default function SettingsTab({ L, company, apiFn, toastFn }: Props) {
                     {plan.features.map(f => <li key={f} style={{ fontSize: 13, color: "#374151", display: "flex", gap: 6, alignItems: "center" }}><span style={{ color: "#16A34A", fontWeight: 800 }}>✓</span> {f}</li>)}
                   </ul>
                   {billing?.plan !== plan.key && plan.key !== "free" && billing?.stripeEnabled && (
-                    <button className="btn btn-p btn-sm" style={{ width: "100%" }} onClick={() => startCheckout(plan.key)} disabled={billingLoading}>
+                    <button type="button" className="btn btn-p btn-sm" style={{ width: "100%" }} onClick={() => startCheckout(plan.key)} disabled={billingLoading}>
                       {billingLoading ? <span className="spin" /> : L === "de" ? "Upgraden" : "Upgrade"}
                     </button>
                   )}
                   {billing?.plan === plan.key && plan.key !== "free" && (
-                    <button className="btn btn-sm" style={{ width: "100%" }} onClick={openPortal} disabled={billingLoading}>
+                    <button type="button" className="btn btn-sm" style={{ width: "100%" }} onClick={openPortal} disabled={billingLoading}>
                       {L === "de" ? "Verwalten" : "Manage"}
                     </button>
                   )}

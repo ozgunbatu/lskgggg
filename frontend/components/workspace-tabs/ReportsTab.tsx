@@ -50,10 +50,10 @@ export default function ReportsTab(props: WorkspaceTabProps) {
           <select className="sel" style={{width:100,height:34}} value={rYear as number} onChange={e=>(setRYear as any)(+e.target.value)}>
             {[2024,2025,2026].map(y=><option key={y} value={y}>{y}</option>)}
           </select>
-          <button className="btn btn-g btn-sm" onClick={()=>loadDraft()} disabled={genLd as boolean}>
+          <button type="button" className="btn btn-g btn-sm" onClick={()=>loadDraft()} disabled={genLd as boolean}>
             {genLd?<span className="spin-d"/>:"↓"} {L==="de"?"Laden":"Load"}
           </button>
-          <button className="btn btn-g btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>
+          <button type="button" className="btn btn-g btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>
             ✓ {L==="de"?"Speichern":"Save"}
           </button>
           {draftTs&&<span style={{fontSize:11,color:"var(--t3)"}}>{L==="de"?"Gespeichert":"Saved"}: {draftTs}</span>}
@@ -92,13 +92,13 @@ export default function ReportsTab(props: WorkspaceTabProps) {
               <span style={{flex:1,fontSize:13,color:s.generated?"var(--t1)":"var(--t2)",fontWeight:s.generated?600:400}}>{s.label}</span>
               {s.generated
                 ? <span style={{fontSize:10,color:"var(--g1)"}}>✓</span>
-                : <button className="btn btn-g btn-xs" onClick={()=>genSection(s.id)} disabled={genLd as boolean||!writable}>
+                : <button type="button" className="btn btn-g btn-xs" onClick={()=>genSection(s.id)} disabled={genLd as boolean||!writable}>
                     {genLd?<span className="spin-d"/>:"✦"} {L==="de"?"Generieren":"Generate"}
                   </button>
               }
             </div>
           ))}
-          <button className="btn btn-ai" onClick={()=>genSection("all")} disabled={genLd as boolean||!writable} style={{width:"100%"}}>
+          <button type="button" className="btn btn-ai" onClick={()=>genSection("all")} disabled={genLd as boolean||!writable} style={{width:"100%"}}>
             {genLd?<span className="spin"/>:"✦"} {L==="de"?"Vollständigen Bericht generieren":"Generate full report"}
           </button>
         </div>
@@ -127,8 +127,8 @@ export default function ReportsTab(props: WorkspaceTabProps) {
             disabled={!writable}
           />
           <div className="brow">
-            <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/reports/export/pdf","bafa-bericht.txt")}>↓ {L==="de"?"Exportieren":"Export"}</button>
-            <button className="btn btn-p btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>✓ {L==="de"?"Speichern":"Save"}</button>
+            <button type="button" className="btn btn-g btn-sm" onClick={()=>exportCSV("/reports/export/pdf","bafa-bericht.txt")}>↓ {L==="de"?"Exportieren":"Export"}</button>
+            <button type="button" className="btn btn-p btn-sm" onClick={()=>saveDraft()} disabled={!writable||!draft}>✓ {L==="de"?"Speichern":"Save"}</button>
           </div>
         </div>
       </div>

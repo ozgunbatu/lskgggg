@@ -23,7 +23,7 @@ export default function WorkspaceModuleReadOnly({ L, title, copy, actionLabel, o
           </div>
         </div>
         {actionLabel && onAction && (
-          <button className="btn btn-g btn-sm" onClick={onAction}>{actionLabel}</button>
+          <button type="button" className="btn btn-g btn-sm" onClick={onAction}>{actionLabel}</button>
         )}
       </div>
     </div>

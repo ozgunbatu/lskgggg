@@ -16,7 +16,7 @@ export default function WorkspaceEmptyState({ icon, title, copy, cta, onCta }: P
       <div className="empty-t">{title}</div>
       <div className="empty-c">{copy}</div>
       {cta && onCta && (
-        <button
+        <button type="button"
           className="btn btn-g btn-sm"
           style={{ marginTop: 16 }}
           onClick={onCta}

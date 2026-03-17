@@ -597,7 +597,7 @@ export default function LandingPage() {
 
       {/* MOBILE MENU */}
       <div className={`lp-mobile-menu${menuOpen ? " open" : ""}`}>
-        <button className="lp-mobile-close" onClick={() => setMenuOpen(false)}>?</button>
+        <button type="button" className="lp-mobile-close" onClick={() => setMenuOpen(false)}>?</button>
         {[["#sektoren","Sektoren"],["#funktionen","Funktionen"],["#preise","Preise"],["#datenschutz","Datenschutz"]].map(([h,l]) => (
           <a key={h} href={h} onClick={() => setMenuOpen(false)}>{l}</a>
         ))}
@@ -618,11 +618,11 @@ export default function LandingPage() {
             <a href="/login">{lang==="de"?"Einloggen":"Log in"}</a>
             <a href="/demo" className="nav-cta">{lang==="de"?"Live-Demo ansehen":"View live demo"}</a>
             <div className="lp-lang-btns">
-              <button className={`lp-lb${lang==="de"?" lp-lb-on":""}`} onClick={()=>{setLang("de");setLangState("de");}}>DE</button>
-              <button className={`lp-lb${lang==="en"?" lp-lb-on":""}`} onClick={()=>{setLang("en");setLangState("en");}}>EN</button>
+              <button type="button" className={`lp-lb${lang==="de"?" lp-lb-on":""}`} onClick={()=>{setLang("de");setLangState("de");}}>DE</button>
+              <button type="button" className={`lp-lb${lang==="en"?" lp-lb-on":""}`} onClick={()=>{setLang("en");setLangState("en");}}>EN</button>
             </div>
           </div>
-          <button className="lp-hamburger" onClick={() => setMenuOpen(true)} aria-label="Menu offnen">
+          <button type="button" className="lp-hamburger" onClick={() => setMenuOpen(true)} aria-label="Menu offnen">
             <Icon.Menu />
           </button>
         </div>

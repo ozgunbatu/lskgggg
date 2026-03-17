@@ -94,7 +94,7 @@ export default function SaqPublicPage({ params }: { params: { token: string } })
             </div>
             <div style={{ display:"flex", gap:4 }}>
               {(["de","en"] as const).map(l => (
-                <button key={l} onClick={() => setLang(l)} style={{ padding:"4px 10px", borderRadius:7, border:"1.5px solid rgba(255,255,255,.3)", background:lang===l?"#fff":"transparent", color:lang===l?"#1B3D2B":"#fff", fontWeight:700, fontSize:12, cursor:"pointer" }}>{l.toUpperCase()}</button>
+                <button type="button" key={l} onClick={() => setLang(l)} style={{ padding:"4px 10px", borderRadius:7, border:"1.5px solid rgba(255,255,255,.3)", background:lang===l?"#fff":"transparent", color:lang===l?"#1B3D2B":"#fff", fontWeight:700, fontSize:12, cursor:"pointer" }}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
@@ -128,7 +128,7 @@ export default function SaqPublicPage({ params }: { params: { token: string } })
               {(q.type === "yesno" || q.type === "yesno_inverse") && (
                 <div style={{ display:"flex", gap:8, paddingLeft:32 }}>
                   {([["yes", lang==="de"?"Ja":"Yes"], ["no", lang==="de"?"Nein":"No"], ["partial", lang==="de"?"Teilweise":"Partial"]] as [string,string][]).map(([v,l]) => (
-                    <button key={v} onClick={() => setAnswers(a => ({ ...a, [q.id]:v }))} style={answers[q.id]===v ? styles.btnSel : styles.btn}>{l}</button>
+                    <button type="button" key={v} onClick={() => setAnswers(a => ({ ...a, [q.id]:v }))} style={answers[q.id]===v ? styles.btnSel : styles.btn}>{l}</button>
                   ))}
                 </div>
               )}
@@ -136,7 +136,7 @@ export default function SaqPublicPage({ params }: { params: { token: string } })
                 <div style={{ display:"flex", gap:8, paddingLeft:32, alignItems:"center", flexWrap:"wrap" }}>
                   <span style={{ fontSize:12, color:"#9CA3AF" }}>{lang==="de"?"1=Gering":"1=Low"}</span>
                   {["1","2","3","4","5"].map(v => (
-                    <button key={v} onClick={() => setAnswers(a => ({ ...a, [q.id]:v }))} style={answers[q.id]===v ? styles.scaleBtnSel : styles.scaleBtn}>{v}</button>
+                    <button type="button" key={v} onClick={() => setAnswers(a => ({ ...a, [q.id]:v }))} style={answers[q.id]===v ? styles.scaleBtnSel : styles.scaleBtn}>{v}</button>
                   ))}
                   <span style={{ fontSize:12, color:"#9CA3AF" }}>{lang==="de"?"5=Hoch":"5=High"}</span>
                 </div>
@@ -159,7 +159,7 @@ export default function SaqPublicPage({ params }: { params: { token: string } })
         })}
 
         {msg && <div style={{ background:"#FEF2F2", border:"1px solid #FECACA", borderRadius:10, padding:"12px 16px", marginBottom:12, fontSize:13, color:"#991B1B" }}>{msg}</div>}
-        <button onClick={submit} disabled={submitting} style={{ width:"100%", padding:16, background:progress===100?"#1B3D2B":"#9CA3AF", color:"#fff", border:"none", borderRadius:12, fontSize:16, fontWeight:900, cursor:progress===100?"pointer":"not-allowed", marginBottom:20 }}>
+        <button type="button" onClick={submit} disabled={submitting} style={{ width:"100%", padding:16, background:progress===100?"#1B3D2B":"#9CA3AF", color:"#fff", border:"none", borderRadius:12, fontSize:16, fontWeight:900, cursor:progress===100?"pointer":"not-allowed", marginBottom:20 }}>
           {submitting ? "..." : (lang==="de"?"Fragebogen absenden":"Submit questionnaire")}
         </button>
         <div style={{ textAlign:"center", fontSize:11.5, color:"#9CA3AF", marginBottom:24 }}>

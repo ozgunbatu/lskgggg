@@ -70,11 +70,11 @@ export default function ActionsTab(props: WorkspaceTabProps) {
           <div className="sec-sub">{L==="de"?"Corrective Action Plans nach §6 LkSG. Abgeschlossene Maßnahmen bleiben im Audit Trail.":"Corrective Action Plans under §6 LkSG. Completed measures stay in the audit trail."}</div>
         </div>
         <div className="brow">
-          <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/actions/export/csv","massnahmen.csv")}>↓ CSV</button>
-          <button className="btn btn-ai btn-sm" onClick={()=>canManage&&sendAi(L==="de"?"Welche meiner CAPs sind am dringlichsten?":"Which of my CAPs are most urgent?")}>
+          <button type="button" className="btn btn-g btn-sm" onClick={()=>exportCSV("/actions/export/csv","massnahmen.csv")}>↓ CSV</button>
+          <button type="button" className="btn btn-ai btn-sm" onClick={()=>canManage&&sendAi(L==="de"?"Welche meiner CAPs sind am dringlichsten?":"Which of my CAPs are most urgent?")}>
             ✦ {L==="de"?"KI-Analyse":"AI Analyse"}
           </button>
-          <button className="btn btn-p btn-sm" onClick={()=>canManage&&setShowCapModal(true)} disabled={!canManage}>
+          <button type="button" className="btn btn-p btn-sm" onClick={()=>canManage&&setShowCapModal(true)} disabled={!canManage}>
             + {L==="de"?"Neuer CAP":"New CAP"}
           </button>
         </div>
@@ -123,9 +123,9 @@ export default function ActionsTab(props: WorkspaceTabProps) {
                         {a.description&&<div style={{fontSize:13,color:"var(--t2)",marginBottom:12,lineHeight:1.7}}>{a.description}</div>}
                         <div className="brow" style={{marginBottom:12}}>
                           {a.status!=="completed"&&a.status!=="closed"&&<>
-                            {a.status==="open"&&<button className="btn btn-g btn-sm" onClick={()=>canManage&&updateActionStatus(a.id,"in_progress")} disabled={!canManage}>{L==="de"?"Starten":"Start"}</button>}
-                            {a.status==="in_progress"&&<button className="btn btn-p btn-sm" onClick={()=>canManage&&updateActionStatus(a.id,"completed")} disabled={!canManage}>✓ {L==="de"?"Abschließen":"Complete"}</button>}
-                            <button className="btn btn-r btn-xs" onClick={()=>canManage&&deleteAction(a.id,a.title)} disabled={!canManage}>✕ {L==="de"?"Löschen":"Delete"}</button>
+                            {a.status==="open"&&<button type="button" className="btn btn-g btn-sm" onClick={()=>canManage&&updateActionStatus(a.id,"in_progress")} disabled={!canManage}>{L==="de"?"Starten":"Start"}</button>}
+                            {a.status==="in_progress"&&<button type="button" className="btn btn-p btn-sm" onClick={()=>canManage&&updateActionStatus(a.id,"completed")} disabled={!canManage}>✓ {L==="de"?"Abschließen":"Complete"}</button>}
+                            <button type="button" className="btn btn-r btn-xs" onClick={()=>canManage&&deleteAction(a.id,a.title)} disabled={!canManage}>✕ {L==="de"?"Löschen":"Delete"}</button>
                           </>}
                           {(a.status==="completed"||a.status==="closed")&&(
                             <div className="al al-ok" style={{padding:"6px 12px",marginBottom:0,fontSize:12.5,flex:1}}>
@@ -141,7 +141,7 @@ export default function ActionsTab(props: WorkspaceTabProps) {
                             disabled={!canManage}
                             placeholder={L==="de"?"z.B. Audit-Befund, Maßnahmen-Nachweis…":"e.g. audit finding, measure evidence…"}
                           />
-                          <button className="btn btn-g btn-xs" style={{marginTop:6}} onClick={()=>canManage&&saveActionNote(a.id)} disabled={!canManage}>
+                          <button type="button" className="btn btn-g btn-xs" style={{marginTop:6}} onClick={()=>canManage&&saveActionNote(a.id)} disabled={!canManage}>
                             ✓ {L==="de"?"Speichern":"Save"}
                           </button>
                         </div>
@@ -158,7 +158,7 @@ export default function ActionsTab(props: WorkspaceTabProps) {
           <div className="empty-ic">✓</div>
           <div className="empty-t">{L==="de"?"Keine Aktionspläne":"No action plans"}</div>
           <div className="empty-c">{L==="de"?"Legen Sie den ersten CAP an, um §6 LkSG Maßnahmen zu dokumentieren.":"Create the first CAP to document §6 LkSG measures."}</div>
-          <button className="btn btn-p btn-sm" style={{marginTop:14}} onClick={()=>canManage&&setShowCapModal(true)} disabled={!canManage}>
+          <button type="button" className="btn btn-p btn-sm" style={{marginTop:14}} onClick={()=>canManage&&setShowCapModal(true)} disabled={!canManage}>
             + {L==="de"?"Ersten CAP anlegen":"Create first CAP"}
           </button>
         </div>

@@ -67,7 +67,7 @@ export default function SaqTab(props: WorkspaceTabProps) {
             </div>
           </div>
 
-          <button className="btn btn-p" style={{width:"100%"}} onClick={()=>(sendSaq as any)()} disabled={(saqSending as boolean)||!(saqEmail as string)?.trim()}>
+          <button type="button" className="btn btn-p" style={{width:"100%"}} onClick={()=>(sendSaq as any)()} disabled={(saqSending as boolean)||!(saqEmail as string)?.trim()}>
             {saqSending?<span className="spin"/>:null}
             {L==="de"?"SAQ senden & Link kopieren":"Send SAQ & copy link"}
           </button>
@@ -120,8 +120,8 @@ export default function SaqTab(props: WorkspaceTabProps) {
                     </div>
                     <div style={{display:"flex",gap:5,alignItems:"center",flexShrink:0}}>
                       <span style={{fontSize:10,fontWeight:600,padding:"2px 8px",borderRadius:20,background:`${meta.color}12`,color:meta.color,border:`1px solid ${meta.color}25`}}>{meta.label}</span>
-                      {s.url&&<button className="btn btn-g btn-xs" onClick={()=>navigator.clipboard.writeText(s.url).then(()=>(toast as any)("ok",L==="de"?"Link kopiert":"Link copied"))}>Link</button>}
-                      <button className="btn btn-r btn-xs" onClick={()=>(deleteSaq as any)(s.id)}>✕</button>
+                      {s.url&&<button type="button" className="btn btn-g btn-xs" onClick={()=>navigator.clipboard.writeText(s.url).then(()=>(toast as any)("ok",L==="de"?"Link kopiert":"Link copied"))}>Link</button>}
+                      <button type="button" className="btn btn-r btn-xs" onClick={()=>(deleteSaq as any)(s.id)}>✕</button>
                     </div>
                   </div>
                   {s.status==="completed"&&s.responses&&(

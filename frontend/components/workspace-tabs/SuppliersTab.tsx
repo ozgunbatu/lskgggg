@@ -115,11 +115,11 @@ export default function SuppliersTab(props: WorkspaceTabProps) {
           )}
         </select>
         <div style={{ flex: 1 }} />
-        <button className="btn btn-g btn-sm" onClick={() => exportCSV("/suppliers/export/csv", "lieferanten.csv")}>↓ CSV</button>
-        <button className="btn btn-g btn-sm" onClick={recalc} disabled={loading || !writable}>
+        <button type="button" className="btn btn-g btn-sm" onClick={() => exportCSV("/suppliers/export/csv", "lieferanten.csv")}>↓ CSV</button>
+        <button type="button" className="btn btn-g btn-sm" onClick={recalc} disabled={loading || !writable}>
           {loading ? <span className="spin-d" /> : "↺"} {L==="de" ? "Berechnen" : "Recalculate"}
         </button>
-        <button className="btn btn-p btn-sm" onClick={openAddSupModal} disabled={!writable}>
+        <button type="button" className="btn btn-p btn-sm" onClick={openAddSupModal} disabled={!writable}>
           + {L==="de" ? "Lieferant" : "Supplier"}
         </button>
       </div>
@@ -178,10 +178,10 @@ export default function SuppliersTab(props: WorkspaceTabProps) {
                         </td>
                         <td>
                           <div className="brow" style={{ gap: 5 }}>
-                            <button className="btn btn-g btn-xs" onClick={e => { e.stopPropagation(); if (!writable) return; openEditSupModal(s); }} disabled={!writable}>
+                            <button type="button" className="btn btn-g btn-xs" onClick={e => { e.stopPropagation(); if (!writable) return; openEditSupModal(s); }} disabled={!writable}>
                               {L==="de" ? "Edit" : "Edit"}
                             </button>
-                            <button className="btn btn-r btn-xs" onClick={e => { e.stopPropagation(); if (!writable) return; delSupplier(s.id, s.name); }} disabled={!writable}>✕</button>
+                            <button type="button" className="btn btn-r btn-xs" onClick={e => { e.stopPropagation(); if (!writable) return; delSupplier(s.id, s.name); }} disabled={!writable}>✕</button>
                           </div>
                         </td>
                       </tr>
@@ -211,15 +211,15 @@ export default function SuppliersTab(props: WorkspaceTabProps) {
                                   </div>
                                   {/* Actions */}
                                   <div className="brow">
-                                    <button className="btn btn-ai btn-xs" onClick={() => writable && getSupAI(s)} disabled={supLd[s.id] || !writable}>
+                                    <button type="button" className="btn btn-ai btn-xs" onClick={() => writable && getSupAI(s)} disabled={supLd[s.id] || !writable}>
                                       {supLd[s.id] ? <span className="spin" /> : "✦"} {L==="de" ? "KI-Analyse" : "AI Analysis"}
                                     </button>
                                     {s.risk_level === "high" && (
-                                      <button className="btn btn-ai btn-xs" onClick={() => writable && getSupCAP(s)} disabled={supLd[s.id+"_c"] || !writable}>
+                                      <button type="button" className="btn btn-ai btn-xs" onClick={() => writable && getSupCAP(s)} disabled={supLd[s.id+"_c"] || !writable}>
                                         {supLd[s.id+"_c"] ? <span className="spin" /> : "⚡"} {L==="de" ? "KI-CAP" : "AI CAP"}
                                       </button>
                                     )}
-                                    <button className="btn btn-p btn-xs" onClick={() => { if (!writable) return; setCapPara(s.risk_level === "high" ? "6" : "4"); setShowCapModal(true); }} disabled={!writable}>
+                                    <button type="button" className="btn btn-p btn-xs" onClick={() => { if (!writable) return; setCapPara(s.risk_level === "high" ? "6" : "4"); setShowCapModal(true); }} disabled={!writable}>
                                       + CAP
                                     </button>
                                   </div>
@@ -252,8 +252,8 @@ export default function SuppliersTab(props: WorkspaceTabProps) {
             <div className="empty-t">{L==="de" ? "Keine Lieferanten" : "No suppliers"}</div>
             <div className="empty-c">{L==="de" ? "CSV importieren oder ersten Lieferanten manuell anlegen." : "Import a CSV or add the first supplier manually."}</div>
             <div className="brow" style={{ justifyContent: "center", marginTop: 16 }}>
-              <button className="btn btn-p btn-sm" onClick={openAddSupModal} disabled={!writable}>+ {L==="de" ? "Anlegen" : "Add supplier"}</button>
-              <button className="btn btn-g btn-sm" onClick={() => (fileRef as any)?.current?.click()}>↑ CSV</button>
+              <button type="button" className="btn btn-p btn-sm" onClick={openAddSupModal} disabled={!writable}>+ {L==="de" ? "Anlegen" : "Add supplier"}</button>
+              <button type="button" className="btn btn-g btn-sm" onClick={() => (fileRef as any)?.current?.click()}>↑ CSV</button>
             </div>
           </div>
         )}

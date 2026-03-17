@@ -87,7 +87,7 @@ export default function AiTab(props: WorkspaceTabProps) {
         {!aiEnd&&(
           <div className="ai-qs">
             {qs.map(q=>(
-              <button key={q} className="ai-q" onClick={()=>sendAi(q)}>{q}</button>
+              <button type="button" key={q} className="ai-q" onClick={()=>sendAi(q)}>{q}</button>
             ))}
           </div>
         )}
@@ -102,7 +102,7 @@ export default function AiTab(props: WorkspaceTabProps) {
             onKeyDown={e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendAi(input);(setAiInput as any)("");}}}
             placeholder={L==="de"?"Fragen Sie zur LkSG-Compliance… (Enter zum Senden)":"Ask about LkSG compliance… (Enter to send)"}
           />
-          <button className="btn btn-ai" style={{alignSelf:"flex-end"}} onClick={()=>{sendAi(input);(setAiInput as any)("");}} disabled={!input.trim()||aiLd as boolean}>
+          <button type="button" className="btn btn-ai" style={{alignSelf:"flex-end"}} onClick={()=>{sendAi(input);(setAiInput as any)("");}} disabled={!input.trim()||aiLd as boolean}>
             {aiLd?<span className="spin"/>:"→"}
           </button>
         </div>

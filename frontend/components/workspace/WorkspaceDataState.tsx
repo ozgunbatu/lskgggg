@@ -43,7 +43,7 @@ export default function WorkspaceDataState({
                 ) : null}
               </div>
               {state.error && item.onRetry ? (
-                <button className="btn secondary" onClick={() => item.onRetry?.()}>
+                <button type="button" className="btn secondary" onClick={() => item.onRetry?.()}>
                   {L === "de" ? "Erneut versuchen" : "Retry"}
                 </button>
               ) : state.loading ? (

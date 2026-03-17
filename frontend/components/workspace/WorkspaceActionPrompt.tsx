@@ -24,7 +24,7 @@ export default function WorkspaceActionPrompt({
         <div className="action-prompt-title">{title}</div>
         <div className="action-prompt-copy">{copy}</div>
       </div>
-      <button className="btn btn-p btn-xs" onClick={onAction}>{actionLabel}</button>
+      <button type="button" className="btn btn-p btn-xs" onClick={onAction}>{actionLabel}</button>
     </div>
   );
 }

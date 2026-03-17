@@ -32,7 +32,7 @@ export default function WorkspaceApprovalAging({
           <div className="sec-title">{title}<span className="ltag">SLA</span></div>
           <div className="sec-sub">{copy}</div>
         </div>
-        {onOpenReports && <button className="btn btn-sm btn-p" onClick={onOpenReports}>{L === "de" ? "Zu Reports" : "Open reports"}</button>}
+        {onOpenReports && <button type="button" className="btn btn-sm btn-p" onClick={onOpenReports}>{L === "de" ? "Zu Reports" : "Open reports"}</button>}
       </div>
       <div className="approval-aging-grid">
         <div className="approval-aging-card">

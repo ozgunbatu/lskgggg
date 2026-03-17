@@ -46,7 +46,7 @@ export default function WorkspaceSectionMeta({
         <span className="section-meta-copy">{error || relTime(lastLoadedAt, L)}</span>
       </div>
       {onRefresh && (
-        <button className="btn btn-g btn-xs" onClick={() => onRefresh()}>
+        <button type="button" className="btn btn-g btn-xs" onClick={() => onRefresh()}>
           ↻ {L === "de" ? "Aktualisieren" : "Refresh"}
         </button>
       )}

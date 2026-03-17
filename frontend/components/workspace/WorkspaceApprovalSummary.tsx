@@ -34,7 +34,7 @@ export default function WorkspaceApprovalSummary({ L, approval, onOpenReports }:
         <div style={{ fontSize: 11.5, color: "#9CA3AF" }}>
           {L === "de" ? "Letzter Status" : "Last status"}: <strong style={{ color: "#374151" }}>{approval.lastStatus || "none"}</strong>
         </div>
-        {onOpenReports && <button className="btn btn-sm btn-p" onClick={onOpenReports}>{L === "de" ? "Zu Reports" : "Open reports"}</button>}
+        {onOpenReports && <button type="button" className="btn btn-sm btn-p" onClick={onOpenReports}>{L === "de" ? "Zu Reports" : "Open reports"}</button>}
       </div>
     </div>
   );

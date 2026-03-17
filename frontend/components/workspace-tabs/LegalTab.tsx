@@ -91,7 +91,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
   }
 
   const navBtn = (v: typeof view, label: string) => (
-    <button className={`btn${view === v ? " btn-p" : ""}`}
+    <button type="button" className={`btn${view === v ? " btn-p" : ""}`}
       style={{ fontSize: 12, padding: "6px 14px", borderRadius: 8, border: view === v ? "none" : "1px solid #e5e7e5", background: view === v ? "#1B3D2B" : "#fff", color: view === v ? "#fff" : "#374151", fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap" }}
       onClick={() => setView(v)}>{label}</button>
   );
@@ -138,7 +138,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap" }}>
             <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
               {CATEGORIES.map(cat => (
-                <button key={cat.id}
+                <button type="button" key={cat.id}
                   style={{ padding: "5px 12px", borderRadius: 7, border: `1px solid ${catFilter === cat.id ? "#1B3D2B" : "#e5e7e5"}`, background: catFilter === cat.id ? "#1B3D2B" : "#fff", color: catFilter === cat.id ? "#fff" : "#6b7280", fontSize: 12, fontWeight: 700, cursor: "pointer" }}
                   onClick={() => setCatFilter(cat.id)}>{L === "de" ? cat.label : cat.labelEn}</button>
               ))}
@@ -146,7 +146,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
             <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
               <span style={{ fontSize: 12, color: "#6b7280", fontWeight: 600 }}>{L === "de" ? "Sprache:" : "Language:"}</span>
               {["de", "en"].map(l => (
-                <button key={l} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${docLang === l ? "#1B3D2B" : "#e5e7e5"}`, background: docLang === l ? "#1B3D2B" : "#fff", color: docLang === l ? "#fff" : "#374151", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
+                <button type="button" key={l} style={{ padding: "4px 10px", borderRadius: 6, border: `1px solid ${docLang === l ? "#1B3D2B" : "#e5e7e5"}`, background: docLang === l ? "#1B3D2B" : "#fff", color: docLang === l ? "#fff" : "#374151", fontSize: 11.5, fontWeight: 700, cursor: "pointer" }}
                   onClick={() => setDocLang(l)}>{l.toUpperCase()}</button>
               ))}
             </div>
@@ -171,7 +171,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
                     <span key={tag} style={{ background: "#F3F4F6", color: "#6b7280", fontSize: 10.5, fontWeight: 600, padding: "2px 7px", borderRadius: 4 }}>{tag}</span>
                   ))}
                 </div>
-                <button
+                <button type="button"
                   className="btn btn-p"
                   style={{ width: "100%", padding: "9px", borderRadius: 9, fontSize: 12.5, fontWeight: 800, border: "none", background: "#1B3D2B", color: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 7, opacity: generating === t.id ? .7 : 1 }}
                   disabled={!!generating}
@@ -190,9 +190,9 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
                   ✓ {L === "de" ? "Generiertes Dokument" : "Generated Document"}
                 </div>
                 <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn" style={{ fontSize: 12, padding: "6px 12px", border: "1px solid #e5e7e5", borderRadius: 7, background: "#fff", cursor: "pointer", fontWeight: 700 }}
+                  <button type="button" className="btn" style={{ fontSize: 12, padding: "6px 12px", border: "1px solid #e5e7e5", borderRadius: 7, background: "#fff", cursor: "pointer", fontWeight: 700 }}
                     onClick={() => copyToClipboard(generatedDoc.content)}>📋 {L === "de" ? "Kopieren" : "Copy"}</button>
-                  <button className="btn" style={{ fontSize: 12, padding: "6px 12px", border: "none", borderRadius: 7, background: "#1B3D2B", color: "#fff", cursor: "pointer", fontWeight: 700 }}
+                  <button type="button" className="btn" style={{ fontSize: 12, padding: "6px 12px", border: "none", borderRadius: 7, background: "#1B3D2B", color: "#fff", cursor: "pointer", fontWeight: 700 }}
                     onClick={() => { const b = new Blob([generatedDoc.content], { type: "text/plain" }); const a = document.createElement("a"); a.href = URL.createObjectURL(b); a.download = `${generatedDoc.id}_${new Date().toISOString().slice(0,10)}.txt`; a.click(); }}>
                     ⬇ {L === "de" ? "Download" : "Download"}
                   </button>
@@ -222,14 +222,14 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
             </div>
             <div style={{ marginBottom: 10 }}>
               {["Welche Pflichten habe ich gegenüber Tier-2 Lieferanten?", "Wie lange muss ich Beschwerden aufbewahren?", "Was passiert wenn ein Lieferant den CoC nicht unterzeichnet?", "Wann liegt eine anlassbezogene Risikoanalyse vor?"].map(q => (
-                <button key={q} style={{ display: "inline-block", margin: "3px 4px 3px 0", padding: "5px 11px", background: "#F0F5F1", border: "1px solid #D1E7D9", borderRadius: 7, fontSize: 12, color: "#1B3D2B", fontWeight: 600, cursor: "pointer" }}
+                <button type="button" key={q} style={{ display: "inline-block", margin: "3px 4px 3px 0", padding: "5px 11px", background: "#F0F5F1", border: "1px solid #D1E7D9", borderRadius: 7, fontSize: 12, color: "#1B3D2B", fontWeight: 600, cursor: "pointer" }}
                   onClick={() => setQuestion(q)}>{q}</button>
               ))}
             </div>
             <textarea value={question} onChange={e => setQuestion(e.target.value)}
               placeholder={L === "de" ? "Ihre LkSG-Rechtsfrage eingeben..." : "Enter your LkSG legal question..."}
               style={{ width: "100%", height: 90, padding: "10px 13px", border: "1.5px solid #E5E7E5", borderRadius: 10, fontSize: 13.5, resize: "vertical", fontFamily: "inherit", outline: "none", marginBottom: 10 }} />
-            <button disabled={askLoading || !question.trim()}
+            <button type="button" disabled={askLoading || !question.trim()}
               style={{ padding: "11px 24px", background: "#1B3D2B", color: "#fff", border: "none", borderRadius: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", opacity: (!question.trim() || askLoading) ? .5 : 1, display: "flex", alignItems: "center", gap: 8 }}
               onClick={askLegal}>
               {askLoading ? <><span className="spin" /> {L === "de" ? "Analysiere..." : "Analysing..."}</> : `${L === "de" ? "Rechtsfrage analysieren" : "Analyse legal question"} →`}
@@ -240,7 +240,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
             <div className="card" style={{ border: "1.5px solid #D1E7D9" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#0b0f0c" }}>⚖️ {L === "de" ? "Rechtliche Einschätzung" : "Legal Assessment"}</div>
-                <button style={{ background: "none", border: "1px solid #e5e7e5", borderRadius: 7, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", color: "#6b7280", fontWeight: 700 }} onClick={() => copyToClipboard(answer)}>📋</button>
+                <button type="button" style={{ background: "none", border: "1px solid #e5e7e5", borderRadius: 7, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", color: "#6b7280", fontWeight: 700 }} onClick={() => copyToClipboard(answer)}>📋</button>
               </div>
               <div className="al al-warn" style={{ marginBottom: 12 }}>
                 <span className="al-icon">!</span>
@@ -268,7 +268,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
             <input value={reviewQ} onChange={e => setReviewQ(e.target.value)}
               placeholder={L === "de" ? "Spezifische Frage (optional): z.B. 'Fehlt ein Auditrecht?'" : "Specific question (optional): e.g. 'Is an audit right missing?'"}
               style={{ width: "100%", padding: "9px 13px", border: "1.5px solid #E5E7E5", borderRadius: 9, fontSize: 13, fontFamily: "inherit", outline: "none", marginBottom: 10 }} />
-            <button disabled={reviewLoading || !reviewText.trim()}
+            <button type="button" disabled={reviewLoading || !reviewText.trim()}
               style={{ padding: "11px 24px", background: "#1B3D2B", color: "#fff", border: "none", borderRadius: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", opacity: (!reviewText.trim() || reviewLoading) ? .5 : 1, display: "flex", alignItems: "center", gap: 8 }}
               onClick={reviewContract}>
               {reviewLoading ? <><span className="spin" /> {L === "de" ? "Prüfe..." : "Reviewing..."}</> : `${L === "de" ? "LkSG-Compliance prüfen" : "Check LkSG compliance"} →`}
@@ -279,7 +279,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
             <div className="card" style={{ border: "1.5px solid #D1E7D9" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
                 <div style={{ fontSize: 13, fontWeight: 800, color: "#0b0f0c" }}>🔍 {L === "de" ? "Prüfungsergebnis" : "Review Result"}</div>
-                <button style={{ background: "none", border: "1px solid #e5e7e5", borderRadius: 7, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", color: "#6b7280", fontWeight: 700 }} onClick={() => copyToClipboard(reviewResult)}>📋</button>
+                <button type="button" style={{ background: "none", border: "1px solid #e5e7e5", borderRadius: 7, padding: "4px 10px", fontSize: 11.5, cursor: "pointer", color: "#6b7280", fontWeight: 700 }} onClick={() => copyToClipboard(reviewResult)}>📋</button>
               </div>
               <pre style={{ whiteSpace: "pre-wrap", fontSize: 13, lineHeight: 1.75, color: "#0b0f0c", fontFamily: "inherit" }}>{reviewResult}</pre>
             </div>
@@ -314,7 +314,7 @@ export default function LegalTab({ L, apiFn, toastFn }: WorkspaceTabProps & { ap
                   {[2025, 2024, 2023].map(y => <option key={y} value={y}>{y}</option>)}
                 </select>
               </div>
-              <button disabled={defLoading}
+              <button type="button" disabled={defLoading}
                 style={{ padding: "11px 28px", background: "#1B3D2B", color: "#fff", border: "none", borderRadius: 9, fontSize: 13.5, fontWeight: 800, cursor: "pointer", marginTop: 20, display: "flex", alignItems: "center", gap: 8, opacity: defLoading ? .6 : 1 }}
                 onClick={downloadDefenseFile}>
                 {defLoading ? <><span className="spin" /> {L === "de" ? "Generiere..." : "Generating..."}</> : `⬇ ${L === "de" ? "Verteidigungsakte herunterladen" : "Download defense file"}`}

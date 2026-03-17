@@ -39,7 +39,7 @@ export default function EvidenceTab(props: WorkspaceTabProps) {
           <div className="workspace-title">{L==="de"?"Nachweis-Tresor":"Evidence Vault"}</div>
           <div className="workspace-sub">{L==="de"?"Auditberichte, CoC, Zertifikate und alle §10-Nachweise an einem Ort.":"Audit reports, CoC, certificates and all §10 evidence in one place."}</div>
         </div>
-        <button className="btn btn-ai btn-sm" onClick={()=>{ (setTab as any)("ai"); setTimeout(()=>(sendAi as any)(L==="de"?"Welche Nachweise fehlen mir für ein BAFA-Audit?":"What evidence am I missing for a BAFA audit?"),100); }}>
+        <button type="button" className="btn btn-ai btn-sm" onClick={()=>{ (setTab as any)("ai"); setTimeout(()=>(sendAi as any)(L==="de"?"Welche Nachweise fehlen mir für ein BAFA-Audit?":"What evidence am I missing for a BAFA audit?"),100); }}>
           ✦ {L==="de"?"Lückenanalyse":"Gap analysis"}
         </button>
       </div>
@@ -101,7 +101,7 @@ export default function EvidenceTab(props: WorkspaceTabProps) {
               }
             </div>
           </div>
-          <button className="btn btn-p" style={{width:"100%",marginTop:4}} onClick={()=>(uploadEvidence as any)()} disabled={(evUploading as boolean)||!(evTitle as string)?.trim()}>
+          <button type="button" className="btn btn-p" style={{width:"100%",marginTop:4}} onClick={()=>(uploadEvidence as any)()} disabled={(evUploading as boolean)||!(evTitle as string)?.trim()}>
             {evUploading?<span className="spin"/>:null}
             {L==="de"?"Dokument speichern":"Save document"}
           </button>
@@ -153,7 +153,7 @@ export default function EvidenceTab(props: WorkspaceTabProps) {
                           href={`${API}/evidence/${ev.id}/download?token=${encodeURIComponent(getToken())}`}
                           target="_blank" rel="noreferrer">↓</a>
                       )}
-                      <button className="btn btn-r btn-xs" onClick={()=>(deleteEvidence as any)(ev.id)}>✕</button>
+                      <button type="button" className="btn btn-r btn-xs" onClick={()=>(deleteEvidence as any)(ev.id)}>✕</button>
                     </div>
                   </div>
                 </div>

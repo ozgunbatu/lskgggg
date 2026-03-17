@@ -96,10 +96,10 @@ export default function ComplaintsTab(props: WorkspaceTabProps) {
             <textarea className="ta" rows={4} value={cDesc as string} onChange={e=>(setCDesc as any)(e.target.value)} placeholder={L==="de"?"Beschreiben Sie den Vorfall genau…":"Describe the incident in detail…"}/>
           </div>
           <div className="brow">
-            <button className="btn btn-p" onClick={()=>(submitComplaint as any)()} disabled={!(cDesc as string)?.trim()}>
+            <button type="button" className="btn btn-p" onClick={()=>(submitComplaint as any)()} disabled={!(cDesc as string)?.trim()}>
               {L==="de"?"Meldung einreichen":"Submit complaint"}
             </button>
-            <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/complaints/export/csv","beschwerden.csv")}>↓ CSV</button>
+            <button type="button" className="btn btn-g btn-sm" onClick={()=>exportCSV("/complaints/export/csv","beschwerden.csv")}>↓ CSV</button>
           </div>
         </div>
 
@@ -126,7 +126,7 @@ export default function ComplaintsTab(props: WorkspaceTabProps) {
       {/* List */}
       <div className="sec-hd" style={{marginBottom:10}}>
         <div className="sec-title">{L==="de"?"Alle Meldungen":"All complaints"} ({complaints.length})</div>
-        <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/complaints/export/csv","beschwerden.csv")}>↓ CSV</button>
+        <button type="button" className="btn btn-g btn-sm" onClick={()=>exportCSV("/complaints/export/csv","beschwerden.csv")}>↓ CSV</button>
       </div>
 
       {complaints.length > 0 ? (
@@ -158,11 +158,11 @@ export default function ComplaintsTab(props: WorkspaceTabProps) {
                       <div style={{marginTop:12,paddingTop:12,borderTop:"1px solid var(--border)"}}>
                         {c.description&&<div style={{fontSize:13,color:"var(--t2)",marginBottom:12,lineHeight:1.7}}>{c.description}</div>}
                         <div className="brow" style={{marginBottom:c.notes?10:0}}>
-                          {c.status==="open"&&<button className="btn btn-g btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"in_review")} disabled={!canManage}>{L==="de"?"In Prüfung":"In review"}</button>}
-                          {c.status==="in_review"&&<button className="btn btn-warn btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"investigating")} disabled={!canManage}>{L==="de"?"Ermitteln":"Investigate"}</button>}
-                          {(c.status==="in_review"||c.status==="investigating")&&<button className="btn btn-p btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"resolved")} disabled={!canManage}>✓ {L==="de"?"Lösen":"Resolve"}</button>}
-                          {c.status!=="closed"&&<button className="btn btn-r btn-xs" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"closed")} disabled={!canManage}>✕ {L==="de"?"Schließen":"Close"}</button>}
-                          {c.status==="open"&&<button className="btn btn-ai btn-sm" onClick={()=>canManage&&(triageComplaint as any)(c.id)} disabled={(triageLd as any)?.[c.id]||!canManage}>
+                          {c.status==="open"&&<button type="button" className="btn btn-g btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"in_review")} disabled={!canManage}>{L==="de"?"In Prüfung":"In review"}</button>}
+                          {c.status==="in_review"&&<button type="button" className="btn btn-warn btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"investigating")} disabled={!canManage}>{L==="de"?"Ermitteln":"Investigate"}</button>}
+                          {(c.status==="in_review"||c.status==="investigating")&&<button type="button" className="btn btn-p btn-sm" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"resolved")} disabled={!canManage}>✓ {L==="de"?"Lösen":"Resolve"}</button>}
+                          {c.status!=="closed"&&<button type="button" className="btn btn-r btn-xs" onClick={()=>canManage&&(updateComplaintStatus as any)(c.id,"closed")} disabled={!canManage}>✕ {L==="de"?"Schließen":"Close"}</button>}
+                          {c.status==="open"&&<button type="button" className="btn btn-ai btn-sm" onClick={()=>canManage&&(triageComplaint as any)(c.id)} disabled={(triageLd as any)?.[c.id]||!canManage}>
                             {(triageLd as any)?.[c.id]?<span className="spin"/>:"✦"} {L==="de"?"KI-Triage":"AI Triage"}
                           </button>}
                         </div>
