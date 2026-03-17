@@ -1,17 +1,11 @@
 "use client";
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import useWorkspaceUi from "./useWorkspaceUi";
 import useWorkspaceData from "./useWorkspaceData";
 import useWorkspaceRuntime from "./useWorkspaceRuntime";
 import useWorkspaceMutations from "./useWorkspaceMutations";
 import useWorkspaceDerived from "./useWorkspaceDerived";
-import useSuppliersFeatureState from "./feature-state/useSuppliersFeatureState";
-import useComplaintsFeatureState from "./feature-state/useComplaintsFeatureState";
-import useReportsFeatureState from "./feature-state/useReportsFeatureState";
-import useSuppliersMutations from "./feature-mutations/useSuppliersMutations";
-import useComplaintsMutations from "./feature-mutations/useComplaintsMutations";
-import useReportsMutations from "./feature-mutations/useReportsMutations";
 import { getToken } from "@/lib/auth";
 import type { Supplier, TabId } from "@/lib/workspace-types";
 
@@ -62,23 +56,30 @@ export default function useWorkspaceStore({ api, initialTab }: { api: ApiFn; ini
   const runtime = useWorkspaceRuntime(initialTab);
 
   const toast = useCallback((type: "ok" | "err" | "info", msg: string) => {
-    // Silently drop rate_limited errors — already deduped at API level
     if (msg === "rate_limited" || msg.includes("Too many requests") || msg.includes("429")) return;
     const id = ++_tid;
     ui.setToasts((x) => {
-      // Deduplicate: don't show same message if already visible
       if (x.some((t) => t.msg === msg)) return x;
-      // Cap at 3 visible toasts
       const trimmed = x.length >= 3 ? x.slice(-2) : x;
       return [...trimmed, { id, type, msg }];
     });
     setTimeout(() => ui.setToasts((x) => x.filter((t) => t.id !== id)), 4500);
-  }, [ui]);
+  }, [ui.setToasts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const data = useWorkspaceData({ api, toast });
   const featureData = data.featureData;
   const reloads = data.reloads;
-  const modalActions = useMemo(() => buildSupplierModalActions(ui), [ui]);
+
+  // STABLE: depend only on atomic useState setters (always same reference)
+  const modalActions = useMemo(
+    () => buildSupplierModalActions(ui),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [
+      ui.setEditingSup, ui.setSName, ui.setSCountry, ui.setSInd, ui.setSSpend,
+      ui.setSWorkers, ui.setSAudit, ui.setSCoc, ui.setSCerts, ui.setSSubSup,
+      ui.setSTransp, ui.setSViolations, ui.setSNotes, ui.setShowSupModal,
+    ]
+  );
 
   const mutations = useWorkspaceMutations({
     L: ui.L,
@@ -98,18 +99,10 @@ export default function useWorkspaceStore({ api, initialTab }: { api: ApiFn; ini
     setTab: runtime.setTab,
     editingSup: ui.editingSup,
     supplierForm: {
-      sName: ui.sName,
-      sCountry: ui.sCountry,
-      sInd: ui.sInd,
-      sSpend: ui.sSpend,
-      sWorkers: ui.sWorkers,
-      sAudit: ui.sAudit,
-      sCoc: ui.sCoc,
-      sCerts: ui.sCerts,
-      sSubSup: ui.sSubSup,
-      sTransp: ui.sTransp,
-      sViolations: ui.sViolations,
-      sNotes: ui.sNotes,
+      sName: ui.sName, sCountry: ui.sCountry, sInd: ui.sInd,
+      sSpend: ui.sSpend, sWorkers: ui.sWorkers, sAudit: ui.sAudit,
+      sCoc: ui.sCoc, sCerts: ui.sCerts, sSubSup: ui.sSubSup,
+      sTransp: ui.sTransp, sViolations: ui.sViolations, sNotes: ui.sNotes,
     },
     setShowSupModal: ui.setShowSupModal,
     setSuppliers: data.setSuppliers,
@@ -123,13 +116,8 @@ export default function useWorkspaceStore({ api, initialTab }: { api: ApiFn; ini
     setTriageLd: ui.setTriageLd,
     setTriageRes: ui.setTriageRes,
     capForm: {
-      capSup: ui.capSup,
-      capTitle: ui.capTitle,
-      capDesc: ui.capDesc,
-      capPara: ui.capPara,
-      capDue: ui.capDue,
-      capPri: ui.capPri,
-      capAssign: ui.capAssign,
+      capSup: ui.capSup, capTitle: ui.capTitle, capDesc: ui.capDesc,
+      capPara: ui.capPara, capDue: ui.capDue, capPri: ui.capPri, capAssign: ui.capAssign,
     },
     setShowCapModal: ui.setShowCapModal,
     setCapTitle: ui.setCapTitle,
@@ -162,17 +150,105 @@ export default function useWorkspaceStore({ api, initialTab }: { api: ApiFn; ini
     fileRef: runtime.fileRef,
   });
 
-  const featureState = {
-    suppliers: useSuppliersFeatureState(ui),
-    complaints: useComplaintsFeatureState(ui),
-    reports: useReportsFeatureState(runtime),
-  };
+  // ── FEATURE STATE ─────────────────────────────────────────────────────────
+  // Build inline with useMemo keyed on atomic values only — no intermediate
+  // hook calls that return plain objects (those break memoization).
+  const featureState = useMemo(() => ({
+    suppliers: {
+      expanded: ui.expanded,
+      setExpanded: ui.setExpanded,
+      supFilter: ui.supFilter,
+      setSupFilter: ui.setSupFilter,
+      hoverParam: ui.hoverParam,
+      setHoverParam: ui.setHoverParam,
+      supplierForm: {
+        editingSup: ui.editingSup,
+        sName: ui.sName, setSName: ui.setSName,
+        sCountry: ui.sCountry, setSCountry: ui.setSCountry,
+        sInd: ui.sInd, setSInd: ui.setSInd,
+        sSpend: ui.sSpend, setSSpend: ui.setSSpend,
+        sWorkers: ui.sWorkers, setSWorkers: ui.setSWorkers,
+        sAudit: ui.sAudit, setSAudit: ui.setSAudit,
+        sCoc: ui.sCoc, setSCoc: ui.setSCoc,
+        sCerts: ui.sCerts, setSCerts: ui.setSCerts,
+        sSubSup: ui.sSubSup, setSSubSup: ui.setSSubSup,
+        sTransp: ui.sTransp, setSTransp: ui.setSTransp,
+        sViolations: ui.sViolations, setSViolations: ui.setSViolations,
+        sNotes: ui.sNotes, setSNotes: ui.setSNotes,
+        csv: ui.csv, setCsv: ui.setCsv,
+      },
+    },
+    complaints: {
+      complaintForm: {
+        cSup: ui.cSup, setCSup: ui.setCSup,
+        cCat: ui.cCat, setCCat: ui.setCCat,
+        cSev: ui.cSev, setCSev: ui.setCSev,
+        cDesc: ui.cDesc, setCDesc: ui.setCDesc,
+      },
+      complaintNotes: { cNotes: ui.cNotes, setCNotes: ui.setCNotes },
+      triage: {
+        triageRes: ui.triageRes, setTriageRes: ui.setTriageRes,
+        triageLd: ui.triageLd, setTriageLd: ui.setTriageLd,
+      },
+    },
+    reports: {
+      reports: {
+        rYear: runtime.rYear, setRYear: runtime.setRYear,
+        draft: runtime.draft, setDraft: runtime.setDraft,
+        draftTs: runtime.draftTs, setDraftTs: runtime.setDraftTs,
+        genLd: runtime.genLd, setGenLd: runtime.setGenLd,
+      },
+      ai: {
+        aiMsgs: runtime.aiMsgs, setAiMsgs: runtime.setAiMsgs,
+        aiInput: runtime.aiInput, setAiInput: runtime.setAiInput,
+        aiLd: runtime.aiLd, setAiLd: runtime.setAiLd,
+        aiEnd: runtime.aiEnd,
+      },
+    },
+  }), [ // eslint-disable-line react-hooks/exhaustive-deps
+    // SUPPLIERS — only values, not setters (setters are stable)
+    ui.expanded, ui.supFilter, ui.hoverParam, ui.editingSup,
+    ui.sName, ui.sCountry, ui.sInd, ui.sSpend, ui.sWorkers,
+    ui.sAudit, ui.sCoc, ui.sCerts, ui.sSubSup, ui.sTransp,
+    ui.sViolations, ui.sNotes, ui.csv,
+    // COMPLAINTS
+    ui.cSup, ui.cCat, ui.cSev, ui.cDesc, ui.cNotes,
+    ui.triageRes, ui.triageLd,
+    // REPORTS
+    runtime.rYear, runtime.draft, runtime.draftTs, runtime.genLd,
+    runtime.aiMsgs, runtime.aiInput, runtime.aiLd,
+  ]);
 
-  const featureMutations = {
-    suppliers: useSuppliersMutations(mutations),
-    complaints: useComplaintsMutations(mutations),
-    reports: useReportsMutations(mutations),
-  };
+  // ── FEATURE MUTATIONS ─────────────────────────────────────────────────────
+  // mutations are useCallback — stable. Just alias them.
+  const featureMutations = useMemo(() => ({
+    suppliers: {
+      saveSupplier: mutations.saveSupplier,
+      delSupplier: mutations.delSupplier,
+      recalc: mutations.recalc,
+      importCsv: mutations.importCsv,
+      getSupAI: mutations.getSupAI,
+      getSupCAP: mutations.getSupCAP,
+    },
+    complaints: {
+      submitComplaint: mutations.submitComplaint,
+      triageComplaint: mutations.triageComplaint,
+      updateComplaintStatus: mutations.updateComplaintStatus,
+      saveComplaintNote: mutations.saveComplaintNote,
+    },
+    reports: {
+      loadDraft: mutations.loadDraft,
+      saveDraft: mutations.saveDraft,
+      genSection: mutations.genSection,
+      sendAi: mutations.sendAi,
+    },
+  }), [ // eslint-disable-line react-hooks/exhaustive-deps
+    mutations.saveSupplier, mutations.delSupplier, mutations.recalc, mutations.importCsv,
+    mutations.getSupAI, mutations.getSupCAP,
+    mutations.submitComplaint, mutations.triageComplaint,
+    mutations.updateComplaintStatus, mutations.saveComplaintNote,
+    mutations.loadDraft, mutations.saveDraft, mutations.genSection, mutations.sendAi,
+  ]);
 
   const derived = useWorkspaceDerived({
     L: ui.L,

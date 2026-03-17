@@ -1,5 +1,5 @@
 "use client";
-import { useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { clearToken, getToken } from "@/lib/auth";
 import { createApiClient } from "@/lib/api";
 import WorkspaceNav from "./workspace/WorkspaceNav";
@@ -32,12 +32,15 @@ import useWorkspaceFeatureSlices from "@/hooks/useWorkspaceFeatureSlices";
 import useReportApprovals from "@/hooks/useReportApprovals";
 
 export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?: TabId }) {
+  // ── STABLE API CLIENT ──────────────────────────────────────────────────
   const api = useMemo(() => createApiClient(getToken, () => {
     clearToken();
     if (typeof window !== "undefined") window.location.href = "/login";
   }), []);
 
-  const { ui, runtime, data, mutations, derived, modalActions, featureState, featureMutations, featureData, toast } = useWorkspaceStore({ api, initialTab });
+  const { ui, runtime, data, mutations, derived, modalActions, featureState, featureMutations, featureData, toast } =
+    useWorkspaceStore({ api, initialTab });
+
   const approvals = useReportApprovals();
 
   const { dismissQuickstart, changeLang, logout } = useWorkspaceSession({
@@ -62,20 +65,45 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
 
   if (!runtime.mounted) return null;
 
+  // ── STABLE CHIP HELPERS ─────────────────────────────────────────────────
+  // CRITICAL: must be stable — creating inline functions here causes every
+  // tab context to get a new object reference every render → infinite loop.
+  // We use stable module-level functions + capture L via ref.
+  const LRef = useRef(ui.L);
+  LRef.current = ui.L;
+
+  // These are stable because they close over the ref, not the value
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundSevChip = useCallback((s: string) => sevChip(s), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundCStatusChip = useCallback((s: string) => cStatusChip(s, LRef.current), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundAStatusChip = useCallback((s: string) => aStatusChip(s, LRef.current), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundPChip = useCallback((s: string) => pChip(s), []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const boundDueBadge = useCallback((d?: string | null) => dueBadge(d, LRef.current), []);
+
+  // RiskBreakdown must also be stable — it's used inside tab render trees
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const BoundRiskBreakdown = useCallback(
+    ({ sup, compact = false }: { sup: Supplier; compact?: boolean }) => (
+      <RiskBreakdownComponent
+        sup={sup}
+        compact={compact}
+        L={ui.L}
+        hoverParam={ui.hoverParam}
+        setHoverParam={ui.setHoverParam}
+      />
+    ),
+    [ui.hoverParam, ui.setHoverParam, ui.L]
+  );
+
   const sc = derived.score.score;
   const sg = derived.score.grade;
   const scCol = gradeColor(sg);
   const BF = ui.L === "de" ? BAFA_DE : BAFA_EN;
   const workspaceFocus = derived.workspaceAssist.cards;
-
-  const boundSevChip = (severity: string) => sevChip(severity);
-  const boundComplaintStatusChip = (status: string) => cStatusChip(status, ui.L);
-  const boundActionStatusChip = (status: string) => aStatusChip(status, ui.L);
-  const boundPriorityChip = (priority: string) => pChip(priority);
-  const boundDueBadge = (dueDate?: string | null) => dueBadge(dueDate, ui.L);
-  const BoundRiskBreakdown = ({ sup, compact = false }: { sup: Supplier; compact?: boolean }) => (
-    <RiskBreakdownComponent sup={sup} compact={compact} L={ui.L} hoverParam={ui.hoverParam} setHoverParam={ui.setHoverParam} />
-  );
 
   const {
     dashboardCtx,
@@ -104,13 +132,12 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
     BF,
     chipRL,
     sevChip: boundSevChip,
-    cStatusChip: boundComplaintStatusChip,
-    aStatusChip: boundActionStatusChip,
-    pChip: boundPriorityChip,
+    cStatusChip: boundCStatusChip,
+    aStatusChip: boundAStatusChip,
+    pChip: boundPChip,
     dueBadge: boundDueBadge,
     RiskBreakdown: BoundRiskBreakdown,
   });
-
 
   if (!runtime.mounted || runtime.authChecking || !getToken()) {
     return <AuthSplash />;
@@ -189,23 +216,46 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
         logout={logout}
       />
 
-      <div className="pg"><div className="workspace-shell">
-        <WorkspaceHeader L={ui.L} tab={runtime.tab} workspaceMeta={derived.workspaceMeta} setTab={runtime.setTab} />
-        <WorkspaceFocus cards={workspaceFocus} />
-        {runtime.tab === "dashboard" && <DashboardTab {...dashboardCtx} dismissQuickstart={dismissQuickstart} workspaceFocus={workspaceFocus} gradeLabel={gradeLabel} scCol={scCol} sc={sc} sg={sg} setExpanded={ui.setExpanded} setEditingSup={ui.setEditingSup} setShowSupModal={ui.setShowSupModal} COUNTRIES={COUNTRIES} INDUSTRIES={INDUSTRIES} />}
-        {runtime.tab === "suppliers" && <SuppliersTab {...suppliersCtx} />}
-        {runtime.tab === "actions" && <ActionsTab {...actionsCtx} />}
-        {runtime.tab === "complaints" && <ComplaintsTab {...complaintsCtx} />}
-        {runtime.tab === "reports" && <ReportsTab {...reportsCtx} />}
-        {runtime.tab === "saq" && <SaqTab {...saqCtx} />}
-        {runtime.tab === "kpi" && <KpiTab {...kpiCtx} />}
-        {runtime.tab === "evidence" && <EvidenceTab {...evidenceCtx} />}
-        {runtime.tab === "monitoring" && <MonitoringTab {...monitoringCtx} />}
-        {runtime.tab === "ai" && <AiTab {...aiCtx} />}
-        {runtime.tab === "audit" && <AuditTab {...auditCtx} />}
-        {runtime.tab === "legal" && <LegalTab {...{L:ui.L,apiFn:api,toastFn:toast} as any} />}
-        {runtime.tab === "settings" && <SettingsTab L={ui.L} company={data.company} apiFn={api} toastFn={toast} />}
-      </div></div>
+      <div className="pg">
+        <div className="workspace-shell">
+          <WorkspaceHeader
+            L={ui.L}
+            tab={runtime.tab}
+            workspaceMeta={derived.workspaceMeta}
+            setTab={runtime.setTab}
+          />
+          <WorkspaceFocus cards={workspaceFocus} />
+
+          {runtime.tab === "dashboard" && (
+            <DashboardTab
+              {...dashboardCtx}
+              dismissQuickstart={dismissQuickstart}
+              workspaceFocus={workspaceFocus}
+              gradeLabel={gradeLabel}
+              scCol={scCol}
+              sc={sc}
+              sg={sg}
+              setExpanded={ui.setExpanded}
+              setEditingSup={ui.setEditingSup}
+              setShowSupModal={ui.setShowSupModal}
+              COUNTRIES={COUNTRIES}
+              INDUSTRIES={INDUSTRIES}
+            />
+          )}
+          {runtime.tab === "suppliers"  && <SuppliersTab  {...suppliersCtx} />}
+          {runtime.tab === "actions"    && <ActionsTab    {...actionsCtx} />}
+          {runtime.tab === "complaints" && <ComplaintsTab {...complaintsCtx} />}
+          {runtime.tab === "reports"    && <ReportsTab    {...reportsCtx} />}
+          {runtime.tab === "saq"        && <SaqTab        {...saqCtx} />}
+          {runtime.tab === "kpi"        && <KpiTab        {...kpiCtx} />}
+          {runtime.tab === "evidence"   && <EvidenceTab   {...evidenceCtx} />}
+          {runtime.tab === "monitoring" && <MonitoringTab {...monitoringCtx} />}
+          {runtime.tab === "ai"         && <AiTab         {...aiCtx} />}
+          {runtime.tab === "audit"      && <AuditTab      {...auditCtx} />}
+          {runtime.tab === "legal"      && <LegalTab      {...{ L: ui.L, apiFn: api, toastFn: toast } as any} />}
+          {runtime.tab === "settings"   && <SettingsTab   L={ui.L} company={data.company} apiFn={api} toastFn={toast} />}
+        </div>
+      </div>
     </div>
   );
 }

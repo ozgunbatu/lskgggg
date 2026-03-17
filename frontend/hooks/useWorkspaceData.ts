@@ -16,37 +16,62 @@ type ToastFn = (type: "ok" | "err" | "info", msg: string) => void;
 export default function useWorkspaceData({ api, toast }: { api: ApiFn; toast: ToastFn }) {
   const cache = useWorkspaceCache();
   const requestState = useWorkspaceRequestState();
-  const suppliersData = useSuppliersData({ api, toast, cache, requestState });
-  const complaintsData = useComplaintsData({ api, toast, cache, requestState });
-  const reportsData = useReportsData({ api, toast, cache, requestState });
 
-  const [events, setEvents] = useState<any[]>([]);
-  const [screenings, setScreenings] = useState<any[]>([]);
-  const [kpiLive, setKpiLive] = useState<KPILive | null>(null);
-  const [kpiTrend, setKpiTrend] = useState<any[]>([]);
+  // requestState.begin/succeed/fail are now stable refs (never change identity)
+  const suppliersData  = useSuppliersData({ api, toast, cache, requestState });
+  const complaintsData = useComplaintsData({ api, toast, cache, requestState });
+  const reportsData    = useReportsData({ api, toast, cache, requestState });
+
+  const [events, setEventsState] = useState<any[]>([]);
+  const [screenings, setScreeningsState] = useState<any[]>([]);
+  const [kpiLive, setKpiLiveState] = useState<KPILive | null>(null);
+  const [kpiTrend, setKpiTrendState] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
 
-  // Refs to break circular deps in useCallback
-  const eventsRef = useRef<any[]>([]);
+  // Refs for async closures — prevent stale captures
+  const eventsRef     = useRef<any[]>([]);
   const screeningsRef = useRef<any[]>([]);
-  const kpiLiveRef = useRef<KPILive | null>(null);
-  const kpiTrendRef = useRef<any[]>([]);
+  const kpiLiveRef    = useRef<KPILive | null>(null);
+  const kpiTrendRef   = useRef<any[]>([]);
 
-  const setEventsStable = useCallback((v: any[]) => { eventsRef.current = v; setEvents(v); }, []);
-  const setScreeningsStable = useCallback((v: any[]) => { screeningsRef.current = v; setScreenings(v); }, []);
-  const setKpiLiveStable = useCallback((v: KPILive | null) => { kpiLiveRef.current = v; setKpiLive(v); }, []);
-  const setKpiTrendStable = useCallback((v: any[]) => { kpiTrendRef.current = v; setKpiTrend(v); }, []);
+  const setEventsStable     = useCallback((v: any[]) => { eventsRef.current = v; setEventsState(v); }, []);
+  const setScreeningsStable = useCallback((v: any[]) => { screeningsRef.current = v; setScreeningsState(v); }, []);
+  const setKpiLiveStable    = useCallback((v: KPILive | null) => { kpiLiveRef.current = v; setKpiLiveState(v); }, []);
+  const setKpiTrendStable   = useCallback((v: any[]) => { kpiTrendRef.current = v; setKpiTrendState(v); }, []);
 
+  // ── STABLE REFS for sub-data loaders ─────────────────────────────────────
+  // suppliersData, complaintsData, reportsData return new objects each render
+  // (they're custom hooks with useState). We capture their loaders in refs
+  // so our useCallbacks don't need them in their dep arrays.
+  const loadCompanyRef   = useRef(suppliersData.loadCompany);
+  const loadSuppRef      = useRef(suppliersData.loadSuppliers);
+  const loadCmpRef       = useRef(complaintsData.loadComplaints);
+  const loadActRef       = useRef(complaintsData.loadActions);
+  const loadSaqRef       = useRef(reportsData.loadSaqData);
+  const loadEvidRef      = useRef(reportsData.loadEvidenceData);
+  const loadAuditRef     = useRef(reportsData.loadAuditData);
+
+  // Keep refs current every render (the actual functions may update if their
+  // own deps changed — but the ref always points to the latest version)
+  loadCompanyRef.current  = suppliersData.loadCompany;
+  loadSuppRef.current     = suppliersData.loadSuppliers;
+  loadCmpRef.current      = complaintsData.loadComplaints;
+  loadActRef.current      = complaintsData.loadActions;
+  loadSaqRef.current      = reportsData.loadSaqData;
+  loadEvidRef.current     = reportsData.loadEvidenceData;
+  loadAuditRef.current    = reportsData.loadAuditData;
+
+  // loadCoreData is now truly stable — no sub-hook objects in deps
   const loadCoreData = useCallback(async () => {
     setLoading(true);
     try {
       await Promise.all([
-        suppliersData.loadCompany(),
-        suppliersData.loadSuppliers(),
-        complaintsData.loadComplaints(),
-        complaintsData.loadActions(),
-        reportsData.loadSaqData(),
-        reportsData.loadEvidenceData(),
+        loadCompanyRef.current(),
+        loadSuppRef.current(),
+        loadCmpRef.current(),
+        loadActRef.current(),
+        loadSaqRef.current(),
+        loadEvidRef.current(),
       ]);
     } catch (e: any) {
       if (!String(e?.message || "").includes("Session")) {
@@ -55,11 +80,12 @@ export default function useWorkspaceData({ api, toast }: { api: ApiFn; toast: To
     } finally {
       setLoading(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [suppliersData.loadCompany, suppliersData.loadSuppliers, complaintsData.loadComplaints, complaintsData.loadActions, reportsData.loadSaqData, reportsData.loadEvidenceData, toast]);
+  }, [toast]); // stable: toast is useCallback, refs never change identity
 
   const loadMonitoringData = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
-    if (!force && eventsRef.current.length && screeningsRef.current.length && cache.isFresh(queryKeys.insights)) return { events: eventsRef.current, screenings: screeningsRef.current };
+    if (!force && eventsRef.current.length && screeningsRef.current.length && cache.isFresh(queryKeys.insights)) {
+      return { events: eventsRef.current, screenings: screeningsRef.current };
+    }
     requestState.begin("insights");
     try {
       const [rawEvents, rawScreenings] = await Promise.all([
@@ -77,7 +103,9 @@ export default function useWorkspaceData({ api, toast }: { api: ApiFn; toast: To
   }, [api, cache, requestState, setEventsStable, setScreeningsStable, toast]);
 
   const loadKpiData = useCallback(async ({ force = false }: { force?: boolean } = {}) => {
-    if (!force && kpiLiveRef.current && kpiTrendRef.current.length && cache.isFresh(queryKeys.kpi)) return { live: kpiLiveRef.current, trend: kpiTrendRef.current };
+    if (!force && kpiLiveRef.current && kpiTrendRef.current.length && cache.isFresh(queryKeys.kpi)) {
+      return { live: kpiLiveRef.current, trend: kpiTrendRef.current };
+    }
     requestState.begin("kpi");
     try {
       const [live, trend] = await Promise.all([api("/kpi/live"), api("/kpi/trend")]);
@@ -93,54 +121,54 @@ export default function useWorkspaceData({ api, toast }: { api: ApiFn; toast: To
 
   const reloads = useWorkspaceReloads({
     cache,
-    loadCompany: suppliersData.loadCompany,
-    loadSuppliers: suppliersData.loadSuppliers,
-    loadComplaints: complaintsData.loadComplaints,
-    loadActions: complaintsData.loadActions,
-    loadSaqData: reportsData.loadSaqData,
+    loadCompany:      suppliersData.loadCompany,
+    loadSuppliers:    suppliersData.loadSuppliers,
+    loadComplaints:   complaintsData.loadComplaints,
+    loadActions:      complaintsData.loadActions,
+    loadSaqData:      reportsData.loadSaqData,
     loadEvidenceData: reportsData.loadEvidenceData,
     loadMonitoringData,
     loadKpiData,
-    loadAuditData: reportsData.loadAuditData,
+    loadAuditData:    reportsData.loadAuditData,
   });
 
   return {
-    company: suppliersData.company,
-    setCompany: suppliersData.setCompany,
-    suppliers: suppliersData.suppliers,
+    company:      suppliersData.company,
+    setCompany:   suppliersData.setCompany,
+    suppliers:    suppliersData.suppliers,
     setSuppliers: suppliersData.setSuppliers,
-    complaints: complaintsData.complaints,
+    complaints:   complaintsData.complaints,
     setComplaints: complaintsData.setComplaints,
-    actions: complaintsData.actions,
-    setActions: complaintsData.setActions,
+    actions:      complaintsData.actions,
+    setActions:   complaintsData.setActions,
     events,
-    setEvents: setEventsStable,
+    setEvents:    setEventsStable,
     screenings,
     setScreenings: setScreeningsStable,
-    saqs: reportsData.saqs,
-    setSaqs: reportsData.setSaqs,
+    saqs:         reportsData.saqs,
+    setSaqs:      reportsData.setSaqs,
     kpiLive,
-    setKpiLive: setKpiLiveStable,
+    setKpiLive:   setKpiLiveStable,
     kpiTrend,
-    setKpiTrend: setKpiTrendStable,
-    auditLog: reportsData.auditLog,
-    setAuditLog: reportsData.setAuditLog,
-    auditLd: reportsData.auditLd,
-    setAuditLd: reportsData.setAuditLd,
-    evidences: reportsData.evidences,
+    setKpiTrend:  setKpiTrendStable,
+    auditLog:     reportsData.auditLog,
+    setAuditLog:  reportsData.setAuditLog,
+    auditLd:      reportsData.auditLd,
+    setAuditLd:   reportsData.setAuditLd,
+    evidences:    reportsData.evidences,
     setEvidences: reportsData.setEvidences,
     loading,
     setLoading,
     loadCoreData,
     loadMonitoringData,
-    loadSaqData: reportsData.loadSaqData,
+    loadSaqData:     reportsData.loadSaqData,
     loadEvidenceData: reportsData.loadEvidenceData,
     loadKpiData,
-    loadAuditData: reportsData.loadAuditData,
+    loadAuditData:   reportsData.loadAuditData,
     featureData: {
-      suppliers: suppliersData,
+      suppliers:  suppliersData,
       complaints: complaintsData,
-      reports: reportsData,
+      reports:    reportsData,
     },
     reloads,
     cache,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useRef } from "react";
 import { downloadWithAuth } from "@/lib/api";
 import { snapshotValue, withRollback } from "@/lib/optimistic";
 import type { Action, Complaint, Evidence, SAQ, Supplier } from "@/lib/workspace-types";
@@ -21,7 +21,6 @@ type Args = {
   reloadComplianceCore: () => Promise<void>;
   reloadInsights: () => Promise<void>;
   setTab: (tab: any) => void;
-
   editingSup: Supplier | null;
   supplierForm: {
     sName: string; sCountry: string; sInd: string; sSpend: string; sWorkers: string;
@@ -29,9 +28,7 @@ type Args = {
   };
   setShowSupModal: (open: boolean) => void;
   setSuppliers: (fn: Supplier[] | ((prev: Supplier[]) => Supplier[])) => void;
-
   csv: string;
-
   complaintForm: { cSup: string; cCat: string; cSev: string; cDesc: string; };
   setComplaints: (fn: Complaint[] | ((prev: Complaint[]) => Complaint[])) => void;
   setActions: (fn: Action[] | ((prev: Action[]) => Action[])) => void;
@@ -40,13 +37,11 @@ type Args = {
   setCDesc: (value: string) => void;
   setTriageLd: (value: boolean) => void;
   setTriageRes: (value: string) => void;
-
   capForm: { capSup: string; capTitle: string; capDesc: string; capPara: string; capDue: string; capPri: string; capAssign: string; };
   setShowCapModal: (open: boolean) => void;
   setCapTitle: (value: string) => void;
   setCapDesc: (value: string) => void;
   setCapAssign: (value: string) => void;
-
   reports: { rYear: number; draft: Record<string, string> | null; aiMsgs: { role: "user" | "assistant"; content: string }[]; aiInput: string; aiLd: boolean; };
   setDraft: (fn: any) => void;
   setDraftTs: (value: string) => void;
@@ -57,16 +52,13 @@ type Args = {
   setSupLd: (fn: any) => void;
   setSupAI: (fn: any) => void;
   setSupCAP: (fn: any) => void;
-
   setSaqs: (fn: SAQ[] | ((prev: SAQ[]) => SAQ[])) => void;
   saqRows: SAQ[];
   saq: { saqEmail: string; saqSup: string; saqDays: string; };
   setSaqEmail: (value: string) => void;
   setSaqSup: (value: string) => void;
   setSaqSending: (value: boolean) => void;
-
   setKpiLd: (value: boolean) => void;
-
   evidence: { evTitle: string; evType: string; evLksg: string; evDesc: string; evSupId: string; evFile: File | null; };
   setEvUploading: (value: boolean) => void;
   setEvTitle: (value: string) => void;
@@ -81,39 +73,51 @@ const tempId = (prefix: string) => `temp_${prefix}_${Date.now()}_${Math.random()
 
 export default function useWorkspaceMutations(args: Args) {
   const {
-    L, api, toast, getToken, setLoading, loadCoreData, loadSaqData, loadKpiData, loadAuditData, reloadSuppliersDomain, reloadComplaintsDomain, reloadReportsDomain, reloadComplianceCore, reloadInsights, setTab,
-    editingSup, supplierForm, setShowSupModal, setSuppliers,
-    csv,
-    complaintForm, setComplaints, setActions, complaintNotes, actionNotes, setCDesc, setTriageLd, setTriageRes,
-    capForm, setShowCapModal, setCapTitle, setCapDesc, setCapAssign,
-    reports, setDraft, setDraftTs, setGenLd, setAiInput, setAiMsgs, setAiLd, setSupLd, setSupAI, setSupCAP,
-    setSaqs, saqRows, saq, setSaqEmail, setSaqSup, setSaqSending,
-    setKpiLd,
-    evidence, setEvUploading, setEvTitle, setEvDesc, setEvFile, setEvidences, evidenceRows, fileRef,
+    L, api, toast, getToken, setLoading, loadCoreData, loadSaqData, loadKpiData, loadAuditData,
+    reloadSuppliersDomain, reloadComplaintsDomain, reloadReportsDomain, reloadComplianceCore, reloadInsights, setTab,
+    setShowSupModal, setSuppliers, setComplaints, setActions, setCDesc, setTriageLd, setTriageRes,
+    setShowCapModal, setCapTitle, setCapDesc, setCapAssign,
+    setDraft, setDraftTs, setGenLd, setAiInput, setAiMsgs, setAiLd, setSupLd, setSupAI, setSupCAP,
+    setSaqs, setSaqEmail, setSaqSup, setSaqSending, setKpiLd,
+    setEvUploading, setEvTitle, setEvDesc, setEvFile, setEvidences, fileRef,
   } = args;
 
-  const saveSupplier = useCallback(async () => {
-    if (!supplierForm.sName.trim()) return toast("err", L === "de" ? "Bitte Namen eingeben" : "Please enter a name");
-    setLoading(true);
+  // ── STABLE REFS for mutable form/data values ──────────────────────────────
+  // These are plain objects/values that change on every render.
+  // Reading them via ref inside useCallback means callbacks never go stale
+  // but also never need to be recreated when these values change.
+  const sfRef  = useRef(args.supplierForm);   sfRef.current  = args.supplierForm;
+  const eiRef  = useRef(args.editingSup);     eiRef.current  = args.editingSup;
+  const cfRef  = useRef(args.complaintForm);  cfRef.current  = args.complaintForm;
+  const cnRef  = useRef(args.complaintNotes); cnRef.current  = args.complaintNotes;
+  const anRef  = useRef(args.actionNotes);    anRef.current  = args.actionNotes;
+  const capRef = useRef(args.capForm);        capRef.current = args.capForm;
+  const rpRef  = useRef(args.reports);        rpRef.current  = args.reports;
+  const evRef  = useRef(args.evidence);       evRef.current  = args.evidence;
+  const saqRef = useRef(args.saq);            saqRef.current = args.saq;
+  const csvRef = useRef(args.csv);            csvRef.current = args.csv;
+  const sqRef  = useRef(args.saqRows);        sqRef.current  = args.saqRows;
+  const evRowsRef = useRef(args.evidenceRows); evRowsRef.current = args.evidenceRows;
+
     const body = {
-      name: supplierForm.sName,
-      country: supplierForm.sCountry,
-      industry: supplierForm.sInd,
-      annual_spend_eur: parseFloat(supplierForm.sSpend) || null,
-      workers: parseInt(supplierForm.sWorkers) || null,
-      has_audit: supplierForm.sAudit,
-      has_code_of_conduct: supplierForm.sCoc,
-      certification_count: parseInt(supplierForm.sCerts) || 0,
-      sub_supplier_count: parseInt(supplierForm.sSubSup) || 0,
-      transparency_score: parseInt(supplierForm.sTransp) || 3,
-      previous_violations: supplierForm.sViolations,
-      notes: supplierForm.sNotes,
+      name: sfRef.current.sName,
+      country: sfRef.current.sCountry,
+      industry: sfRef.current.sInd,
+      annual_spend_eur: parseFloat(sfRef.current.sSpend) || null,
+      workers: parseInt(sfRef.current.sWorkers) || null,
+      has_audit: sfRef.current.sAudit,
+      has_code_of_conduct: sfRef.current.sCoc,
+      certification_count: parseInt(sfRef.current.sCerts) || 0,
+      sub_supplier_count: parseInt(sfRef.current.sSubSup) || 0,
+      transparency_score: parseInt(sfRef.current.sTransp) || 3,
+      previous_violations: sfRef.current.sViolations,
+      notes: sfRef.current.sNotes,
     };
     let previous: Supplier[] = [];
     setSuppliers((prev) => {
       previous = snapshotValue(prev);
-      if (editingSup) {
-        return prev.map((s) => s.id === editingSup.id ? { ...s, ...body } as Supplier : s);
+      if (eiRef.current) {
+        return prev.map((s) => s.id === eiRef.current.id ? { ...s, ...body } as Supplier : s);
       }
       const optimistic: Supplier = {
         id: tempId("supplier"),
@@ -129,8 +133,8 @@ export default function useWorkspaceMutations(args: Args) {
         apply: () => {},
         rollback: (prev) => setSuppliers(prev),
         commit: async () => {
-          if (editingSup) {
-            await api(`/suppliers/${editingSup.id}`, { method: "PUT", body: JSON.stringify(body) });
+          if (eiRef.current) {
+            await api(`/suppliers/${eiRef.current.id}`, { method: "PUT", body: JSON.stringify(body) });
             toast("ok", L === "de" ? "Lieferant aktualisiert" : "Supplier updated");
           } else {
             await api("/suppliers", { method: "POST", body: JSON.stringify(body) });
@@ -147,7 +151,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setLoading(false);
     }
-  }, [L, api, editingSup, reloadInsights, reloadSuppliersDomain, setLoading, setShowSupModal, setSuppliers, setTab, supplierForm, toast]);
+  }, [L, api, reloadInsights, reloadSuppliersDomain, setLoading, setShowSupModal, setSuppliers, setTab toast]);
 
   const delSupplier = useCallback(async (id: string, name: string) => {
     if (!confirm(`"${name}" ${L === "de" ? "loeschen?" : "delete?"}`)) return;
@@ -200,18 +204,18 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setLoading(false);
     }
-  }, [L, api, csv, reloadInsights, reloadSuppliersDomain, setLoading, setTab, toast]);
+  }, [L, api, reloadInsights, reloadSuppliersDomain, setLoading, setTab, toast]);
 
   const submitComplaint = useCallback(async () => {
-    if (!complaintForm.cDesc.trim()) return toast("err", L === "de" ? "Bitte Beschreibung eingeben" : "Please enter description");
+    if (!cfRef.current.cDesc.trim()) return toast("err", L === "de" ? "Bitte Beschreibung eingeben" : "Please enter description");
     const optimistic: Complaint = {
       id: tempId("complaint"),
-      supplier_id: complaintForm.cSup || null,
+      supplier_id: cfRef.current.cSup || null,
       supplier_name: null,
-      category: complaintForm.cCat,
-      description: complaintForm.cDesc,
+      category: cfRef.current.cCat,
+      description: cfRef.current.cDesc,
       status: "open",
-      severity: complaintForm.cSev,
+      severity: cfRef.current.cSev,
       reference_number: "PENDING",
       created_at: new Date().toISOString(),
     };
@@ -226,7 +230,7 @@ export default function useWorkspaceMutations(args: Args) {
         apply: () => {},
         rollback: (prev) => setComplaints(prev),
         commit: async () => {
-          await api("/complaints", { method: "POST", body: JSON.stringify({ supplierId: complaintForm.cSup || null, category: complaintForm.cCat, description: complaintForm.cDesc, severity: complaintForm.cSev }) });
+          await api("/complaints", { method: "POST", body: JSON.stringify({ supplierId: cfRef.current.cSup || null, category: cfRef.current.cCat, description: cfRef.current.cDesc, severity: cfRef.current.cSev }) });
           setCDesc("");
           await reloadComplaintsDomain();
           toast("ok", L === "de" ? "Beschwerde eingereicht -- Admin benachrichtigt" : "Complaint submitted -- admin notified");
@@ -235,21 +239,21 @@ export default function useWorkspaceMutations(args: Args) {
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, complaintForm, reloadComplaintsDomain, setCDesc, setComplaints, toast]);
+  }, [L, api, reloadComplaintsDomain, setCDesc, setComplaints, toast]);
 
   const triageComplaint = useCallback(async () => {
-    if (!complaintForm.cDesc.trim()) return;
+    if (!cfRef.current.cDesc.trim()) return;
     setTriageLd(true);
     setTriageRes("");
     try {
-      const r = await api("/ai/complaint-triage", { method: "POST", body: JSON.stringify({ description: complaintForm.cDesc, category: complaintForm.cCat }) });
+      const r = await api("/ai/complaint-triage", { method: "POST", body: JSON.stringify({ description: cfRef.current.cDesc, category: cfRef.current.cCat }) });
       setTriageRes(r.triage || "");
     } catch {
       setTriageRes(L === "de" ? "KI nicht verfugbar -- ANTHROPIC_API_KEY pruefen" : "AI unavailable -- check ANTHROPIC_API_KEY");
     } finally {
       setTriageLd(false);
     }
-  }, [L, api, complaintForm, setTriageLd, setTriageRes]);
+  }, [L, api, setTriageLd, setTriageRes]);
 
   const updateComplaintStatus = useCallback(async (id: string, status: string) => {
     let previous: Complaint[] = [];
@@ -275,27 +279,27 @@ export default function useWorkspaceMutations(args: Args) {
 
   const saveComplaintNote = useCallback(async (id: string) => {
     try {
-      await api(`/complaints/${id}/notes`, { method: "PUT", body: JSON.stringify({ notes: complaintNotes[id] || "" }) });
+      await api(`/complaints/${id}/notes`, { method: "PUT", body: JSON.stringify({ notes: cnRef.current[id] || "" }) });
       toast("ok", L === "de" ? "Notiz gespeichert" : "Note saved");
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, complaintNotes, toast]);
+  }, [L, api, cnRef.current, toast]);
 
   const createCap = useCallback(async () => {
-    if (!capForm.capTitle.trim()) return toast("err", L === "de" ? "Titel erforderlich" : "Title required");
+    if (!capRef.current.capTitle.trim()) return toast("err", L === "de" ? "Titel erforderlich" : "Title required");
     const optimistic: Action = {
       id: tempId("action"),
-      supplier_id: capForm.capSup || null,
+      supplier_id: capRef.current.capSup || null,
       supplier_name: null,
-      title: capForm.capTitle,
-      description: capForm.capDesc,
-      risk_level: capForm.capPri,
-      lksg_paragraph: capForm.capPara,
-      due_date: capForm.capDue || null,
+      title: capRef.current.capTitle,
+      description: capRef.current.capDesc,
+      risk_level: capRef.current.capPri,
+      lksg_paragraph: capRef.current.capPara,
+      due_date: capRef.current.capDue || null,
       status: "open",
-      priority: capForm.capPri,
-      assigned_to: capForm.capAssign || null,
+      priority: capRef.current.capPri,
+      assigned_to: capRef.current.capAssign || null,
       completed_at: null,
       evidence_notes: null,
       created_at: new Date().toISOString(),
@@ -314,13 +318,13 @@ export default function useWorkspaceMutations(args: Args) {
           await api("/actions", {
             method: "POST",
             body: JSON.stringify({
-              supplierId: capForm.capSup || null,
-              title: capForm.capTitle,
-              description: capForm.capDesc,
-              lksgParagraph: capForm.capPara,
-              dueDate: capForm.capDue || null,
-              priority: capForm.capPri,
-              assignedTo: capForm.capAssign || null,
+              supplierId: capRef.current.capSup || null,
+              title: capRef.current.capTitle,
+              description: capRef.current.capDesc,
+              lksgParagraph: capRef.current.capPara,
+              dueDate: capRef.current.capDue || null,
+              priority: capRef.current.capPri,
+              assignedTo: capRef.current.capAssign || null,
             }),
           });
           setShowCapModal(false);
@@ -335,7 +339,7 @@ export default function useWorkspaceMutations(args: Args) {
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, capForm, reloadComplaintsDomain, reloadInsights, setActions, setCapAssign, setCapDesc, setCapTitle, setShowCapModal, toast]);
+  }, [L, api, reloadComplaintsDomain, reloadInsights, setActions, setCapAssign, setCapDesc, setCapTitle, setShowCapModal, toast]);
 
   const updateActionStatus = useCallback(async (id: string, status: string) => {
     let previous: Action[] = [];
@@ -361,12 +365,12 @@ export default function useWorkspaceMutations(args: Args) {
 
   const saveActionNote = useCallback(async (id: string) => {
     try {
-      await api(`/actions/${id}`, { method: "PUT", body: JSON.stringify({ evidence_notes: actionNotes[id] || "" }) });
+      await api(`/actions/${id}`, { method: "PUT", body: JSON.stringify({ evidence_notes: anRef.current[id] || "" }) });
       toast("ok", L === "de" ? "Nachweis gespeichert" : "Evidence saved");
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, actionNotes, toast]);
+  }, [L, api, anRef.current, toast]);
 
   const deleteAction = useCallback(async (id: string, title: string) => {
     if (!confirm(`"${title}" ${L === "de" ? "loeschen?" : "delete?"}`)) return;
@@ -388,27 +392,27 @@ export default function useWorkspaceMutations(args: Args) {
 
   const loadDraft = useCallback(async () => {
     try {
-      const d = await api(`/reports/bafa/${reports.rYear}/draft`);
+      const d = await api(`/reports/bafa/${rpRef.current.rYear}/draft`);
       setDraft(d?.draft || {});
     } catch {
       setDraft({});
     }
-  }, [api, reports.rYear, setDraft]);
+  }, [api, rpRef.current.rYear, setDraft]);
 
   const saveDraft = useCallback(async () => {
     try {
-      await api(`/reports/bafa/${reports.rYear}/draft`, { method: "PUT", body: JSON.stringify(reports.draft || {}) });
+      await api(`/reports/bafa/${rpRef.current.rYear}/draft`, { method: "PUT", body: JSON.stringify(rpRef.current.draft || {}) });
       setDraftTs(new Date().toLocaleString(L === "de" ? "de-DE" : "en-GB"));
       toast("ok", L === "de" ? "Gespeichert" : "Saved");
     } catch (e: any) {
       toast("err", e.message);
     }
-  }, [L, api, reports.draft, reports.rYear, setDraftTs, toast]);
+  }, [L, api, rpRef.current.draft, rpRef.current.rYear, setDraftTs, toast]);
 
   const genSection = useCallback(async (key: string) => {
     setGenLd(key);
     try {
-      const r = await api("/ai/report-section", { method: "POST", body: JSON.stringify({ section: key, year: reports.rYear }) });
+      const r = await api("/ai/report-section", { method: "POST", body: JSON.stringify({ section: key, year: rpRef.current.rYear }) });
       setDraft((d: any) => ({ ...(d || {}), [key]: r.text }));
       toast("ok", L === "de" ? "Erstellt" : "Generated");
     } catch (e: any) {
@@ -416,7 +420,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setGenLd("");
     }
-  }, [L, api, reports.rYear, setDraft, setGenLd, toast]);
+  }, [L, api, rpRef.current.rYear, setDraft, setGenLd, toast]);
 
   const getSupAI = useCallback(async (s: Supplier) => {
     setSupLd((x: any) => ({ ...x, [s.id]: true }));
@@ -443,10 +447,10 @@ export default function useWorkspaceMutations(args: Args) {
   }, [api, setSupCAP, setSupLd, toast]);
 
   const sendAi = useCallback(async (text?: string) => {
-    const msg = (text || reports.aiInput).trim();
-    if (!msg || reports.aiLd) return;
+    const msg = (text || rpRef.current.aiInput).trim();
+    if (!msg || rpRef.current.aiLd) return;
     setAiInput("");
-    const hist = [...reports.aiMsgs, { role: "user" as const, content: msg }];
+    const hist = [...rpRef.current.aiMsgs, { role: "user" as const, content: msg }];
     setAiMsgs(hist);
     setAiLd(true);
     try {
@@ -457,7 +461,7 @@ export default function useWorkspaceMutations(args: Args) {
     } finally {
       setAiLd(false);
     }
-  }, [L, api, reports.aiInput, reports.aiLd, reports.aiMsgs, setAiInput, setAiLd, setAiMsgs]);
+  }, [L, api, rpRef.current.aiInput, rpRef.current.aiLd, rpRef.current.aiMsgs, setAiInput, setAiLd, setAiMsgs]);
 
   const loadAuditLog = useCallback(async (entityType?: string) => {
     await loadAuditData(entityType);
@@ -468,11 +472,11 @@ export default function useWorkspaceMutations(args: Args) {
   }, [getToken, toast]);
 
   const sendSaq = useCallback(async () => {
-    if (!saq.saqEmail.trim()) return toast("err", L === "de" ? "E-Mail erforderlich" : "Email required");
+    if (!saqRef.current.saqEmail.trim()) return toast("err", L === "de" ? "E-Mail erforderlich" : "Email required");
     setSaqSending(true);
     try {
-      const r = await api("/saq", { method: "POST", body: JSON.stringify({ supplierId: saq.saqSup || null, email: saq.saqEmail, daysValid: parseInt(saq.saqDays) || 30 }) });
-      const lastEmail = saq.saqEmail;
+      const r = await api("/saq", { method: "POST", body: JSON.stringify({ supplierId: saqRef.current.saqSup || null, email: saqRef.current.saqEmail, daysValid: parseInt(saqRef.current.saqDays) || 30 }) });
+      const lastEmail = saqRef.current.saqEmail;
       setSaqEmail("");
       setSaqSup("");
       await reloadReportsDomain();
@@ -487,7 +491,7 @@ export default function useWorkspaceMutations(args: Args) {
 
   const deleteSaq = useCallback(async (id: string) => {
     if (!confirm(L === "de" ? "SAQ loeschen?" : "Delete SAQ?")) return;
-    const previous = saqRows;
+    const previous = sqRef.current;
     setSaqs((prev) => prev.filter((s) => s.id !== id));
     try {
       await api(`/saq/${id}`, { method: "DELETE" });
@@ -497,7 +501,7 @@ export default function useWorkspaceMutations(args: Args) {
       setSaqs(previous);
       toast("err", e.message);
     }
-  }, [L, api, reloadReportsDomain, saqRows, setSaqs, toast]);
+  }, [L, api, reloadReportsDomain, sqRef.current, setSaqs, toast]);
 
   const loadKpi = useCallback(async () => {
     setKpiLd(true);
@@ -519,25 +523,25 @@ export default function useWorkspaceMutations(args: Args) {
   }, [L, api, loadKpi, toast]);
 
   const uploadEvidence = useCallback(async () => {
-    if (!evidence.evTitle.trim()) return toast("err", L === "de" ? "Titel erforderlich" : "Title required");
+    if (!evRef.current.evTitle.trim()) return toast("err", L === "de" ? "Titel erforderlich" : "Title required");
     setEvUploading(true);
     try {
       let fileData: string | null = null;
       let fileName: string | null = null;
       let fileSize: number | null = null;
       let mimeType: string | null = null;
-      if (evidence.evFile) {
-        fileName = evidence.evFile.name;
-        fileSize = evidence.evFile.size;
-        mimeType = evidence.evFile.type;
+      if (evRef.current.evFile) {
+        fileName = evRef.current.evFile.name;
+        fileSize = evRef.current.evFile.size;
+        mimeType = evRef.current.evFile.type;
         fileData = await new Promise<string>((res, rej) => {
           const r = new FileReader();
           r.onload = () => res((r.result as string).split(",")[1]);
           r.onerror = () => rej(new Error("Read failed"));
-          r.readAsDataURL(evidence.evFile as Blob);
+          r.readAsDataURL(evRef.current.evFile as Blob);
         });
       }
-      await api("/evidence", { method: "POST", body: JSON.stringify({ title: evidence.evTitle, type: evidence.evType, lksg_ref: evidence.evLksg || null, description: evidence.evDesc || null, supplier_id: evidence.evSupId || null, file_data: fileData, file_name: fileName, file_size: fileSize, mime_type: mimeType }) });
+      await api("/evidence", { method: "POST", body: JSON.stringify({ title: evRef.current.evTitle, type: evRef.current.evType, lksg_ref: evRef.current.evLksg || null, description: evRef.current.evDesc || null, supplier_id: evRef.current.evSupId || null, file_data: fileData, file_name: fileName, file_size: fileSize, mime_type: mimeType }) });
       setEvTitle("");
       setEvDesc("");
       setEvFile(null);
@@ -553,7 +557,7 @@ export default function useWorkspaceMutations(args: Args) {
 
   const deleteEvidence = useCallback(async (id: string) => {
     if (!confirm(L === "de" ? "Nachweis loeschen?" : "Delete evidence?")) return;
-    const previous = evidenceRows;
+    const previous = evRowsRef.current;
     setEvidences((prev) => prev.filter((e) => e.id !== id));
     try {
       await api(`/evidence/${id}`, { method: "DELETE" });
@@ -563,7 +567,7 @@ export default function useWorkspaceMutations(args: Args) {
       setEvidences(previous);
       toast("err", e.message);
     }
-  }, [L, api, evidenceRows, reloadReportsDomain, setEvidences, toast]);
+  }, [L, api, evRowsRef.current, reloadReportsDomain, setEvidences, toast]);
 
   return {
     saveSupplier,
