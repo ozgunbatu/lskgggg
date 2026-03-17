@@ -37,7 +37,7 @@ export default function ReportsTab(props: WorkspaceTabProps) {
       <WorkspaceDataState L={L} requestState={requestState} domains={[
         {key:"reports",label:"Reports",onRetry:reloads.reloadCoreData},
       ]}/>
-      <WorkspaceApprovalSummary L={L} meta={approvalMeta} setTab={setTab}/>
+      <WorkspaceApprovalSummary L={L} approval={approvalMeta} onOpenReports={() => setTab("reports")}/>
 
       {/* Header + actions */}
       <div className="workspace-bar" style={{marginBottom:14}}>
@@ -134,7 +134,7 @@ export default function ReportsTab(props: WorkspaceTabProps) {
       </div>
 
       <div style={{marginTop:14}}>
-        <WorkspaceApprovalAging L={L} meta={approvalMeta}/>
+        <WorkspaceApprovalAging L={L} approval={approvalMeta}/>
       </div>
     </>
   );

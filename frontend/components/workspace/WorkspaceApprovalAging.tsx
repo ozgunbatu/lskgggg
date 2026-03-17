@@ -6,9 +6,10 @@ export default function WorkspaceApprovalAging({
   onOpenReports,
 }: {
   L: "de" | "en";
-  approval: WorkspaceApprovalMeta;
+  approval: WorkspaceApprovalMeta | null | undefined;
   onOpenReports?: () => void;
 }) {
+  if (!approval) return null;
   const pending = approval.pending || 0;
   const oldest = approval.oldestPendingDays || 0;
   const breaches = approval.slaBreaches || 0;

@@ -38,7 +38,9 @@ export default function DashboardTab(props: DashboardTabProps) {
   return (
     <>
       <WorkspaceDataState L={L} requestState={requestState} domains={["suppliers","actions","complaints"]} reload={reloads.reloadCoreData} />
-      <WorkspaceApprovalSummary L={L} meta={approvalMeta} setTab={setTab} />
+      {approvalMeta && (approvalMeta.pending > 0 || approvalMeta.approved > 0 || approvalMeta.rejected > 0) && (
+        <WorkspaceApprovalSummary L={L} approval={approvalMeta} onOpenReports={() => setTab("reports")} />
+      )}
 
       {/* QUICKSTART */}
       {showQuickstart && (
