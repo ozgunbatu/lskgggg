@@ -3,8 +3,6 @@
    Base: #f4f5f4 bg · #1B3D2B green · #ffffff cards
    ================================================================ */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;0,9..40,800;1,9..40,400&family=DM+Mono:wght@400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap');
-
 body:has(.ws-root), html:has(.ws-root) { background:#f4f5f4!important; color:#0b0f0c!important; }
 
 .ws-root {

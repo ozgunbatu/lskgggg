@@ -662,7 +662,7 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
         db.query("SELECT status,category FROM complaints WHERE company_id=$1", [companyId]).catch(() => ({ rows: [] })),
       ]);
 
-      const { calcComplianceScore, getGrade } = await import("./kpi");
+      // calcComplianceScore and getGrade imported at top of file
       const total      = supR.rows.length;
       const high       = supR.rows.filter((s: any) => s.risk_level === "high").length;
       const med        = supR.rows.filter((s: any) => s.risk_level === "medium").length;
@@ -724,7 +724,7 @@ router.post("/bafa/:year/generate/:key", requireAuth, requireWriteAccess, async 
     const cmpOpen    = (cmpR as any).rows.filter((c: any) => c.status === "open").length;
     const cmpTotal   = (cmpR as any).rows.length;
 
-    const { calcComplianceScore, getGrade } = await import("./kpi");
+    // Use calcComplianceScore imported at top
     const score = calcComplianceScore({
       total: n, high, med, auditCount: auditN, cocCount: cocN,
       capsTotal: cTotal, capsDone, capsOverdue,

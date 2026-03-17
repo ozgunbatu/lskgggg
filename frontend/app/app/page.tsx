@@ -1,5 +1,6 @@
+"use client";
 import AppWorkspace from "@/components/AppWorkspace";
 
-export default function Page() {
-  return <AppWorkspace initialTab="settings" />;
+export default function AppIndexPage() {
+  return <AppWorkspace initialTab="dashboard" />;
 }
