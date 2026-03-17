@@ -1,5 +1,5 @@
 import AppWorkspace from "@/components/AppWorkspace";
 
-export default function Page() {
-  return <AppWorkspace initialTab="ai" />;
+export default function AppIndexPage() {
+  return <AppWorkspace initialTab="dashboard" />;
 }
