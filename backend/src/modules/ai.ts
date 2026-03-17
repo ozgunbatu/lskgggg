@@ -153,7 +153,11 @@ SAQ-Fragebogen: ${saqList.length} gesendet, ${saqDone} ausgefuellt
 // -- 1. Chat ------------------------------------------------------------------
 router.post("/chat", requireAuth, async (req, res) => {
   try {
-    const { messages } = req.body;
+    // Accept both {message: str} (frontend) and {messages: [...]} (API)
+    let messages = req.body.messages;
+    if (!messages && req.body.message) {
+      messages = [{ role: "user", content: req.body.message }];
+    }
     if (!Array.isArray(messages) || !messages.length) return res.status(400).json({ error: "messages required" });
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -174,7 +178,8 @@ router.post("/chat", requireAuth, async (req, res) => {
     });
 
     const data = await resp.json() as any;
-    res.json({ reply: data.content?.[0]?.text || "Keine Antwort." });
+    const text = data.content?.[0]?.text || "Keine Antwort.";
+    res.json({ reply: text, response: text, text });
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
@@ -414,3 +419,45 @@ router.get("/health", async (_req, res) => {
   });
 });
 export default router;
+
+// ── FRONTEND COMPATIBILITY ALIASES ──────────────────────────────────────────
+
+// POST /ai/supplier-brief  (frontend calls this)
+router.post("/supplier-brief", requireAuth, async (req, res) => {
+  try {
+    const { supplierId } = req.body;
+    if (!supplierId) return res.status(400).json({ error: "supplierId required" });
+    const s = await db.query("SELECT * FROM suppliers WHERE id=$1 AND company_id=$2", [supplierId, req.auth!.companyId]);
+    if (!s.rows[0]) return res.status(404).json({ error: "Not found" });
+    const sup = s.rows[0];
+    const brief = await callClaude(SYSTEM_LKSG,
+      `Erstelle eine kompakte Risikoanalyse (§5 LkSG) fuer diesen Lieferanten:\n\n` +
+      `Unternehmen: ${sup.name}\nLand: ${sup.country} | Branche: ${sup.industry}\n` +
+      `Risikostufe: ${sup.risk_level?.toUpperCase()} | Score: ${sup.risk_score}/100\n` +
+      `Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}\n` +
+      `Beschaeftigte: ${sup.workers || "unbekannt"} | Jahresumsatz: ${sup.annual_spend_eur ? `€${sup.annual_spend_eur.toLocaleString()}` : "unbekannt"}\n\n` +
+      `Format: 3 Abschnitte — (1) Risikolage §2 LkSG-Tatbestaende, (2) Handlungsempfehlungen, (3) BAFA-Relevanz. Max 250 Woerter.`,
+      700
+    );
+    res.json({ brief, supplier: { id: sup.id, name: sup.name } });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
+// POST /ai/cap-suggestion  (frontend calls this)
+router.post("/cap-suggestion", requireAuth, async (req, res) => {
+  try {
+    const { supplierId } = req.body;
+    if (!supplierId) return res.status(400).json({ error: "supplierId required" });
+    const s = await db.query("SELECT * FROM suppliers WHERE id=$1 AND company_id=$2", [supplierId, req.auth!.companyId]);
+    if (!s.rows[0]) return res.status(404).json({ error: "Not found" });
+    const sup = s.rows[0];
+    const suggestion = await callClaude(SYSTEM_LKSG,
+      `Erstelle einen Corrective Action Plan (CAP) gemaess §6 LkSG:\n\n` +
+      `${sup.name} | ${sup.country} | ${sup.industry} | Score: ${sup.risk_score}/100\n` +
+      `Audit: ${sup.has_audit ? "vorhanden" : "FEHLT"} | CoC: ${sup.has_code_of_conduct ? "vorhanden" : "FEHLT"}\n\n` +
+      `CAP-Struktur:\n1. Festgestellte Risiken (§2 LkSG)\n2. Sofortmassnahmen (0-30 Tage)\n3. Kurzfristig (31-90 Tage)\n4. Langfristig (91-365 Tage)\n5. Erfolgskriterien\n\nBAFA-tauglich, umsetzbar, max 300 Woerter.`,
+      800
+    );
+    res.json({ suggestion, supplier: { id: sup.id, name: sup.name } });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});

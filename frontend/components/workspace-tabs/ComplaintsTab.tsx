@@ -1,7 +1,7 @@
 "use client";
 
 export default function ComplaintsTab(props: any) {
-  const { L, suppliers, complaints, expanded, setExpanded, cSup, setCSup, cCat, setCCat, cSev, setCSev, cDesc, setCDesc,
+  const { L, suppliers, complaints, expanded, setExpanded, cSup, setCSup, cCat, setCCat, cSev, setCSev, cDesc, setCDesc, company,
     submitComplaint, triageComplaint, updateComplaintStatus, exportCSV, triageLd, triageRes, sevChip, cStatusChip, approvalMeta, toast } = props;
 
   const canManage = ["manager","approver","admin"].includes(approvalMeta?.currentRole||"");
@@ -33,6 +33,17 @@ export default function ComplaintsTab(props: any) {
 
       <div className="g2">
         {/* Submit form */}
+        {company?.slug && (
+          <div style={{ display:"flex", alignItems:"center", gap:10, padding:"10px 13px", borderRadius:"var(--r2)", background:"var(--g3)", border:"1px solid var(--g4)", marginBottom:0 }}>
+            <span style={{ fontSize:10, color:"var(--g2)", fontWeight:700, textTransform:"uppercase", letterSpacing:".08em", fontFamily:"'DM Mono',monospace", flexShrink:0 }}>§8 Portal</span>
+            <span style={{ flex:1, fontSize:12, color:"var(--t2)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+              {typeof window !== "undefined" ? window.location.origin : "https://lksgcompass.de"}/complaints/{company.slug}
+            </span>
+            <button className="btn btn-g btn-xs" onClick={() => navigator.clipboard?.writeText(`${typeof window !== "undefined" ? window.location.origin : "https://lksgcompass.de"}/complaints/${company.slug}`).then(()=>toast?.("ok", L==="de"?"Link kopiert":"Link copied"))}>
+              {L==="de"?"Kopieren":"Copy"}
+            </button>
+          </div>
+        )}
         <div className="card">
           <div className="sec-title" style={{marginBottom:4}}>{L==="de"?"Neue Meldung":"New complaint"}<span className="ltag">§8 LkSG</span></div>
           <div className="sec-sub" style={{marginBottom:12}}>{L==="de"?"Anonyme Meldungen werden sicher und BAFA-konform verarbeitet.":"Anonymous reports are securely processed."}</div>

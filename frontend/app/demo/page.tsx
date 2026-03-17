@@ -2,17 +2,17 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 
 const SCENES = [
-  { id: "intro", duration: 5000, subtitle: "Stellen Sie sich vor: Ein BAFA-Brief liegt auf Ihrem Schreibtisch.", bg: "#060d05", accent: "#c4f135" },
-  { id: "problem", duration: 6000, subtitle: "§3 LkSG verpflichtet über 1.000 Unternehmen zur Sorgfaltspflicht. Verstöße: bis zu 2% des Jahresumsatzes.", bg: "#0a0a0a", accent: "#ff4444" },
-  { id: "dashboard", duration: 7000, subtitle: "LkSGCompass — Ihr vollständiges Compliance-Cockpit. Alle §4–§10-Pflichten auf einen Blick.", bg: "#060d05", accent: "#c4f135" },
-  { id: "score", duration: 6000, subtitle: "Der Compliance-Score bewertet Ihre Lieferkette in Echtzeit. Heute: 87 von 100 Punkten.", bg: "#060d05", accent: "#c4f135" },
-  { id: "suppliers", duration: 7000, subtitle: "Lieferantenmanagement: 147 Lieferanten, automatisch klassifiziert nach Risikoland und Branche.", bg: "#071209", accent: "#4ade80" },
-  { id: "risk", duration: 7000, subtitle: "§5 Risikoanalyse: KI erkennt kritische Länder und Branchen — automatisch, ohne Excel.", bg: "#071209", accent: "#f59e0b" },
-  { id: "complaints", duration: 6000, subtitle: "Hinweisgebersystem §8: Anonyme Meldungen, lückenlose Dokumentation, BAFA-ready.", bg: "#0a0508", accent: "#a78bfa" },
-  { id: "legal", duration: 7000, subtitle: "Rechtsassistent: 6 KI-generierte Vorlagen — Lieferantenkodex, Vertragsklauseln, SAQ, Audit.", bg: "#050a10", accent: "#38bdf8" },
-  { id: "report", duration: 7000, subtitle: "BAFA-Bericht §10: KI generiert den vollständigen Rechenschaftsbericht in Sekunden.", bg: "#060d05", accent: "#c4f135" },
-  { id: "defense", duration: 6000, subtitle: "Verteidigungsakte: §5–§10-Nachweise als strukturierter Export — ein Klick für die Behörde.", bg: "#060d05", accent: "#c4f135" },
-  { id: "cta", duration: 8000, subtitle: "LkSGCompass. Compliance, die funktioniert. Jetzt 14 Tage kostenlos testen.", bg: "#060d05", accent: "#c4f135" },
+  { id: "intro", duration: 5000, subtitle: "Stellen Sie sich vor: Ein BAFA-Brief liegt auf Ihrem Schreibtisch.", bg: "#060d05", accent: "#22c55e" },
+  { id: "problem", duration: 6000, subtitle: "§3 LkSG verpflichtet über 1.000 Unternehmen zur Sorgfaltspflicht. Verstöße: bis zu 2% des Jahresumsatzes.", bg: "#0a0a0a", accent: "#f87171" },
+  { id: "dashboard", duration: 7000, subtitle: "LkSGCompass — Sidebar-Navigation, Compliance-Score immer sichtbar, klickbare KPI-Karten.", bg: "#060d05", accent: "#22c55e" },
+  { id: "score", duration: 6000, subtitle: "Der Compliance-Score bewertet Ihre Lieferkette in Echtzeit — §9 LkSG. Heute: 84 von 100.", bg: "#060d05", accent: "#22c55e" },
+  { id: "suppliers", duration: 7000, subtitle: "§5 Risikoregister: Lieferanten automatisch klassifiziert, KI-Analyse per Klick, CSV-Import.", bg: "#071209", accent: "#4ade80" },
+  { id: "risk", duration: 7000, subtitle: "§5 Risikoanalyse: 20-Parameter-Modell. KI-CAP für Hochrisiko-Lieferanten — automatisch.", bg: "#071209", accent: "#fb923c" },
+  { id: "complaints", duration: 6000, subtitle: "§8 Hinweisgebersystem: Öffentliches Portal, anonyme Meldungen, KI-Triage, lückenloser Trail.", bg: "#0a0508", accent: "#a78bfa" },
+  { id: "legal", duration: 7000, subtitle: "Rechtsassistent: KI-generierte Vorlagen für CoC, SAQ, Auditchecklisten und Vertragsklauseln.", bg: "#050a10", accent: "#60a5fa" },
+  { id: "report", duration: 7000, subtitle: "BAFA-Bericht §10: 10 Pflichtabschnitte, KI-generiert, direkt editierbar — Freigabe-Workflow inklusive.", bg: "#060d05", accent: "#22c55e" },
+  { id: "defense", duration: 6000, subtitle: "Nachweise-Tresor §10: Auditberichte, CoC, SAQ — 7 Jahre revisionssicher gespeichert.", bg: "#060d05", accent: "#22c55e" },
+  { id: "cta", duration: 8000, subtitle: "LkSGCompass. Compliance, die funktioniert. Jetzt 14 Tage kostenlos testen.", bg: "#060d05", accent: "#22c55e" },
 ];
 
 function SceneIntro({ p }: { p: number }) {
@@ -64,8 +64,8 @@ function SceneProblem({ p }: { p: number }) {
 
 function SceneDashboard({ p }: { p: number }) {
   const metrics=[
-    {label:"Compliance-Score",value:"87/100",color:"#c4f135"},
-    {label:"Lieferanten",value:"147",color:"#4ade80"},
+    {label:"Compliance-Score",value:"84/100",color:"#22c55e"},
+    {label:"Lieferanten",value:"47",color:"#4ade80"},
     {label:"Offene Maßnahmen",value:"3",color:"#f59e0b"},
     {label:"BAFA-Status",value:"Ready",color:"#38bdf8"},
   ];
@@ -91,7 +91,7 @@ function SceneDashboard({ p }: { p: number }) {
 }
 
 function SceneScore({ p }: { p: number }) {
-  const score=Math.round(p*87);
+  const score=Math.round(p*84);
   const r=70, circ=2*Math.PI*r;
   return (
     <div style={{ height:"100%",display:"flex",alignItems:"center",justifyContent:"center",gap:80,padding:"0 60px",flexWrap:"wrap" }}>

@@ -71,65 +71,82 @@ const Icon = {
 // --- Dashboard Mockup --------------------------------------------------------
 function DashboardMockup() {
   return (
-    <div style={{
-      background: "#fff", border: "1px solid #e6e6e6", borderRadius: 16,
-      overflow: "hidden", boxShadow: "0 24px 64px rgba(0,0,0,0.1)",
-      userSelect: "none",
-    }}>
-      {/* Window chrome */}
-      <div style={{ background: "#f6f7f6", borderBottom: "1px solid #e6e6e6", padding: "10px 16px", display: "flex", alignItems: "center", gap: 6 }}>
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fecaca" }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#fef08a" }} />
-        <div style={{ width: 10, height: 10, borderRadius: "50%", background: "#bbf7d0" }} />
-        <div style={{ flex: 1, marginLeft: 12, background: "#e6e6e6", borderRadius: 6, height: 20, display: "flex", alignItems: "center", padding: "0 10px" }}>
-          <span style={{ fontSize: 10, color: "#9ca3af", fontFamily: "monospace" }}>app.lksgcompass.de/dashboard</span>
+    <div style={{ background:"#fff", border:"1px solid #e8eae8", borderRadius:16, overflow:"hidden", boxShadow:"0 24px 64px rgba(0,0,0,0.1)", userSelect:"none" }}>
+      {/* Browser chrome */}
+      <div style={{ background:"#f4f5f4", borderBottom:"1px solid #e8eae8", padding:"9px 16px", display:"flex", alignItems:"center", gap:6 }}>
+        <div style={{ width:9, height:9, borderRadius:"50%", background:"#fecaca" }}/>
+        <div style={{ width:9, height:9, borderRadius:"50%", background:"#fef08a" }}/>
+        <div style={{ width:9, height:9, borderRadius:"50%", background:"#bbf7d0" }}/>
+        <div style={{ flex:1, marginLeft:10, background:"#e8eae8", borderRadius:5, height:18, display:"flex", alignItems:"center", padding:"0 10px" }}>
+          <span style={{ fontSize:9.5, color:"#9ca3af", fontFamily:"monospace" }}>app.lksgcompass.de/app/dashboard</span>
         </div>
       </div>
-      {/* Nav */}
-      <div style={{ background: "#fff", borderBottom: "1px solid #e6e6e6", padding: "10px 20px", display: "flex", alignItems: "center", gap: 16 }}>
-        <span style={{ fontWeight: 800, fontSize: 13, color: "#1B3D2B" }}>LkSGCompass</span>
-        {["Dashboard","Lieferanten","Berichte","Monitoring"].map(t => (
-          <span key={t} style={{ fontSize: 11, color: t === "Dashboard" ? "#1B3D2B" : "#9ca3af", fontWeight: t === "Dashboard" ? 700 : 400, padding: "3px 8px", background: t === "Dashboard" ? "#f0f5f1" : "transparent", borderRadius: 6 }}>{t}</span>
-        ))}
-        <div style={{ marginLeft: "auto", background: "#1B3D2B", color: "#fff", borderRadius: 8, padding: "4px 12px", fontSize: 11, fontWeight: 700 }}>Neuer Bericht</div>
-      </div>
-      {/* Content */}
-      <div style={{ padding: 20 }}>
-        {/* KPI row */}
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 12, marginBottom: 16 }}>
-          {[
-            { label: "Compliance Score", value: "84", sub: "/100", color: "#1B3D2B" },
-            { label: "Lieferanten", value: "47", sub: " aktiv", color: "#0b0f0c" },
-            { label: "Hochrisiko", value: "6", sub: " kritisch", color: "#C0392B" },
-          ].map(k => (
-            <div key={k.label} style={{ background: "#f6f7f6", borderRadius: 10, padding: "12px 14px", border: "1px solid #e6e6e6" }}>
-              <div style={{ fontSize: 10, color: "#9ca3af", fontWeight: 700, textTransform: "uppercase", letterSpacing: 1, marginBottom: 6 }}>{k.label}</div>
-              <div style={{ fontSize: 22, fontWeight: 800, color: k.color, lineHeight: 1 }}>
-                {k.value}<span style={{ fontSize: 12, color: "#9ca3af" }}>{k.sub}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-        {/* Table */}
-        <div style={{ border: "1px solid #e6e6e6", borderRadius: 10, overflow: "hidden" }}>
-          <div style={{ background: "#f6f7f6", padding: "8px 14px", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", gap: 8 }}>
-            {["Lieferant","Land","Branche","Risiko"].map(h => (
-              <span key={h} style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: 0.8 }}>{h}</span>
-            ))}
+      {/* App shell with sidebar */}
+      <div style={{ display:"grid", gridTemplateColumns:"168px 1fr", height:320 }}>
+        {/* Sidebar */}
+        <div style={{ background:"#fff", borderRight:"1px solid #e8eae8", padding:"12px 8px", display:"flex", flexDirection:"column" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:7, padding:"0 8px", marginBottom:12 }}>
+            <div style={{ width:22, height:22, borderRadius:6, background:"#1B3D2B", display:"flex", alignItems:"center", justifyContent:"center", fontSize:8, fontWeight:800, color:"#fff", flexShrink:0 }}>LC</div>
+            <span style={{ fontSize:12, fontWeight:700, color:"#1B3D2B" }}>LkSGCompass</span>
+          </div>
+          {/* Score block */}
+          <div style={{ margin:"0 4px 10px", background:"#f0f5f1", border:"1px solid #d1e7d9", borderRadius:8, padding:"8px 10px" }}>
+            <div style={{ fontSize:8, fontWeight:700, color:"#2d5c3f", textTransform:"uppercase", letterSpacing:1, marginBottom:2 }}>SCORE §9</div>
+            <div style={{ fontSize:22, fontWeight:800, color:"#1B3D2B", lineHeight:1 }}>84</div>
+            <div style={{ fontSize:9, color:"#5a8c6a" }}>Note B · Gut</div>
           </div>
           {[
-            { name: "Textile Group", country: "Bangladesch", industry: "Textil", risk: "Hoch", rc: "#fff0ef", tc: "#8b1d13", bc: "#ffc5c0" },
-            { name: "TechParts Co.", country: "China", industry: "Elektronik", risk: "Mittel", rc: "#fff7e8", tc: "#7a3e00", bc: "#ffe3b5" },
-            { name: "AutoSteelworks", country: "Mexiko", industry: "Automotive", risk: "Mittel", rc: "#fff7e8", tc: "#7a3e00", bc: "#ffe3b5" },
-            { name: "EcoBuild AG", country: "Deutschland", industry: "Bau", risk: "Niedrig", rc: "#eefbf2", tc: "#125b2c", bc: "#bde5c7" },
-          ].map((r, i) => (
-            <div key={i} style={{ padding: "10px 14px", display: "grid", gridTemplateColumns: "2fr 1fr 1fr 80px", gap: 8, borderTop: "1px solid #f0f0f0", alignItems: "center" }}>
-              <span style={{ fontSize: 12, fontWeight: 600, color: "#0b0f0c" }}>{r.name}</span>
-              <span style={{ fontSize: 11, color: "#6b7280" }}>{r.country}</span>
-              <span style={{ fontSize: 11, color: "#6b7280" }}>{r.industry}</span>
-              <span style={{ fontSize: 10, fontWeight: 700, padding: "3px 8px", borderRadius: 100, background: r.rc, color: r.tc, border: `1px solid ${r.bc}`, textAlign: "center" }}>{r.risk}</span>
+            ["Dashboard","●"],
+            ["Lieferanten","47"],
+            ["Aktionspläne","3"],
+            ["Beschwerden","2"],
+          ].map(([t,b],i)=>(
+            <div key={t} style={{ display:"flex", alignItems:"center", gap:6, padding:"5px 8px", borderRadius:6, background:i===0?"#f0f5f1":"transparent", marginBottom:2 }}>
+              <span style={{ fontSize:11, color:i===0?"#1B3D2B":"#9ca3af", fontWeight:i===0?600:400, flex:1 }}>{t}</span>
+              {b!=="●"&&<span style={{ fontSize:9, color:i<2?"#9ca3af":i===2?"#d97706":"#dc2626", fontWeight:700, background:i===2?"#fffbeb":i===3?"#fef2f2":"transparent", padding:"1px 5px", borderRadius:10 }}>{b}</span>}
             </div>
           ))}
+        </div>
+        {/* Main */}
+        <div style={{ background:"#f4f5f4", padding:12, overflow:"hidden" }}>
+          <div style={{ fontSize:11, fontWeight:700, color:"#9ca3af", textTransform:"uppercase", letterSpacing:1, marginBottom:2, fontFamily:"monospace" }}>DASHBOARD</div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:10 }}>
+            {[
+              {l:"Compliance Score",v:"84",c:"#1B3D2B",sub:"Note B"},
+              {l:"Lieferanten",v:"47",c:"#0b0f0c",sub:"12 Länder"},
+              {l:"Offene CAPs",v:"3",c:"#d97706",sub:"1 überfällig"},
+              {l:"Meldungen",v:"2",c:"#dc2626",sub:"offen"},
+            ].map(k=>(
+              <div key={k.l} style={{ background:"#fff", borderRadius:8, padding:"9px 10px", border:"1px solid #e8eae8", cursor:"pointer" }}>
+                <div style={{ fontSize:8, color:"#9ca3af", fontWeight:700, textTransform:"uppercase", letterSpacing:.8, marginBottom:4, fontFamily:"monospace" }}>{k.l}</div>
+                <div style={{ fontSize:19, fontWeight:800, color:k.c, lineHeight:1, marginBottom:2 }}>{k.v}</div>
+                <div style={{ fontSize:9.5, color:"#9ca3af" }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ background:"#fff", borderRadius:8, border:"1px solid #e8eae8", overflow:"hidden" }}>
+            <div style={{ background:"#f4f5f4", padding:"6px 10px", display:"grid", gridTemplateColumns:"2fr 1fr 80px", gap:6 }}>
+              {["Top Risikolieferanten","Land","Score"].map(h=>(
+                <span key={h} style={{ fontSize:8.5, fontWeight:700, color:"#9ca3af", textTransform:"uppercase", letterSpacing:.8, fontFamily:"monospace" }}>{h}</span>
+              ))}
+            </div>
+            {[
+              {n:"Textile Group",c:"BD",s:87,rc:"#fef2f2",tc:"#991b1b"},
+              {n:"TechParts Co.",c:"CN",s:82,rc:"#fef2f2",tc:"#991b1b"},
+              {n:"AutoSteelworks",c:"MX",s:61,rc:"#fffbeb",tc:"#92400e"},
+            ].map((r,i)=>(
+              <div key={i} style={{ padding:"8px 10px", display:"grid", gridTemplateColumns:"2fr 1fr 80px", gap:6, borderTop:"1px solid #f4f5f4", alignItems:"center" }}>
+                <span style={{ fontSize:11, fontWeight:600, color:"#0b0f0c" }}>{r.n}</span>
+                <span style={{ fontSize:10, color:"#6b7280", fontFamily:"monospace" }}>{r.c}</span>
+                <div style={{ display:"flex", alignItems:"center", gap:5 }}>
+                  <div style={{ flex:1, height:3, borderRadius:2, background:"#f4f5f4" }}>
+                    <div style={{ width:`${r.s}%`, height:"100%", borderRadius:2, background:r.tc }}/>
+                  </div>
+                  <span style={{ fontSize:10, fontWeight:700, color:r.tc }}>{r.s}</span>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>
@@ -138,35 +155,53 @@ function DashboardMockup() {
 
 // --- Report Mockup -----------------------------------------------------------
 function ReportMockup() {
+  const sections = [
+    {para:"§10",label:"Berichtsumfang",done:true},
+    {para:"§10",label:"Unternehmensstruktur",done:true},
+    {para:"§4", label:"Verantwortliche Personen",done:true},
+    {para:"§5", label:"Risikoanalyse Methodik",done:true},
+    {para:"§5", label:"Priorisierte Risiken",done:true},
+    {para:"§6", label:"Präventionsmaßnahmen",done:true},
+    {para:"§7", label:"Abhilfemaßnahmen",done:true},
+    {para:"§8", label:"Beschwerdeverfahren",done:true},
+    {para:"§8", label:"Zugangsgruppen",done:false},
+    {para:"§9", label:"Wirksamkeitskontrolle",done:false},
+  ];
+  const done = sections.filter(s=>s.done).length;
   return (
-    <div style={{ background: "#fff", border: "1px solid #e6e6e6", borderRadius: 14, padding: 20, boxShadow: "0 8px 32px rgba(0,0,0,0.06)" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-        <div>
-          <div style={{ fontSize: 13, fontWeight: 800, color: "#0b0f0c" }}>BAFA Jahresbericht 2025</div>
-          <div style={{ fontSize: 11, color: "#9ca3af", marginTop: 2 }}>PDF  -  Generiert in 4 Sekunden</div>
+    <div style={{ background:"#fff", border:"1px solid #e8eae8", borderRadius:14, overflow:"hidden", boxShadow:"0 8px 32px rgba(0,0,0,0.06)" }}>
+      <div style={{ padding:"14px 16px", borderBottom:"1px solid #e8eae8" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:8 }}>
+          <div>
+            <div style={{ fontSize:13, fontWeight:800, color:"#0b0f0c" }}>BAFA Rechenschaftsbericht 2025</div>
+            <div style={{ fontSize:11, color:"#9ca3af", marginTop:2 }}>10 Pflichtabschnitte · KI-generiert · §10 LkSG</div>
+          </div>
+          <div style={{ fontSize:14, fontWeight:800, color:"#1B3D2B" }}>{done}/10</div>
         </div>
-        <div style={{ background: "#f0f5f1", color: "#1B3D2B", fontSize: 10, fontWeight: 700, padding: "4px 10px", borderRadius: 100, border: "1px solid #d1e7d9" }}>§10 LkSG ?</div>
+        <div style={{ height:4, background:"#e8eae8", borderRadius:2, overflow:"hidden" }}>
+          <div style={{ width:`${done/10*100}%`, height:"100%", background:"#1B3D2B", borderRadius:2 }}/>
+        </div>
       </div>
-      {[
-        { n: "01", label: "Unternehmensstruktur", done: true },
-        { n: "02", label: "Risikoanalyse & Pravention", done: true },
-        { n: "03", label: "Abhilfemassnahmen", done: true },
-        { n: "04", label: "Beschwerdeverfahren", done: true },
-        { n: "05", label: "Wirksamkeitskontrolle", done: true },
-      ].map(s => (
-        <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderBottom: "1px solid #f6f7f6" }}>
-          <div style={{ width: 22, height: 22, borderRadius: "50%", background: "#f0f5f1", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-            <span style={{ fontSize: 9, fontWeight: 800, color: "#1B3D2B" }}>{s.n}</span>
+      <div style={{ padding:"0 16px" }}>
+        {sections.map((s,i)=>(
+          <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"7px 0", borderBottom:i<sections.length-1?"1px solid #f4f5f4":"none" }}>
+            <span style={{ fontSize:8.5, fontWeight:700, color:s.done?"#2d5c3f":"#9ca3af", background:s.done?"#f0f5f1":"#f9fafb", border:`1px solid ${s.done?"#d1e7d9":"#e8eae8"}`, borderRadius:20, padding:"1px 6px", fontFamily:"monospace", flexShrink:0 }}>{s.para}</span>
+            <span style={{ fontSize:11.5, color:s.done?"#0b0f0c":"#9ca3af", flex:1, fontWeight:s.done?500:400 }}>{s.label}</span>
+            {s.done
+              ? <svg width="13" height="13" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#f0f5f1" stroke="#d1e7d9"/><path d="M4 7l2 2 4-4" stroke="#1B3D2B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              : <div style={{ width:13, height:13, borderRadius:"50%", border:"1px solid #e8eae8", background:"#f4f5f4" }}/>
+            }
           </div>
-          <span style={{ fontSize: 12, color: "#374151", flex: 1 }}>{s.label}</span>
-          <div style={{ color: "#1B3D2B", display: "flex", alignItems: "center" }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="6" fill="#f0f5f1" stroke="#bde5c7"/><path d="M4 7l2 2 4-4" stroke="#1B3D2B" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-          </div>
+        ))}
+      </div>
+      <div style={{ padding:12, borderTop:"1px solid #e8eae8", display:"flex", gap:6 }}>
+        <div style={{ flex:1, background:"#1B3D2B", borderRadius:8, padding:"8px 0", display:"flex", alignItems:"center", justifyContent:"center", gap:7 }}>
+          <svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+          <span style={{ fontSize:11, fontWeight:700, color:"#fff" }}>Export</span>
         </div>
-      ))}
-      <div style={{ marginTop: 14, background: "#1B3D2B", borderRadius: 8, padding: "10px 14px", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 11h10" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
-        <span style={{ fontSize: 12, fontWeight: 700, color: "#fff" }}>PDF herunterladen</span>
+        <div style={{ background:"#f0f5f1", border:"1px solid #d1e7d9", borderRadius:8, padding:"8px 12px", display:"flex", alignItems:"center", gap:6 }}>
+          <span style={{ fontSize:11, fontWeight:600, color:"#1B3D2B" }}>✦ KI generieren</span>
+        </div>
       </div>
     </div>
   );
@@ -742,10 +777,10 @@ export default function LandingPage() {
             <div className="feature-row rev" {...a("f2")}>
               <div>
                 <div className="feature-tag">BAFA Report Generator</div>
-                <h3 className="feature-title">Alle 5 Pflichtabschnitte. Sofort als PDF.</h3>
+                <h3 className="feature-title">Alle 10 Pflichtabschnitte. KI-generiert.</h3>
                 <p className="feature-desc">Der integrierte Report-Generator erstellt den vollstandigen Jahresbericht nach §10 Abs. 2 LkSG -- strukturiert nach dem offiziellen BAFA-Fragebogen, editierbar, per Klick als PDF.</p>
                 <div className="feature-points">
-                  {["Alle 5 Pflichtabschnitte (§10 Abs. 2 Nr. 1-5 LkSG)","Bearbeitbarer Entwurfsmodus vor PDF-Export","Automatische Lieferantenubersicht als Anhang"].map((p, i) => (
+                  {["Alle 10 BAFA-Pflichtabschnitte (§4–§10 LkSG)","Bearbeitbarer Entwurfsmodus vor PDF-Export","Automatische Lieferantenubersicht als Anhang"].map((p, i) => (
                     <div key={i} className="fp">
                       <div className="fp-icon"><Icon.FileText /></div>
                       {p}

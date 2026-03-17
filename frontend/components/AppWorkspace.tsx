@@ -207,7 +207,21 @@ export default function AppWorkspace({initialTab="dashboard"}:{initialTab?:TabId
   const deleteAction=async(id:string,title:string)=>{if(!confirm(L==="de"?`"${title}" löschen?`:`Delete "${title}"?`))return;try{await api(`/actions/${id}`,{method:"DELETE"});toast("ok","Gelöscht");setActions(as=>as.filter(a=>a.id!==id));}catch(e:any){toast("err",e.message);}};
   const saveDraft=async()=>{if(!draft)return;try{await api(`/reports/bafa/${rYear}/draft`,{method:"PUT",body:JSON.stringify({draft})});setDraftTs(new Date().toISOString());toast("ok","Entwurf gespeichert");}catch(e:any){toast("err",e.message);}};
   const genSection=async(key:string)=>{setGenLd(key);try{const r=await api(`/reports/bafa/${rYear}/generate/${key}`,{method:"POST"});if(r?.text)setDraft((d:any)=>({...(d||{}),[key]:r.text}));}catch(e:any){toast("err",e.message);}finally{setGenLd("");}};
-  const sendAi=async(text?:string)=>{const msg=text||aiInput;if(!msg.trim()||aiLd)return;setAiMsgs(m=>[...m,{role:"user",content:msg}]);setAiInput("");setAiLd(true);try{const r=await api("/ai/chat",{method:"POST",body:JSON.stringify({message:msg})});setAiMsgs(m=>[...m,{role:"assistant",content:r?.response||r?.text||"..."}]);}catch(e:any){setAiMsgs(m=>[...m,{role:"assistant",content:"Fehler: "+e.message}]);}finally{setAiLd(false);}};
+  const sendAi=async(text?:string)=>{
+  const msg=text||aiInput;
+  if(!msg.trim()||aiLd)return;
+  const userMsg={role:"user" as const,content:msg};
+  setAiMsgs(m=>[...m,userMsg]);
+  setAiInput("");setAiLd(true);
+  try{
+    // Send full conversation history for context
+    const history=[...aiMsgs,userMsg].slice(-14);
+    const r=await api("/ai/chat",{method:"POST",body:JSON.stringify({message:msg,messages:history})});
+    const reply=r?.reply||r?.response||r?.text||"...";
+    setAiMsgs(m=>[...m,{role:"assistant",content:reply}]);
+  }catch(e:any){setAiMsgs(m=>[...m,{role:"assistant",content:"Fehler: "+e.message}]);}
+  finally{setAiLd(false);}
+};
   const getSupAI=async(sup:any)=>{setSupLd(l=>({...l,[sup.id]:true}));try{const r=await api("/ai/supplier-brief",{method:"POST",body:JSON.stringify({supplierId:sup.id})});setSupAI(a=>({...a,[sup.id]:r?.brief||r?.text||""}));}catch(e:any){toast("err",e.message);}finally{setSupLd(l=>({...l,[sup.id]:false}));}};
   const getSupCAP=async(sup:any)=>{setSupLd(l=>({...l,[sup.id]:true}));try{const r=await api("/ai/cap-suggestion",{method:"POST",body:JSON.stringify({supplierId:sup.id})});setSupCAP(a=>({...a,[sup.id]:r?.suggestion||r?.text||""}));}catch(e:any){toast("err",e.message);}finally{setSupLd(l=>({...l,[sup.id]:false}));}};
   const sendSaq=async()=>{if(!saqEmail||!saqSup)return toast("err","E-Mail und Lieferant erforderlich");setSaqSending(true);try{await api("/saq",{method:"POST",body:JSON.stringify({supplierId:saqSup,email:saqEmail,days:parseInt(saqDays)||30})});toast("ok","SAQ gesendet");setSaqEmail("");setSaqSup("");await loadSaqData();}catch(e:any){toast("err",e.message);}finally{setSaqSending(false);}};
