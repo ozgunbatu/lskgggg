@@ -197,4 +197,27 @@ router.get("/export/csv", requireAuth, requireWriteAccess, async (req, res) => {
   } catch (e: any) { res.status(500).json({ error: e.message }); }
 });
 
+// DELETE /complaints/:id  — §8 LkSG: resolved/closed complaints are protected
+router.delete("/:id", requireAuth, requireWriteAccess, async (req, res) => {
+  try {
+    const companyId = req.auth!.companyId;
+    const r = await db.query(
+      "SELECT status, created_at FROM complaints WHERE id=$1 AND company_id=$2",
+      [req.params.id, companyId]
+    );
+    if (!r.rows.length) return res.status(404).json({ error: "Not found" });
+
+    const { status, created_at } = r.rows[0];
+    // Resolved complaints must be kept (HinSchG §12 + §8 LkSG audit trail)
+    if (status === "resolved" || status === "closed") {
+      return res.status(403).json({
+        error: "Abgeschlossene Beschwerden können nicht gelöscht werden. Gemäß §8 LkSG und HinSchG §12 sind Hinweisgebervorgänge für den Audit-Trail zu erhalten."
+      });
+    }
+    await db.query("DELETE FROM complaints WHERE id=$1 AND company_id=$2", [req.params.id, companyId]);
+    res.json({ ok: true });
+  } catch (e: any) { res.status(500).json({ error: e.message }); }
+});
+
 export default router;
+

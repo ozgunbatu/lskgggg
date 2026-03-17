@@ -70,9 +70,27 @@ async function buildContext(companyId: string) {
 
   const n = supList.length;
   // Use accurate formula from kpi module (risk 55% + process 45%)
-  const portfolioScore = (kpis as any)?.portfolioScore ?? (n > 0
-    ? Math.max(0, Math.round(100 - ((high.length / n) * 55) - ((med.length / n) * 20)))
-    : 100);
+  const capsTotal   = capList.length;
+  const capsDone    = capList.filter((c: any) => c.status === "completed" || c.status === "closed").length;
+  const capsOverdue = capList.filter((c: any) => c.due_date && new Date(c.due_date) < new Date() && c.status !== "completed" && c.status !== "closed").length;
+  const saqsSent    = saqList.length;
+  const saqsDone    = saqList.filter((s: any) => s.status === "completed").length;
+  const complaintsOpen = cmpList.filter((c: any) => c.status === "open").length;
+  const auditCountN = supList.filter((s: any) => s.has_audit).length;
+  const cocCountN   = supList.filter((s: any) => s.has_code_of_conduct).length;
+
+  const portfolioScore = (kpis as any)?.portfolioScore ?? (() => {
+    if (n === 0) return 100;
+    const riskScore = Math.max(0, 100 - (high.length / n) * 55 - (med.length / n) * 20);
+    const auditCov  = (auditCountN / n) * 100;
+    const cocCov    = (cocCountN   / n) * 100;
+    const capRate   = capsTotal > 0 ? (capsDone / capsTotal) * 100 : 100;
+    const saqRate   = saqsSent > 0 ? (saqsDone / saqsSent) * 100 : (high.length + med.length > 0 ? 0 : 50);
+    const cmpScore  = complaintsOpen === 0 ? 100 : Math.max(0, 100 - complaintsOpen * 15);
+    const overduePenalty = Math.min(50, capsOverdue * 8);
+    const processScore = Math.max(0, auditCov * 0.25 + cocCov * 0.20 + capRate * 0.30 + saqRate * 0.10 + cmpScore * 0.15 - overduePenalty);
+    return Math.max(0, Math.min(100, Math.round(riskScore * 0.55 + processScore * 0.45)));
+  })();
   const auditCoverage  = (kpis as any)?.auditCoverage  ?? (n > 0 ? Math.round(supList.filter((s: any) => s.has_audit).length / n * 100) : 0);
   const cocCoverage    = (kpis as any)?.cocCoverage    ?? (n > 0 ? Math.round(supList.filter((s: any) => s.has_code_of_conduct).length / n * 100) : 0);
 
