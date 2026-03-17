@@ -154,8 +154,8 @@ export default function LoginPage() {
             <a href="/" className="llogo">LkSG<em>Compass</em></a>
             <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
               <div className="lgrp">
-                <button type="button" className={"lb" + (lang === "de" ? " on" : "")} onClick={() => changeLang("de")}>DE</button>
-                <button type="button" className={"lb" + (lang === "en" ? " on" : "")} onClick={() => changeLang("en")}>EN</button>
+                <button className={"lb" + (lang === "de" ? " on" : "")} onClick={() => changeLang("de")}>DE</button>
+                <button className={"lb" + (lang === "en" ? " on" : "")} onClick={() => changeLang("en")}>EN</button>
               </div>
               <a href="/register" className="lnl">{t("Noch kein Konto? Registrieren", "No account? Register")}</a>
             </div>
@@ -181,7 +181,7 @@ export default function LoginPage() {
                 </div>
                 <div className="liw">
                   <input className="linp" type={showPw ? "text" : "password"} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" style={{ paddingRight: 80 }} onKeyDown={e => e.key === "Enter" && submit()} />
-                  <button type="button" className="lpwt" onClick={() => setShowPw(s => !s)} type="button">{showPw ? t("Verbergen", "Hide") : t("Anzeigen", "Show")}</button>
+                  <button className="lpwt" onClick={() => setShowPw(s => !s)}>{showPw ? t("Verbergen", "Hide") : t("Anzeigen", "Show")}</button>
                 </div>
               </div>
             )}
@@ -196,11 +196,11 @@ export default function LoginPage() {
 
             {forgotMode ? (
               <>
-                <button type="button" className="lbtn" onClick={sendReset} disabled={loading}>{loading ? <span className="lsp" /> : t("Reset-Link senden", "Send reset link")}</button>
-                <button type="button" className="lbtn alt" onClick={() => { setForgotMode(false); setForgotSent(""); setPreviewLink(""); setError(""); }} disabled={loading}>{t("Zurueck zum Login", "Back to sign in")}</button>
+                <button className="lbtn" onClick={sendReset} disabled={loading}>{loading ? <span className="lsp" /> : t("Reset-Link senden", "Send reset link")}</button>
+                <button className="lbtn alt" onClick={() => { setForgotMode(false); setForgotSent(""); setPreviewLink(""); setError(""); }} disabled={loading}>{t("Zurueck zum Login", "Back to sign in")}</button>
               </>
             ) : (
-              <button type="button" className="lbtn" onClick={submit} disabled={loading}>{loading ? <span className="lsp" /> : t("Einloggen", "Sign in")}</button>
+              <button className="lbtn" onClick={submit} disabled={loading}>{loading ? <span className="lsp" /> : t("Einloggen", "Sign in")}</button>
             )}
 
             <hr className="ldiv" />

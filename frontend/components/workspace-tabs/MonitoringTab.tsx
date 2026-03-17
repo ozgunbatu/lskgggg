@@ -17,7 +17,7 @@ export default function MonitoringTab(props: WorkspaceTabProps) {
           <div className="workspace-title">{L==="de"?"Monitoring & Frühwarnung":"Monitoring & Early Warning"}</div>
           <div className="workspace-sub">{L==="de"?"Kontinuierliche Überwachung von Lieferanten und Risikoländern.":"Continuous monitoring of suppliers and risk countries."}</div>
         </div>
-        <button type="button" className="btn btn-g btn-sm" onClick={()=>reloads.reloadMonitoringData()}>↺ {L==="de"?"Aktualisieren":"Refresh"}</button>
+        <button className="btn btn-g btn-sm" onClick={()=>reloads.reloadMonitoringData()}>↺ {L==="de"?"Aktualisieren":"Refresh"}</button>
       </div>
 
       {/* Stats */}

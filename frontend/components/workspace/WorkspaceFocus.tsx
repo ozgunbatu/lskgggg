@@ -61,7 +61,7 @@ export default function WorkspaceFocus({ cards }: { cards: WorkspaceCard[] }) {
 
             {/* CTA */}
             <div className="focus-action">
-              <button type="button"
+              <button
                 className="btn btn-sm"
                 style={{
                   background: `${color.accent}14`,

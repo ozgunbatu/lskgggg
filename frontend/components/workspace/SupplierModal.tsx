@@ -60,7 +60,7 @@ export default function SupplierModal(props: Props) {
               {L === "de" ? "Alle Parameter fliessen in die 20-Faktor Risikobewertung ein." : "All parameters feed into the 20-factor risk assessment."}
             </div>
           </div>
-          <button type="button" className="modal-close" onClick={onClose}>x</button>
+          <button className="modal-close" onClick={onClose}>x</button>
         </div>
         <div className="sec-divider">{L === "de" ? "Stammdaten" : "Basic Data"}</div>
         <div className="fl"><label>{L === "de" ? "Unternehmensname *" : "Company name *"}</label><input className="inp" value={sName} onChange={e => setSName(e.target.value)} placeholder={L === "de" ? "Muster GmbH" : "Acme Corp"} /></div>
@@ -83,8 +83,8 @@ export default function SupplierModal(props: Props) {
         <div className="chk-row"><input id="chk-viol" type="checkbox" checked={sViolations} onChange={e => setSViolations(e.target.checked)} /><label htmlFor="chk-viol" style={{ color: "#DC2626" }}>{L === "de" ? "Fruhere LkSG-Verstoss (erhoht Risiko)" : "Previous LkSG violation (increases risk)"}</label></div>
         <div className="fl" style={{ marginTop: 4 }}><label>{L === "de" ? "Interne Notiz" : "Internal note"}</label><textarea className="ta" rows={2} value={sNotes} onChange={e => setSNotes(e.target.value)} placeholder={L === "de" ? "Zusatzliche Informationen..." : "Additional information..."} /></div>
         <div className="brow" style={{ justifyContent: "flex-end", marginTop: 8 }}>
-          <button type="button" className="btn btn-g" onClick={onClose}>{L === "de" ? "Abbrechen" : "Cancel"}</button>
-          <button type="button" className="btn btn-p" onClick={onSave} disabled={loading || !sName.trim()}>{loading ? <span className="spin" /> : null}{editingSup ? (L === "de" ? "Speichern" : "Save") : (L === "de" ? "Anlegen & Bewerten" : "Create & Score")}</button>
+          <button className="btn btn-g" onClick={onClose}>{L === "de" ? "Abbrechen" : "Cancel"}</button>
+          <button className="btn btn-p" onClick={onSave} disabled={loading || !sName.trim()}>{loading ? <span className="spin" /> : null}{editingSup ? (L === "de" ? "Speichern" : "Save") : (L === "de" ? "Anlegen & Bewerten" : "Create & Score")}</button>
         </div>
       </div>
     </div>

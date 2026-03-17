@@ -46,7 +46,7 @@ export default function DashboardTab(props: DashboardTabProps) {
               <span className={quickstartDone === quickstartSteps.length ? "badge-ok" : "badge-warn"}>
                 {quickstartDone}/{quickstartSteps.length} {L==="de" ? "erledigt" : "done"}
               </span>
-              <button type="button" className="btn btn-g btn-sm" onClick={dismissQuickstart}>{L==="de" ? "Ausblenden" : "Dismiss"}</button>
+              <button className="btn btn-g btn-sm" onClick={dismissQuickstart}>{L==="de" ? "Ausblenden" : "Dismiss"}</button>
             </div>
           </div>
           <div className="quickstart-progress" style={{ marginTop: 12 }}>
@@ -66,7 +66,7 @@ export default function DashboardTab(props: DashboardTabProps) {
                 </div>
                 <div className="quickstep-title">{step.title}</div>
                 <div className="quickstep-copy">{step.copy}</div>
-                <button type="button" className={"btn btn-sm " + (step.done ? "btn-g" : "btn-p")} onClick={() => setTab(step.tab)}>
+                <button className={"btn btn-sm " + (step.done ? "btn-g" : "btn-p")} onClick={() => setTab(step.tab)}>
                   {step.done ? (L==="de" ? "Prüfen →" : "Review →") : (L==="de" ? "Öffnen →" : "Open →")}
                 </button>
               </div>
@@ -165,7 +165,7 @@ export default function DashboardTab(props: DashboardTabProps) {
                 color: "var(--blue)",
               },
             ].map(item => (
-              <button type="button"
+              <button
                 key={item.tab}
                 onClick={() => setTab(item.tab)}
                 style={{
@@ -205,11 +205,11 @@ export default function DashboardTab(props: DashboardTabProps) {
               <div className="sec-sub">{L==="de" ? "Top Lieferanten nach Risikolevel" : "Top suppliers by risk level"}</div>
             </div>
             <div className="brow">
-              <button type="button" className="btn btn-g btn-sm" onClick={recalc} disabled={loading}>
+              <button className="btn btn-g btn-sm" onClick={recalc} disabled={loading}>
                 {loading ? <span className="spin-d" /> : null}
                 {L==="de" ? "Berechnen" : "Calculate"}
               </button>
-              <button type="button" className="btn btn-ai btn-sm" onClick={() => setTab("ai")}>✦ AI</button>
+              <button className="btn btn-ai btn-sm" onClick={() => setTab("ai")}>✦ AI</button>
             </div>
           </div>
           {topSuppliers.length ? (
@@ -219,7 +219,7 @@ export default function DashboardTab(props: DashboardTabProps) {
                 const rc = s.risk_level === "high" ? "var(--red)" : "var(--amber)";
                 return (
                   <div key={s.id}>
-                    <button type="button"
+                    <button
                       onClick={() => setExpanded(isExp ? null : `dash-${s.id}`)}
                       style={{
                         width: "100%", display: "flex", alignItems: "center", gap: 10,
@@ -249,7 +249,7 @@ export default function DashboardTab(props: DashboardTabProps) {
               <div className="empty-ic">◎</div>
               <div className="empty-t">{L==="de" ? "Keine Risikodaten" : "No risk data"}</div>
               <div className="empty-c">{L==="de" ? "Lieferanten anlegen oder CSV importieren." : "Add suppliers or import a CSV."}</div>
-              <button type="button" className="btn btn-p btn-sm" style={{ marginTop: 12 }} onClick={openAddSupModal}>
+              <button className="btn btn-p btn-sm" style={{ marginTop: 12 }} onClick={openAddSupModal}>
                 + {L==="de" ? "Lieferant anlegen" : "Add supplier"}
               </button>
             </div>
@@ -330,14 +330,14 @@ export default function DashboardTab(props: DashboardTabProps) {
             style={{ fontFamily: "'DM Mono', monospace", fontSize: 11.5 }}
           />
           <div className="brow" style={{ marginTop: 10 }}>
-            <button type="button" className="btn btn-g btn-sm" onClick={importCsv} disabled={loading}>
+            <button className="btn btn-g btn-sm" onClick={importCsv} disabled={loading}>
               {loading ? <span className="spin-d" /> : null}
               {L==="de" ? "CSV importieren" : "Import CSV"}
             </button>
-            <button type="button" className="btn btn-p btn-sm" onClick={openAddSupModal}>
+            <button className="btn btn-p btn-sm" onClick={openAddSupModal}>
               + {L==="de" ? "Manuell" : "Manual"}
             </button>
-            <button type="button" className="btn btn-g btn-sm" onClick={() => setShowCapModal(true)}>
+            <button className="btn btn-g btn-sm" onClick={() => setShowCapModal(true)}>
               {L==="de" ? "CAP vorbereiten" : "Prepare CAP"}
             </button>
           </div>

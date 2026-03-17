@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { clearToken, validateSession } from "@/lib/auth";
 import type { Lang, TabId } from "@/lib/workspace-types";
 
@@ -52,18 +52,27 @@ export default function useWorkspaceSession({
   loadKpi,
   loadAuditLog,
 }: Args) {
+  const lastLoadedTabRef = useRef<string>("");
+
   useEffect(() => {
     setMounted(true);
     setL(readLang());
 
     (async () => {
-      const status = await validateSession();
-      if (!status.ok) {
+      try {
+        const status = await validateSession();
+        if (!status.ok) {
+          clearToken();
+          window.location.href = "/login";
+          return;
+        }
+      } catch {
         clearToken();
         window.location.href = "/login";
         return;
+      } finally {
+        setAuthChecking(false);
       }
-      setAuthChecking(false);
     })();
   }, [setMounted, setL, setAuthChecking]);
 

@@ -19,10 +19,10 @@ export default function AuditTab(props: WorkspaceTabProps) {
           <div className="workspace-sub">{L==="de"?"Lückenlose Aktivitätsprotokollierung für BAFA-Prüfungen.":"Complete activity logging for BAFA audits."}</div>
         </div>
         <div className="brow">
-          <button type="button" className="btn btn-g btn-sm" onClick={()=>loadAuditLog()} disabled={auditLd as boolean}>
+          <button className="btn btn-g btn-sm" onClick={()=>loadAuditLog()} disabled={auditLd as boolean}>
             {auditLd?<span className="spin-d"/>:"↺"} {L==="de"?"Laden":"Load"}
           </button>
-          <button type="button" className="btn btn-g btn-sm" onClick={()=>exportCSV("/audit/export/csv","audit-trail.csv")}>↓ CSV</button>
+          <button className="btn btn-g btn-sm" onClick={()=>exportCSV("/audit/export/csv","audit-trail.csv")}>↓ CSV</button>
         </div>
       </div>
 
@@ -72,7 +72,7 @@ export default function AuditTab(props: WorkspaceTabProps) {
           <div className="empty-ic">≡</div>
           <div className="empty-t">{L==="de"?"Keine Protokolleinträge":"No log entries"}</div>
           <div className="empty-c">{L==="de"?"Klicken Sie auf Laden, um den Audit Trail abzurufen.":"Click Load to fetch the audit trail."}</div>
-          <button type="button" className="btn btn-g btn-sm" style={{marginTop:14}} onClick={()=>loadAuditLog()}>{L==="de"?"Laden":"Load"}</button>
+          <button className="btn btn-g btn-sm" style={{marginTop:14}} onClick={()=>loadAuditLog()}>{L==="de"?"Laden":"Load"}</button>
         </div>
       )}
     </div>

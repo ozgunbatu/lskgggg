@@ -58,7 +58,7 @@ export default function ResetPasswordPage() {
             </div>
             <label style={{ display: "block", fontSize: 11, fontWeight: 800, color: "#6b7280", textTransform: "uppercase", letterSpacing: ".7px", marginBottom: 7 }}>Passwort bestaetigen</label>
             <input type={showPw ? "text" : "password"} value={confirm} onChange={e => setConfirm(e.target.value)} style={{ width: "100%", padding: "13px 14px", borderRadius: 12, border: "1.5px solid #e8eae8", outline: "none", marginBottom: 16 }} />
-            <button type="button" onClick={submit} disabled={loading} style={{ width: "100%", padding: 14, background: "#1B3D2B", color: "#fff", border: "none", borderRadius: 12, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? .6 : 1 }}>{loading ? "Wird gespeichert..." : "Passwort speichern"}</button>
+            <button onClick={submit} disabled={loading} style={{ width: "100%", padding: 14, background: "#1B3D2B", color: "#fff", border: "none", borderRadius: 12, fontWeight: 800, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? .6 : 1 }}>{loading ? "Wird gespeichert..." : "Passwort speichern"}</button>
           </>
         )}
       </div>

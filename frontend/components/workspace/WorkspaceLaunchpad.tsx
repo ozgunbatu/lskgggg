@@ -36,7 +36,7 @@ export default function WorkspaceLaunchpad({ L, title, subtitle, items }: { L: L
               <div className="module-launchpad-status" style={{ color: tone.color }}>{item.status}</div>
               <div className="module-launchpad-title">{item.title}</div>
               <div className="module-launchpad-copy">{item.copy}</div>
-              <button type="button" className="btn btn-xs btn-g" onClick={item.onAction}>{item.actionLabel}</button>
+              <button className="btn btn-xs btn-g" onClick={item.onAction}>{item.actionLabel}</button>
             </div>
           );
         })}

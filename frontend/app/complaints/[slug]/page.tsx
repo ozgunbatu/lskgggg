@@ -127,8 +127,8 @@ export default function PublicComplaintPage({ params }:{params:{slug:string}}) {
       <header className="header">
         <div className="header-logo">LkSG<em>Compass</em></div>
         <div className="header-right">
-          <button type="button" className={`lang-btn${lang==="de"?" on":""}`} onClick={()=>changeLang("de")}>DE</button>
-          <button type="button" className={`lang-btn${lang==="en"?" on":""}`} onClick={()=>changeLang("en")}>EN</button>
+          <button className={`lang-btn${lang==="de"?" on":""}`} onClick={()=>changeLang("de")}>DE</button>
+          <button className={`lang-btn${lang==="en"?" on":""}`} onClick={()=>changeLang("en")}>EN</button>
         </div>
       </header>
 
@@ -208,7 +208,7 @@ export default function PublicComplaintPage({ params }:{params:{slug:string}}) {
                 </div>}
               </div>
 
-              <button type="button" className="btn" onClick={submit} disabled={submitting||!description.trim()}>
+              <button className="btn" onClick={submit} disabled={submitting||!description.trim()}>
                 {submitting?<><span className="sp"/>{lang==="de"?"Wird gesendet...":"Submitting..."}</>:lang==="de"?"Meldung sicher ubermitteln ->":"Submit report securely ->"}
               </button>
 

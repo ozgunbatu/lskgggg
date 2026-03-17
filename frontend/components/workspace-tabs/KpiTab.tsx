@@ -99,8 +99,8 @@ export default function KpiTab(props: WorkspaceTabProps) {
           </div>
         </div>
         <div className="brow" style={{flexShrink:0}}>
-          <button type="button" className="btn btn-g btn-sm" onClick={()=>loadKpi()} disabled={kpiLd}>{kpiLd?<span className="spin-d"/>:"↺"} {L==="de"?"Aktualisieren":"Refresh"}</button>
-          <button type="button" className="btn btn-p btn-sm" onClick={()=>saveKpiSnapshot()}>{L==="de"?"Snapshot":"Snapshot"}</button>
+          <button className="btn btn-g btn-sm" onClick={()=>loadKpi()} disabled={kpiLd}>{kpiLd?<span className="spin-d"/>:"↺"} {L==="de"?"Aktualisieren":"Refresh"}</button>
+          <button className="btn btn-p btn-sm" onClick={()=>saveKpiSnapshot()}>{L==="de"?"Snapshot":"Snapshot"}</button>
         </div>
       </div>
 

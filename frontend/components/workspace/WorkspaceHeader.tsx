@@ -53,12 +53,12 @@ export default function WorkspaceHeader({ L, tab, workspaceMeta, setTab }: Props
       </div>
       <div className="workspace-actions" style={{ flexShrink: 0 }}>
         {tab !== "suppliers" && (
-          <button type="button" className="btn btn-g btn-sm" onClick={() => setTab("suppliers")}>
+          <button className="btn btn-g btn-sm" onClick={() => setTab("suppliers")}>
             {L === "de" ? "Lieferanten" : "Suppliers"}
           </button>
         )}
         {tab !== "reports" && (
-          <button type="button" className="btn btn-p btn-sm" onClick={() => setTab("reports")}>
+          <button className="btn btn-p btn-sm" onClick={() => setTab("reports")}>
             {L === "de" ? "BAFA-Bericht" : "BAFA Report"} →
           </button>
         )}

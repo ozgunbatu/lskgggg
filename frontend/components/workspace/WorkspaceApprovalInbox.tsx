@@ -59,8 +59,8 @@ export default function WorkspaceApprovalInbox({
           </div>
         </div>
         <div className="brow">
-          <button type="button" className="btn btn-g btn-sm" onClick={onRefresh} disabled={loading}>{L === "de" ? "Aktualisieren" : "Refresh"}</button>
-          <button type="button" className="btn btn-p btn-sm" onClick={onRequest} disabled={loading}>{L === "de" ? "Freigabe anfragen" : "Request approval"}</button>
+          <button className="btn btn-g btn-sm" onClick={onRefresh} disabled={loading}>{L === "de" ? "Aktualisieren" : "Refresh"}</button>
+          <button className="btn btn-p btn-sm" onClick={onRequest} disabled={loading}>{L === "de" ? "Freigabe anfragen" : "Request approval"}</button>
         </div>
       </div>
 
@@ -82,8 +82,8 @@ export default function WorkspaceApprovalInbox({
 
       {canApprove && latest?.status === "pending" && (
         <div className="brow" style={{ marginBottom: 14 }}>
-          <button type="button" className="btn btn-g" onClick={onApprove} disabled={loading}>{L === "de" ? "Freigeben" : "Approve"}</button>
-          <button type="button" className="btn" style={{ borderColor: "#DC2626", color: "#DC2626" }} onClick={onReject} disabled={loading}>{L === "de" ? "Ablehnen" : "Reject"}</button>
+          <button className="btn btn-g" onClick={onApprove} disabled={loading}>{L === "de" ? "Freigeben" : "Approve"}</button>
+          <button className="btn" style={{ borderColor: "#DC2626", color: "#DC2626" }} onClick={onReject} disabled={loading}>{L === "de" ? "Ablehnen" : "Reject"}</button>
         </div>
       )}
 

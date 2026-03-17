@@ -38,7 +38,7 @@ export default function WorkspaceModuleGuide({
     return (
       <div className="module-guide-collapsed">
         <span className={done === steps.length ? "badge-ok" : "badge-warn"}>{done}/{steps.length} {L === "de" ? "erledigt" : "done"}</span>
-        <button type="button" className="btn btn-g btn-xs" onClick={() => {
+        <button className="btn btn-g btn-xs" onClick={() => {
           try { window.localStorage.removeItem(storageKey); } catch {}
           setHidden(false);
         }}>{L === "de" ? "Guide zeigen" : "Show guide"}</button>
@@ -55,7 +55,7 @@ export default function WorkspaceModuleGuide({
         </div>
         <div className="brow">
           <span className={toneClass === "ok" ? "badge-ok" : toneClass === "warn" ? "badge-warn" : "badge-err"}>{done}/{steps.length} {L === "de" ? "erledigt" : "done"}</span>
-          <button type="button" className="btn btn-g btn-xs" onClick={() => {
+          <button className="btn btn-g btn-xs" onClick={() => {
             try { window.localStorage.setItem(storageKey, "hidden"); } catch {}
             setHidden(true);
           }}>{L === "de" ? "Ausblenden" : "Hide"}</button>
@@ -72,7 +72,7 @@ export default function WorkspaceModuleGuide({
             <div className="module-guide-step-title">{step.label}</div>
             {step.copy ? <div className="module-guide-step-copy">{step.copy}</div> : null}
             {step.onAction && step.actionLabel ? (
-              <button type="button" className={"btn btn-xs " + (step.done ? "btn-g" : "btn-p")} onClick={step.onAction}>{step.actionLabel}</button>
+              <button className={"btn btn-xs " + (step.done ? "btn-g" : "btn-p")} onClick={step.onAction}>{step.actionLabel}</button>
             ) : null}
           </div>
         ))}

@@ -31,7 +31,7 @@ export default class ErrorBoundary extends Component<Props, State> {
         <div style={{ fontSize: 13, color: "#6B7280", maxWidth: 400, textAlign: "center" }}>
           {this.state.error}
         </div>
-        <button type="button"
+        <button
           onClick={() => { this.setState({ hasError: false, error: null }); window.location.reload(); }}
           style={{
             background: "#1B3D2B", color: "#fff", border: "none",
