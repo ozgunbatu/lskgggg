@@ -1,73 +1,76 @@
 import React from "react";
 import WorkspaceDataState from "../workspace/WorkspaceDataState";
 import WorkspaceSectionMeta from "../workspace/WorkspaceSectionMeta";
-import WorkspaceActionPrompt from "../workspace/WorkspaceActionPrompt";
-import WorkspaceLaunchpad from "../workspace/WorkspaceLaunchpad";
 import WorkspaceApprovalSummary from "../workspace/WorkspaceApprovalSummary";
-import WorkspaceApprovalAging from "../workspace/WorkspaceApprovalAging";
 import SkeletonCard from "@/components/workspace/SkeletonCard";
 import type { DashboardTabProps, Supplier } from "@/lib/workspace-types";
+
+const PAL = {
+  high: { c:"var(--red)",   bg:"var(--red-5)",  b:"var(--red-15)"  },
+  medium:{ c:"var(--amb)",  bg:"var(--amb-5)",  b:"var(--amb-15)"  },
+  low:   { c:"var(--g-lo)", bg:"var(--g-5)",    b:"var(--g-20)"    },
+  unknown:{ c:"var(--t3)", bg:"var(--c3)",      b:"var(--b2)"      },
+};
 
 export default function DashboardTab(props: DashboardTabProps) {
   const {
     L, requestState, reloads, showQuickstart, dismissQuickstart,
-    quickstartSteps, quickstartDone, company, complaints, suppliers,
-    actions, saqs, draftTs, setTab, score, actionStats, kpis,
-    recalc, loading, approvalMeta, sendAi, expanded, setExpanded,
-    RiskBreakdown, openAddSupModal, setShowCapModal, gradeLabel,
-    scCol, sc, sg, COUNTRIES, INDUSTRIES, csv, setCsv, importCsv,
+    quickstartSteps, quickstartDone, complaints, suppliers, actions,
+    draftTs, setTab, score, actionStats, kpis, recalc, loading,
+    approvalMeta, expanded, setExpanded, RiskBreakdown,
+    openAddSupModal, setShowCapModal, gradeLabel, scCol, sc, sg,
+    csv, setCsv, importCsv, COUNTRIES, INDUSTRIES,
   } = props;
 
-  const openComplaints   = complaints.filter(c => c.status === "open").length;
-  const overdueActions   = actions.filter(a => a.due_date && new Date(a.due_date) < new Date() && a.status !== "completed" && a.status !== "closed").length;
-  const riskSuppliers    = suppliers.filter(s => s.risk_level === "high" || s.risk_level === "medium");
-  const topSuppliers     = [...riskSuppliers].sort((a,b) => (b.risk_score??0)-(a.risk_score??0)).slice(0,5);
-  const bafahecks = [
-    { ok: suppliers.length > 0,              para: "§5", label: L==="de" ? "Lieferanten erfasst" : "Suppliers recorded" },
-    { ok: suppliers.some(s => s.risk_score > 0), para: "§5", label: L==="de" ? "Risikoanalyse ausgeführt" : "Risk analysis completed" },
-    { ok: actionStats.total > 0,             para: "§7", label: L==="de" ? "CAPs angelegt" : "CAPs created" },
-    { ok: complaints.length >= 0,            para: "§8", label: L==="de" ? "Beschwerdekanal aktiv" : "Complaint channel active" },
-    { ok: !!draftTs,                         para: "§10", label: L==="de" ? "Berichtsentwurf vorhanden" : "Report draft exists" },
+  const openComplaints  = complaints.filter((c:any) => c.status === "open").length;
+  const overdueActions  = actions.filter((a:any) => a.due_date && new Date(a.due_date) < new Date() && a.status !== "completed" && a.status !== "closed").length;
+  const topRisk = [...(suppliers as Supplier[])].filter(s => s.risk_level === "high" || s.risk_level === "medium").sort((a,b) => (b.risk_score||0)-(a.risk_score||0)).slice(0,5);
+  const bafaChecks = [
+    { para:"§5", ok: suppliers.length > 0,                                             label: L==="de" ? "Lieferanten erfasst" : "Suppliers recorded" },
+    { para:"§5", ok: (suppliers as any[]).some((s:any) => s.risk_score > 0),           label: L==="de" ? "Risikoanalyse abgeschlossen" : "Risk analysis completed" },
+    { para:"§7", ok: actionStats.total > 0,                                             label: L==="de" ? "CAPs angelegt" : "CAPs created" },
+    { para:"§8", ok: complaints.length >= 0,                                             label: L==="de" ? "Beschwerdekanal aktiv" : "Complaint channel active" },
+    { para:"§10",ok: !!draftTs,                                                          label: L==="de" ? "Berichtsentwurf vorhanden" : "Report draft exists" },
   ];
+  const bafaScore = bafaChecks.filter(b => b.ok).length;
+  const compliancePct = Math.round((bafaScore / bafaChecks.length) * 100);
 
   return (
     <>
       <WorkspaceDataState L={L} requestState={requestState} domains={["suppliers","actions","complaints"]} reload={reloads.reloadCoreData} />
+      <WorkspaceApprovalSummary L={L} meta={approvalMeta} setTab={setTab} />
 
-      {/* ── QUICKSTART ─────────────────────────────────────────────────────── */}
+      {/* QUICKSTART */}
       {showQuickstart && (
-        <div className="quickstart-card">
-          <div className="sec-hd" style={{ marginBottom: 0 }}>
+        <div className="quickstart-card" style={{ marginBottom:14 }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:10 }}>
             <div>
               <div className="sec-title">{L==="de" ? "Geführter Start" : "Guided start"}</div>
-              <div className="sec-sub">{L==="de" ? "Alle Funktionen. Die richtige Reihenfolge." : "All features. The right order."}</div>
+              <div className="sec-sub">{L==="de" ? "Diese 5 Schritte, dann ist das System produktiv." : "These 5 steps make the system productive."}</div>
             </div>
-            <div className="brow">
-              <span className={quickstartDone === quickstartSteps.length ? "badge-ok" : "badge-warn"}>
-                {quickstartDone}/{quickstartSteps.length} {L==="de" ? "erledigt" : "done"}
-              </span>
+            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <div className="prog" style={{ width:120, height:4 }}>
+                  <div className="prog-fill" style={{ width:`${(quickstartDone/Math.max(quickstartSteps.length,1))*100}%`, background:"var(--g)" }}/>
+                </div>
+                <span style={{ fontSize:11, fontWeight:700, color:"var(--g-lo)", fontFamily:"'DM Mono',monospace" }}>
+                  {quickstartDone}/{quickstartSteps.length}
+                </span>
+              </div>
               <button className="btn btn-g btn-sm" onClick={dismissQuickstart}>{L==="de" ? "Ausblenden" : "Dismiss"}</button>
             </div>
           </div>
-          <div className="quickstart-progress" style={{ marginTop: 12 }}>
-            <div className="prog" style={{ height: 5 }}>
-              <div className="prog-fill" style={{ width: `${Math.round((quickstartDone/Math.max(quickstartSteps.length,1))*100)}%`, background: "var(--g2)" }} />
-            </div>
-            <div className="quickstart-progress-note">
-              {quickstartDone === quickstartSteps.length ? (L==="de" ? "System bereit." : "System ready.") : `${Math.round((quickstartDone/Math.max(quickstartSteps.length,1))*100)}% ${L==="de" ? "abgeschlossen" : "complete"}`}
-            </div>
-          </div>
           <div className="quickstart-grid">
-            {quickstartSteps.map((step, idx) => (
+            {quickstartSteps.map((step:any, i:number) => (
               <div key={step.id} className={"quickstep" + (step.done ? " done" : "")}>
                 <div className="quickstep-top">
-                  <div className="quickstep-num">{step.done ? "✓" : idx + 1}</div>
-                  <div className="quickstep-status">{step.done ? (L==="de" ? "Fertig" : "Done") : (L==="de" ? "Offen" : "Open")}</div>
+                  <div className="quickstep-num">{step.done ? "✓" : i+1}</div>
+                  <div className="quickstep-status">{step.done ? (L==="de"?"Fertig":"Done") : (L==="de"?"Offen":"Open")}</div>
                 </div>
                 <div className="quickstep-title">{step.title}</div>
                 <div className="quickstep-copy">{step.copy}</div>
-                <button className={"btn btn-sm " + (step.done ? "btn-g" : "btn-p")} onClick={() => setTab(step.tab)}>
-                  {step.done ? (L==="de" ? "Prüfen →" : "Review →") : (L==="de" ? "Öffnen →" : "Open →")}
+                <button className={"btn btn-sm " + (step.done?"btn-g":"btn-p")} onClick={() => setTab(step.tab)}>
+                  {step.done ? (L==="de"?"Prüfen →":"Review →") : (L==="de"?"Öffnen →":"Open →")}
                 </button>
               </div>
             ))}
@@ -75,168 +78,109 @@ export default function DashboardTab(props: DashboardTabProps) {
         </div>
       )}
 
-      {/* ── KPI ROW ───────────────────────────────────────────────────────── */}
+      {/* KPI ROW */}
       <div className="kpi-row">
-        {/* Compliance Score */}
-        <div className="kpi">
-          <div className="kpi-accent" style={{ background: scCol }} />
-          <div className="kpi-lbl" style={{ color: "var(--t3)" }}>
-            {L==="de" ? "Compliance Score" : "Compliance Score"}
-            <span className="ltag">§9</span>
+        {[
+          { lbl:L==="de"?"Score":"Score", val:`${sc}`, sub:`${L==="de"?"Note":"Grade"} ${sg} · ${gradeLabel(String(sg),L)}`, col:scCol, para:"§9" },
+          { lbl:L==="de"?"Lieferanten":"Suppliers", val:`${kpis.total}`, sub:`${kpis.countries} ${L==="de"?"Länder":"countries"} · ${kpis.high} ${L==="de"?"Hochrisiko":"high-risk"}`, col:kpis.high>0?"var(--red)":"var(--g-lo)", para:"§5" },
+          { lbl:L==="de"?"Offene CAPs":"Open CAPs", val:`${actionStats.open}`, sub:overdueActions>0?`${overdueActions} ${L==="de"?"überfällig":"overdue"}`:`${actionStats.done} ${L==="de"?"abgeschlossen":"done"}`, col:overdueActions>0?"var(--red)":actionStats.open>0?"var(--amb)":"var(--g-lo)", para:"§7" },
+          { lbl:L==="de"?"Beschwerden":"Complaints", val:`${openComplaints}`, sub:`${complaints.length} ${L==="de"?"gesamt":"total"}`, col:openComplaints>0?"var(--amb)":"var(--t3)", para:"§8" },
+        ].map((k,i) => (
+          <div key={i} className="kpi">
+            <div className="kpi-accent" style={{ background:k.col }}/>
+            <div className="kpi-lbl">{k.lbl}<span className="ltag">{k.para}</span></div>
+            <div className="kpi-val" style={{ color:k.col }}>{k.val}</div>
+            <div className="kpi-sub">{k.sub}</div>
           </div>
-          <div className="kpi-val" style={{ color: scCol }}>
-            {sc}<span style={{ fontSize: 14, fontWeight: 400, color: "var(--t3)" }}>/100</span>
-          </div>
-          <div className="kpi-sub">
-            {L==="de" ? "Note" : "Grade"} <strong style={{ color: scCol }}>{String(sg)}</strong> · {gradeLabel(String(sg), L)}
-          </div>
-          <div style={{ marginTop: 10, display: "flex", gap: 6, flexWrap: "wrap" }}>
-            <span className="stat-pill">{L==="de" ? "Risiko" : "Risk"}: {score.risk}</span>
-            <span className="stat-pill">{L==="de" ? "Prozess" : "Process"}: {score.process}</span>
-          </div>
-        </div>
-
-        {/* Suppliers */}
-        <div className="kpi">
-          <div className="kpi-accent" style={{ background: kpis.high > 0 ? "var(--red)" : "var(--g2)" }} />
-          <div className="kpi-lbl">{L==="de" ? "Lieferanten" : "Suppliers"}</div>
-          <div className="kpi-val">{kpis.total}</div>
-          <div className="kpi-sub">
-            {kpis.countries} {L==="de" ? "Länder" : "countries"}
-            {kpis.high > 0 && <> · <span style={{ color: "var(--red)" }}>{kpis.high} {L==="de" ? "Hochrisiko" : "high-risk"}</span></>}
-          </div>
-        </div>
-
-        {/* Actions */}
-        <div className="kpi">
-          <div className="kpi-accent" style={{ background: overdueActions > 0 ? "var(--red)" : actionStats.open > 0 ? "var(--amber)" : "var(--g2)" }} />
-          <div className="kpi-lbl">{L==="de" ? "Offene CAPs" : "Open CAPs"}<span className="ltag">§6</span></div>
-          <div className="kpi-val" style={{ color: overdueActions > 0 ? "var(--red)" : actionStats.open > 0 ? "var(--amber)" : "var(--g1)" }}>
-            {actionStats.open}
-          </div>
-          <div className="kpi-sub">
-            {overdueActions > 0
-              ? <span style={{ color: "var(--red)" }}>{overdueActions} {L==="de" ? "überfällig" : "overdue"}</span>
-              : <>{actionStats.done} {L==="de" ? "abgeschlossen" : "completed"}</>}
-          </div>
-        </div>
-
-        {/* Complaints */}
-        <div className="kpi">
-          <div className="kpi-accent" style={{ background: openComplaints > 0 ? "var(--amber)" : "var(--border)" }} />
-          <div className="kpi-lbl">{L==="de" ? "Beschwerden offen" : "Open complaints"}<span className="ltag">§8</span></div>
-          <div className="kpi-val" style={{ color: openComplaints > 0 ? "var(--amber)" : "var(--t2)" }}>{openComplaints}</div>
-          <div className="kpi-sub">{L==="de" ? "Gesamt" : "Total"}: {complaints.length}</div>
-        </div>
+        ))}
       </div>
 
-      {/* ── MAIN GRID ─────────────────────────────────────────────────────── */}
-      <div className="g2" style={{ marginBottom: 14 }}>
+      {/* MAIN GRID */}
+      <div className="g2" style={{ marginBottom:12 }}>
 
-        {/* Priorities */}
+        {/* Situation */}
         <div className="card">
           <div className="sec-hd">
             <div>
-              <div className="sec-title">{L==="de" ? "Heutige Prioritäten" : "Today's priorities"}</div>
-              <div className="sec-sub">{L==="de" ? "Was zuerst Aufmerksamkeit braucht." : "What needs attention first."}</div>
+              <div className="sec-title">{L==="de" ? "Aktuelle Lage" : "Current situation"}</div>
+              <div className="sec-sub">{L==="de" ? "Was jetzt Aufmerksamkeit braucht." : "What needs attention now."}</div>
             </div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:7 }}>
             {[
-              {
-                tab: "actions" as const,
-                label: L==="de" ? "Überfällige CAPs" : "Overdue CAPs",
-                copy: overdueActions > 0 ? `${overdueActions} ${L==="de" ? "Maßnahmen brauchen sofort Aufmerksamkeit" : "actions need immediate attention"}` : (L==="de" ? "Keine überfälligen CAPs" : "No overdue CAPs"),
-                urgent: overdueActions > 0,
-                color: "var(--red)",
-              },
-              {
-                tab: "complaints" as const,
-                label: L==="de" ? "Offene Beschwerden" : "Open complaints",
-                copy: openComplaints > 0 ? `${openComplaints} ${L==="de" ? "Hinweise müssen priorisiert werden" : "cases need prioritisation"}` : (L==="de" ? "Kanal ist ruhig" : "Channel is quiet"),
-                urgent: openComplaints > 0,
-                color: "var(--amber)",
-              },
-              {
-                tab: "reports" as const,
-                label: "BAFA Readiness",
-                copy: draftTs ? `${L==="de" ? "Letzter Entwurf" : "Last draft"}: ${draftTs}` : (L==="de" ? "Noch kein Entwurf" : "No draft yet"),
-                urgent: !draftTs,
-                color: "var(--blue)",
-              },
+              { key:"overdue",  title:L==="de"?"Überfällige CAPs":"Overdue CAPs",  urgent:overdueActions>0, count:overdueActions,  tab:"actions"    as const, bullet:"var(--red)" },
+              { key:"complaints",title:L==="de"?"Offene Beschwerden":"Open complaints",urgent:openComplaints>0,count:openComplaints,tab:"complaints" as const, bullet:"var(--amb)" },
+              { key:"bafa",     title:"BAFA Readiness",                             urgent:compliancePct<100, count:compliancePct,   tab:"reports"    as const, bullet:"var(--blu)", pct:true },
             ].map(item => (
               <button
-                key={item.tab}
+                key={item.key}
                 onClick={() => setTab(item.tab)}
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 12,
-                  padding: "12px 14px",
-                  borderRadius: "var(--r-md)",
-                  border: `1px solid ${item.urgent ? item.color + "30" : "var(--border)"}`,
-                  background: item.urgent ? item.color + "08" : "var(--bg-2)",
-                  textAlign: "left",
-                  cursor: "pointer",
-                  transition: "all 0.12s",
+                  display:"flex", alignItems:"center", gap:12,
+                  padding:"11px 13px", borderRadius:"var(--r3)",
+                  border:`1px solid ${item.urgent ? item.bullet+"25" : "var(--b2)"}`,
+                  background:item.urgent ? item.bullet+"07" : "var(--c2)",
+                  textAlign:"left", cursor:"pointer", transition:"all 120ms",
                 }}
               >
                 <div style={{
-                  width: 6, height: 6, borderRadius: "50%",
-                  background: item.urgent ? item.color : "var(--t4)",
-                  flexShrink: 0,
-                  boxShadow: item.urgent ? `0 0 6px ${item.color}` : "none",
-                }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: "var(--t1)", marginBottom: 2 }}>{item.label}</div>
-                  <div style={{ fontSize: 12, color: "var(--t3)" }}>{item.copy}</div>
+                  width:7, height:7, borderRadius:"50%", flexShrink:0,
+                  background: item.count === 0 ? "var(--t4)" : item.bullet,
+                  boxShadow: item.count > 0 && item.urgent ? `0 0 6px ${item.bullet}` : "none",
+                }}/>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontSize:13, fontWeight:600, color:"var(--t1)", marginBottom:1 }}>{item.title}</div>
+                  <div style={{ fontSize:11.5, color:"var(--t3)" }}>
+                    {item.pct ? `${item.count}% ${L==="de"?"vollständig":"complete"}` : item.count > 0 ? `${item.count} ${L==="de"?"erfordern Aufmerksamkeit":"require attention"}` : L==="de"?"Alles in Ordnung":"All good"}
+                  </div>
                 </div>
-                <span style={{ fontSize: 12, color: "var(--t4)" }}>→</span>
+                <span style={{ fontSize:11, color:"var(--t4)", flexShrink:0 }}>→</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Risk Portfolio */}
+        {/* Risk portfolio */}
         <div className="card">
           <div className="sec-hd">
             <div>
-              <div className="sec-title">{L==="de" ? "Risikoanalyse" : "Risk analysis"}</div>
-              <div className="sec-sub">{L==="de" ? "Top Lieferanten nach Risikolevel" : "Top suppliers by risk level"}</div>
+              <div className="sec-title">{L==="de" ? "Top-Risikolieferanten" : "Top risk suppliers"}</div>
+              <div className="sec-sub">{L==="de" ? "Höchste Risikoscores im Portfolio." : "Highest risk scores in portfolio."}</div>
             </div>
             <div className="brow">
               <button className="btn btn-g btn-sm" onClick={recalc} disabled={loading}>
-                {loading ? <span className="spin-d" /> : null}
-                {L==="de" ? "Berechnen" : "Calculate"}
+                {loading ? <span className="spin-d"/> : "↺"}
               </button>
               <button className="btn btn-ai btn-sm" onClick={() => setTab("ai")}>✦ AI</button>
             </div>
           </div>
-          {topSuppliers.length ? (
-            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-              {topSuppliers.map((s: Supplier) => {
-                const isExp = expanded === `dash-${s.id}`;
-                const rc = s.risk_level === "high" ? "var(--red)" : "var(--amber)";
+          {topRisk.length > 0 ? (
+            <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+              {topRisk.map(s => {
+                const pal = PAL[s.risk_level as keyof typeof PAL] || PAL.unknown;
+                const isExp = expanded === `d-${s.id}`;
                 return (
                   <div key={s.id}>
                     <button
-                      onClick={() => setExpanded(isExp ? null : `dash-${s.id}`)}
+                      onClick={() => setExpanded(isExp ? null : `d-${s.id}`)}
                       style={{
-                        width: "100%", display: "flex", alignItems: "center", gap: 10,
-                        padding: "10px 12px",
-                        borderRadius: isExp ? "var(--r-md) var(--r-md) 0 0" : "var(--r-md)",
-                        border: `1px solid ${isExp ? rc + "30" : "var(--border)"}`,
-                        background: isExp ? rc + "06" : "var(--bg-2)",
-                        textAlign: "left", cursor: "pointer", transition: "all 0.12s",
+                        width:"100%", display:"flex", alignItems:"center", gap:10,
+                        padding:"9px 12px",
+                        borderRadius: isExp ? "var(--r2) var(--r2) 0 0" : "var(--r2)",
+                        border:`1px solid ${isExp ? pal.c+"30" : "var(--b2)"}`,
+                        background: isExp ? pal.bg : "var(--c2)",
+                        textAlign:"left", cursor:"pointer", transition:"all 120ms",
                       }}
                     >
-                      <span className={s.risk_level === "high" ? "chip ch" : "chip cm"} style={{ flexShrink: 0 }}>{s.risk_level}</span>
-                      <span style={{ flex: 1, fontSize: 12.5, fontWeight: 600, color: "var(--t1)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{s.name}</span>
-                      <span style={{ fontSize: 11, color: "var(--t3)", flexShrink: 0 }}>{s.country} · {s.industry}</span>
-                      <span style={{ fontSize: 13, fontWeight: 700, color: rc, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{s.risk_score}</span>
+                      <span style={{ fontSize:10, fontWeight:700, color:pal.c, background:pal.bg, border:`1px solid ${pal.b}`, borderRadius:20, padding:"1px 7px", flexShrink:0 }}>
+                        {s.risk_level === "high" ? (L==="de"?"Hoch":"High") : s.risk_level === "medium" ? (L==="de"?"Mittel":"Med") : (L==="de"?"Niedrig":"Low")}
+                      </span>
+                      <span style={{ flex:1, fontSize:12.5, fontWeight:600, color:"var(--t1)", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{s.name}</span>
+                      <span style={{ fontSize:11, color:"var(--t3)", flexShrink:0, fontFamily:"'DM Mono',monospace" }}>{s.country}</span>
+                      <span style={{ fontSize:13, fontWeight:700, color:pal.c, fontVariantNumeric:"tabular-nums", flexShrink:0 }}>{s.risk_score}</span>
                     </button>
                     {isExp && (
-                      <div style={{ padding: 12, background: "var(--bg-2)", border: `1px solid ${rc}20`, borderTop: "none", borderRadius: "0 0 var(--r-md) var(--r-md)" }}>
+                      <div style={{ padding:12, background:pal.bg, border:`1px solid ${pal.c}20`, borderTop:"none", borderRadius:"0 0 var(--r2) var(--r2)" }}>
                         <RiskBreakdown sup={s} compact />
                       </div>
                     )}
@@ -246,93 +190,88 @@ export default function DashboardTab(props: DashboardTabProps) {
             </div>
           ) : (
             <div className="empty empty-compact">
-              <div className="empty-ic">◎</div>
-              <div className="empty-t">{L==="de" ? "Keine Risikodaten" : "No risk data"}</div>
-              <div className="empty-c">{L==="de" ? "Lieferanten anlegen oder CSV importieren." : "Add suppliers or import a CSV."}</div>
-              <button className="btn btn-p btn-sm" style={{ marginTop: 12 }} onClick={openAddSupModal}>
-                + {L==="de" ? "Lieferant anlegen" : "Add supplier"}
+              <div className="empty-ic">◉</div>
+              <div className="empty-t">{L==="de" ? "Noch keine Lieferanten" : "No suppliers yet"}</div>
+              <button className="btn btn-p btn-sm" style={{ marginTop:12 }} onClick={openAddSupModal}>
+                + {L==="de" ? "Anlegen" : "Add supplier"}
               </button>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── BOTTOM ROW ────────────────────────────────────────────────────── */}
+      {/* BOTTOM GRID */}
       <div className="g2">
         {/* BAFA Checklist */}
         <div className="card">
-          <div className="sec-hd">
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
             <div>
               <div className="sec-title">BAFA Readiness</div>
               <div className="sec-sub">{L==="de" ? "Status der Kernpflichten §§4–10" : "Core obligation status §§4–10"}</div>
             </div>
-            <span className={bafahecks.every(b => b.ok) ? "badge-ok" : "badge-warn"}>
-              {bafahecks.filter(b => b.ok).length}/{bafahecks.length}
-            </span>
+            <div style={{
+              fontSize:16, fontWeight:700, fontVariantNumeric:"tabular-nums",
+              color: compliancePct === 100 ? "var(--g-lo)" : compliancePct >= 60 ? "var(--amb)" : "var(--red)",
+            }}>{compliancePct}%</div>
           </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
-            {bafahecks.map((item, idx) => (
-              <div key={idx} style={{
-                display: "flex", alignItems: "center", gap: 10,
-                padding: "9px 12px",
-                borderRadius: "var(--r-md)",
-                border: `1px solid ${item.ok ? "var(--g-border)" : "var(--border)"}`,
-                background: item.ok ? "var(--g-bg)" : "var(--bg-2)",
+
+          {/* Progress bar */}
+          <div className="prog" style={{ height:5, marginBottom:14 }}>
+            <div className="prog-fill" style={{ width:`${compliancePct}%`, background: compliancePct===100?"var(--g)":compliancePct>=60?"var(--amb)":"var(--red)" }}/>
+          </div>
+
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {bafaChecks.map((item, i) => (
+              <div key={i} style={{
+                display:"flex", alignItems:"center", gap:10,
+                padding:"8px 11px", borderRadius:"var(--r2)",
+                border:`1px solid ${item.ok ? "var(--g-20)" : "var(--b2)"}`,
+                background: item.ok ? "var(--g-5)" : "var(--c2)",
+                transition:"all 120ms",
               }}>
-                <span style={{ fontSize: 12, color: item.ok ? "var(--g1)" : "var(--t4)", flexShrink: 0 }}>
+                <span style={{ fontSize:12, color:item.ok?"var(--g-lo)":"var(--t4)", flexShrink:0 }}>
                   {item.ok ? "✓" : "○"}
                 </span>
                 <span style={{
-                  fontSize: 10, fontWeight: 700, color: item.ok ? "var(--g1)" : "var(--t3)",
-                  fontFamily: "'DM Mono', monospace", flexShrink: 0,
-                  background: item.ok ? "rgba(110,231,160,0.12)" : "var(--bg-3)",
-                  border: `1px solid ${item.ok ? "var(--g-border)" : "var(--border)"}`,
-                  borderRadius: 20, padding: "1px 7px",
-                }}>
-                  {item.para}
-                </span>
-                <span style={{ fontSize: 13, fontWeight: 500, color: item.ok ? "var(--t1)" : "var(--t2)", flex: 1 }}>{item.label}</span>
+                  fontSize:9, fontWeight:700, fontFamily:"'DM Mono',monospace",
+                  color:item.ok?"var(--g-lo)":"var(--t3)",
+                  background:item.ok?"var(--g-5)":"var(--c3)",
+                  border:`1px solid ${item.ok?"var(--g-20)":"var(--b2)"}`,
+                  borderRadius:20, padding:"1px 6px", flexShrink:0,
+                }}>{item.para}</span>
+                <span style={{ fontSize:12.5, color:item.ok?"var(--t1)":"var(--t2)", flex:1 }}>{item.label}</span>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Quick Import */}
+        {/* Quick import */}
         <div className="card">
-          <div className="sec-hd">
-            <div>
-              <div className="sec-title">{L==="de" ? "Schnellimport" : "Quick import"}</div>
-              <div className="sec-sub">{L==="de" ? "CSV für Demo und Erstaufbau." : "CSV for demo and initial setup."}</div>
-            </div>
-          </div>
+          <div className="sec-title" style={{ marginBottom:4 }}>{L==="de" ? "Schnellimport" : "Quick import"}</div>
+          <div className="sec-sub" style={{ marginBottom:14 }}>{L==="de" ? "CSV für Demo und Erstaufbau." : "CSV for demo and initial setup."}</div>
           <div style={{
-            padding: "10px 12px",
-            borderRadius: "var(--r-md)",
-            background: "var(--bg-2)",
-            border: "1px solid var(--border)",
-            marginBottom: 10,
-            fontFamily: "'DM Mono', monospace",
-            fontSize: 11,
-            color: "var(--t3)",
-            lineHeight: 1.8,
+            padding:"9px 12px", borderRadius:"var(--r2)",
+            background:"var(--c3)", border:"1px solid var(--b2)",
+            fontFamily:"'DM Mono',monospace", fontSize:10.5, color:"var(--t3)",
+            lineHeight:1.8, marginBottom:10,
           }}>
-            <div style={{ color: "var(--g1)", marginBottom: 4, fontFamily: "inherit", fontSize: 10, textTransform: "uppercase", letterSpacing: "0.08em" }}>
-              {L==="de" ? "Empfohlene Spalten" : "Recommended columns"}
+            <div style={{ color:"var(--g-lo)", fontSize:9, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:3, fontFamily:"inherit" }}>
+              {L==="de" ? "Spalten" : "Columns"}
             </div>
             name, country, industry, spend, workers
           </div>
           <textarea
             className="ta"
             rows={5}
-            value={csv}
+            value={csv as string}
             onChange={e => setCsv(e.target.value)}
-            placeholder="name,country,industry&#10;Example GmbH,DE,Automotive&#10;..."
-            style={{ fontFamily: "'DM Mono', monospace", fontSize: 11.5 }}
+            placeholder={"name,country,industry\nExample GmbH,DE,Automotive\n..."}
+            style={{ fontFamily:"'DM Mono',monospace", fontSize:11 }}
           />
-          <div className="brow" style={{ marginTop: 10 }}>
-            <button className="btn btn-g btn-sm" onClick={importCsv} disabled={loading}>
-              {loading ? <span className="spin-d" /> : null}
-              {L==="de" ? "CSV importieren" : "Import CSV"}
+          <div className="brow" style={{ marginTop:10 }}>
+            <button className="btn btn-g btn-sm" onClick={() => (importCsv as any)()} disabled={loading}>
+              {loading ? <span className="spin-d"/> : null}
+              {L==="de" ? "Importieren" : "Import CSV"}
             </button>
             <button className="btn btn-p btn-sm" onClick={openAddSupModal}>
               + {L==="de" ? "Manuell" : "Manual"}

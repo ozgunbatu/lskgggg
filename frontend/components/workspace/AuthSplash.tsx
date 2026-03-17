@@ -2,76 +2,42 @@
 import { useEffect, useState } from "react";
 
 export default function AuthSplash() {
-  const [dots, setDots] = useState(1);
-
+  const [tick, setTick] = useState(0);
   useEffect(() => {
-    const t = setInterval(() => setDots(d => d === 3 ? 1 : d + 1), 400);
+    const t = setInterval(() => setTick(n => n + 1), 350);
     return () => clearInterval(t);
   }, []);
-
+  const dots = ".".repeat((tick % 3) + 1);
   return (
     <div style={{
-      position: "fixed",
-      inset: 0,
-      background: "var(--bg)",
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      flexDirection: "column",
-      gap: 16,
-      zIndex: 9999,
+      position:"fixed", inset:0,
+      background:"#07090a",
+      display:"flex", flexDirection:"column",
+      alignItems:"center", justifyContent:"center",
+      gap:14, fontFamily:"'DM Sans',sans-serif",
     }}>
-      {/* Logo */}
       <div style={{
-        width: 48,
-        height: 48,
-        borderRadius: 14,
-        background: "linear-gradient(135deg, #1a4a2e 0%, #2d7a4f 100%)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        fontSize: 18,
-        fontWeight: 800,
-        color: "var(--g)",
-        border: "1px solid var(--g-border)",
-        boxShadow: "0 0 24px rgba(110,231,160,0.15)",
-        marginBottom: 8,
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
-        LC
-      </div>
-
-      {/* Brand */}
-      <div style={{
-        fontSize: 17,
-        fontWeight: 700,
-        color: "var(--t1)",
-        letterSpacing: "-0.03em",
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
+        width:44, height:44, borderRadius:12,
+        background:"linear-gradient(145deg,#142918,#1e4526)",
+        display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize:17, fontWeight:800, color:"#22c55e",
+        border:"1px solid rgba(34,197,94,0.2)",
+        boxShadow:"0 0 24px rgba(34,197,94,0.12)",
+        letterSpacing:-1,
+      }}>LC</div>
+      <div style={{ fontSize:15, fontWeight:700, color:"#ecf0ec", letterSpacing:-0.3 }}>
         LkSGCompass
       </div>
-
-      {/* Loading */}
-      <div style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 8,
-        fontSize: 13,
-        color: "var(--t3)",
-        fontFamily: "'DM Sans', sans-serif",
-      }}>
+      <div style={{ display:"flex", alignItems:"center", gap:8, fontSize:12, color:"#445547" }}>
         <div style={{
-          width: 16,
-          height: 16,
-          border: "2px solid rgba(110,231,160,0.15)",
-          borderTopColor: "var(--g2)",
-          borderRadius: "50%",
-          animation: "spin 0.6s linear infinite",
-        }} />
-        Lade{".".repeat(dots)}
+          width:13, height:13,
+          border:"1.5px solid rgba(34,197,94,0.15)",
+          borderTopColor:"#22c55e",
+          borderRadius:"50%",
+          animation:"spin 0.65s linear infinite",
+        }}/>
+        Authentifizierung{dots}
       </div>
-
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
   );

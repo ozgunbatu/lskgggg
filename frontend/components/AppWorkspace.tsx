@@ -117,7 +117,7 @@ export default function AppWorkspace({ initialTab = "dashboard" }: { initialTab?
   }
 
   return (
-    <div className="workspace-root" style={{ background: "var(--bg, #080b09)", minHeight: "100vh" }}>
+    <div className="workspace-root">
       <WorkspaceToasts toasts={ui.toasts} />
 
       <SupplierModal
