@@ -128,6 +128,7 @@ export default function RegisterPage() {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) return setError(d?.error || "Registrierung fehlgeschlagen.");
       if (d.requiresOtp === false) {
+        (window as { seansim?: (name: string) => void }).seansim?.("signup");
         setToken(d.token);
         window.location.href = "/app?welcome=1";
         return;
@@ -165,6 +166,7 @@ export default function RegisterPage() {
       });
       const d = await r.json().catch(() => ({}));
       if (!r.ok) return setError(d?.error || "Ungültiger Code.");
+      (window as { seansim?: (name: string) => void }).seansim?.("signup");
       setToken(d.token);
       window.location.href = "/app?welcome=1";
     } catch { setError("Verbindungsfehler."); }
